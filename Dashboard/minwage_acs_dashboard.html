@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Minimum Wage & Economic Indicators — State Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+<style>
+:root {
+  --paper:      #faf9f6;
+  --paper2:     #f3f1ec;
+  --paper3:     #ede9e1;
+  --ink:        #1a1814;
+  --ink2:       #3d3a34;
+  --ink3:       #6b6760;
+  --rule:       #ddd9d0;
+  --rule2:      #e8e4dc;
+  --red:        #b83232;
+  --red-light:  #f5e8e8;
+  --blue:       #1a4a7a;
+  --blue-light: #e4edf7;
+  --green:      #2a6644;
+  --green-light:#e4f0ea;
+  --amber:      #8a5c00;
+  --amber-light:#f5edd9;
+  --teal:       #1a6666;
+  --teal-light: #e0f0f0;
+  --accent:     #b83232;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-sans:  'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono:  'IBM Plex Mono', monospace;
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
+  --shadow:     0 2px 12px rgba(0,0,0,.09);
+  --shadow-lg:  0 4px 24px rgba(0,0,0,.12);
+  --radius:     6px;
+  --transition: .18s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:15px}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-sans);line-height:1.6;min-height:100vh}
+
+/* ── HEADER ── */
+header{
+  background:var(--ink);
+  color:#fff;
+  padding:0;
+  position:relative;
+  overflow:hidden;
+}
+.header-inner{
+  max-width:1400px;margin:0 auto;
+  padding:40px 48px 36px;
+  display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end;
+}
+.header-kicker{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;
+  text-transform:uppercase;color:#a09890;margin-bottom:10px;
+}
+header h1{
+  font-family:var(--font-serif);font-size:clamp(22px,3.5vw,36px);
+  font-weight:400;line-height:1.15;color:#fff;
+}
+header h1 em{font-style:italic;color:#e8b4b4;}
+.header-desc{margin-top:10px;font-size:13px;color:#a09890;max-width:560px;line-height:1.7;}
+.header-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.header-pill{
+  font-size:11px;font-family:var(--font-mono);
+  border:1px solid rgba(255,255,255,.18);
+  color:#ccc;padding:3px 10px;border-radius:3px;
+}
+.header-stat{text-align:right;}
+.header-stat .big{
+  font-family:var(--font-serif);font-size:52px;font-weight:400;
+  color:#e8b4b4;line-height:1;
+}
+.header-stat .lbl{font-size:12px;color:#a09890;margin-top:4px;font-family:var(--font-mono);}
+header::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--red) 0%,#c84a4a 40%,#8a2020 100%);
+}
+
+/* ── CONTROLS BAR ── */
+.controls-bar{
+  background:var(--paper2);
+  border-bottom:1px solid var(--rule);
+  padding:0;
+  position:sticky;top:0;z-index:100;
+  box-shadow:var(--shadow-sm);
+}
+.controls-inner{
+  max-width:1400px;margin:0 auto;
+  padding:14px 48px;
+  display:flex;gap:24px;align-items:center;flex-wrap:wrap;
+}
+.ctrl-group{display:flex;flex-direction:column;gap:4px;}
+.ctrl-label{font-size:10px;font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);}
+select,input[type=range]{
+  font-family:var(--font-sans);font-size:13px;
+  background:white;border:1px solid var(--rule);color:var(--ink);
+  padding:6px 10px;border-radius:var(--radius);
+  cursor:pointer;transition:border-color var(--transition);
+  min-width:160px;
+}
+select:focus,select:hover{border-color:var(--ink2);outline:none;}
+.ctrl-sep{width:1px;height:36px;background:var(--rule);align-self:center;}
+.year-display{font-family:var(--font-mono);font-size:15px;font-weight:500;color:var(--ink);min-width:40px;}
+input[type=range]{min-width:120px;padding:0;accent-color:var(--red);}
+
+/* ── LAYOUT ── */
+.main{max-width:1400px;margin:0 auto;padding:32px 48px 60px;}
+.section{margin-bottom:48px;}
+.section-head{
+  display:flex;align-items:baseline;gap:16px;
+  border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:24px;
+}
+.section-num{font-family:var(--font-mono);font-size:11px;color:var(--ink3);}
+.section-title{font-family:var(--font-serif);font-size:20px;font-weight:400;}
+.section-sub{font-size:12px;color:var(--ink3);margin-left:auto;font-family:var(--font-mono);}
+
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:24px;}
+@media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-2-1{grid-template-columns:1fr}}
+@media(max-width:700px){.grid-4{grid-template-columns:1fr}.main{padding:20px 16px}}
+
+/* ── CARDS ── */
+.card{
+  background:white;border:1px solid var(--rule);
+  border-radius:var(--radius);padding:22px 24px;
+  box-shadow:var(--shadow-sm);
+}
+.card-title{font-family:var(--font-serif);font-size:15px;font-weight:600;margin-bottom:2px;}
+.card-sub{font-size:11px;color:var(--ink3);font-family:var(--font-mono);margin-bottom:16px;}
+.chart-wrap{position:relative;}
+
+/* ── KPI CARDS ── */
+.kpi-card{
+  background:white;border:1px solid var(--rule);border-radius:var(--radius);
+  padding:20px 22px;box-shadow:var(--shadow-sm);
+  border-top:3px solid var(--rule);
+  transition:box-shadow var(--transition);
+}
+.kpi-card:hover{box-shadow:var(--shadow);}
+.kpi-card.c-red{border-top-color:var(--red);}
+.kpi-card.c-blue{border-top-color:var(--blue);}
+.kpi-card.c-green{border-top-color:var(--green);}
+.kpi-card.c-amber{border-top-color:var(--amber);}
+.kpi-card.c-teal{border-top-color:var(--teal);}
+.kpi-label{font-size:10px;font-family:var(--font-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;}
+.kpi-value{font-family:var(--font-serif);font-size:30px;font-weight:400;line-height:1;color:var(--ink);}
+.kpi-sub{font-size:11px;color:var(--ink3);margin-top:5px;}
+.kpi-delta{display:inline-block;font-size:11px;font-family:var(--font-mono);padding:1px 6px;border-radius:3px;margin-top:4px;}
+.delta-up{background:var(--green-light);color:var(--green);}
+.delta-dn{background:var(--red-light);color:var(--red);}
+
+/* ── SCATTER CONTROLS ── */
+.scatter-controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.scatter-controls label{font-size:12px;color:var(--ink3);font-family:var(--font-mono);}
+.scatter-controls select{min-width:120px;font-size:12px;padding:4px 8px;}
+
+/* ── TABLE ── */
+.tbl-wrap{overflow-x:auto;max-height:380px;overflow-y:auto;border:1px solid var(--rule);border-radius:var(--radius);}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{
+  position:sticky;top:0;background:var(--paper2);
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink3);font-weight:500;
+  padding:9px 14px;border-bottom:1px solid var(--rule);
+  text-align:left;cursor:pointer;user-select:none;white-space:nowrap;
+}
+thead th:hover{color:var(--ink);}
+thead th .sort-arrow{margin-left:4px;opacity:.4;}
+thead th.sorted .sort-arrow{opacity:1;color:var(--red);}
+tbody td{padding:8px 14px;border-bottom:1px solid var(--rule2);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--paper2);}
+.bar-cell{display:flex;align-items:center;gap:8px;}
+.mini-bar{height:8px;border-radius:2px;flex-shrink:0;}
+.flag{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ── CORR MATRIX ── */
+.corr-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:3px;}
+.corr-cell{
+  aspect-ratio:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  border-radius:4px;font-size:11px;cursor:default;
+  padding:4px;text-align:center;transition:transform .15s;
+}
+.corr-cell:hover{transform:scale(1.06);}
+.corr-label{font-family:var(--font-mono);font-size:9px;color:var(--ink3);text-align:center;padding:6px 2px;}
+.corr-val{font-weight:600;font-size:13px;}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink3);}
+.legend-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+
+/* ── FOOTNOTE ── */
+.footnote{font-size:11px;color:var(--ink3);font-family:var(--font-mono);margin-top:10px;line-height:1.7;border-top:1px solid var(--rule2);padding-top:8px;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-bottom:20px;}
+.tab{
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  padding:9px 18px;cursor:pointer;color:var(--ink3);
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:all var(--transition);background:none;border-top:none;border-left:none;border-right:none;
+}
+.tab:hover{color:var(--ink);}
+.tab.active{color:var(--red);border-bottom-color:var(--red);}
+
+/* ── TOOLTIP ── */
+#tip{
+  position:fixed;z-index:9999;background:white;
+  border:1px solid var(--rule);border-radius:var(--radius);
+  padding:10px 14px;font-size:12px;pointer-events:none;
+  opacity:0;transition:opacity .12s;box-shadow:var(--shadow);
+  max-width:240px;line-height:1.6;
+}
+#tip.show{opacity:1;}
+#tip strong{display:block;font-family:var(--font-serif);font-size:13px;border-bottom:1px solid var(--rule2);padding-bottom:5px;margin-bottom:5px;}
+#tip .tip-row{display:flex;justify-content:space-between;gap:16px;}
+#tip .tip-key{color:var(--ink3);}
+#tip .tip-val{font-family:var(--font-mono);font-weight:500;}
+
+/* ── RADIO PILLS ── */
+.pill-group{display:flex;gap:0;border:1px solid var(--rule);border-radius:var(--radius);overflow:hidden;}
+.pill{
+  font-size:11px;font-family:var(--font-mono);padding:5px 13px;
+  background:white;border:none;cursor:pointer;color:var(--ink3);
+  border-right:1px solid var(--rule);transition:all var(--transition);
+}
+.pill:last-child{border-right:none;}
+.pill:hover{background:var(--paper2);}
+.pill.active{background:var(--ink);color:white;}
+
+/* animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:fadeUp .4s ease both;}
+.section:nth-child(2){animation-delay:.05s;}
+.section:nth-child(3){animation-delay:.1s;}
+.section:nth-child(4){animation-delay:.15s;}
+.section:nth-child(5){animation-delay:.2s;}
+</style>
+</head>
+<body>
+<div id="tip"></div>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header>
+  <div class="header-inner">
+    <div>
+      <div class="header-kicker">U.S. Labor Policy · ACS Integration · 2024</div>
+      <h1>Minimum Wage &amp; <em>Economic Conditions</em><br>State-Level Explorer</h1>
+      <p class="header-desc">
+        Cross-sectional and longitudinal analysis of minimum wage policy against
+        American Community Survey indicators — income, poverty, unemployment, and housing cost burden.
+      </p>
+      <div class="header-pills">
+        <span class="header-pill">51 Jurisdictions</span>
+        <span class="header-pill">ACS 5-Year Estimates</span>
+        <span class="header-pill">Federal + State + Local</span>
+        <span class="header-pill">Zipperer (2022) · UCB (2025)</span>
+      </div>
+    </div>
+    <div class="header-stat">
+      <div class="big" id="hdr-fed">$7.25</div>
+      <div class="lbl">Federal Floor<br>Since Jul 2009</div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ CONTROLS ══════════════════ -->
+<div class="controls-bar">
+  <div class="controls-inner">
+    <div class="ctrl-group">
+      <span class="ctrl-label">Reference Year</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" id="yearSlider" min="2010" max="2024" value="2023" step="1" oninput="onYearChange(this.value)"/>
+        <span class="year-display" id="yearDisplay">2023</span>
+      </div>
+    </div>
+    <div class="ctrl-sep"></div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">ACS Outcome (Y-axis)</span>
+      <select id="yVarSelect" onchange="onVarChange()">
+        <option value="poverty">Poverty Rate (%)</option>
+        <option value="median_income">Median Household Income ($)</option>
+        <option value="unemployment">Unemployment Rate (%)</option>
+        <option value="rent_burden">Rent Burden (% income)</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Color By</span>
+      <select id="colorBySelect" onchange="onVarChange()">
+        <option value="region">Census Region</option>
+        <option value="mw_tier">Min Wage Tier</option>
+        <option value="level">Jurisdiction Level</option>
+      </select>
+    </div>
+    <div class="ctrl-sep"></div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Highlight State</span>
+      <select id="highlightSelect" onchange="onVarChange()">
+        <option value="">— none —</option>
+      </select>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Show Trendline</span>
+      <div class="pill-group">
+        <button class="pill active" data-trend="1" onclick="setTrend(this)">On</button>
+        <button class="pill" data-trend="0" onclick="setTrend(this)">Off</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ MAIN ══════════════════ -->
+<div class="main">
+
+  <!-- § 1 — KPIs -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">Snapshot — Selected Year</span>
+      <span class="section-sub" id="kpi-year-label">2023 estimates</span>
+    </div>
+    <div class="grid-4" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi-card c-red">
+        <div class="kpi-label">Median Min Wage</div>
+        <div class="kpi-value" id="kpi-med-mw">—</div>
+        <div class="kpi-sub">across all states</div>
+      </div>
+      <div class="kpi-card c-blue">
+        <div class="kpi-label">Median HH Income</div>
+        <div class="kpi-value" id="kpi-income">—</div>
+        <div class="kpi-sub">U.S. median (ACS)</div>
+      </div>
+      <div class="kpi-card c-amber">
+        <div class="kpi-label">Poverty Rate</div>
+        <div class="kpi-value" id="kpi-poverty">—</div>
+        <div class="kpi-sub">national average</div>
+      </div>
+      <div class="kpi-card c-green">
+        <div class="kpi-label">Unemployment</div>
+        <div class="kpi-value" id="kpi-unemp">—</div>
+        <div class="kpi-sub">annual avg (BLS/ACS)</div>
+      </div>
+      <div class="kpi-card c-teal">
+        <div class="kpi-label">Rent Burden</div>
+        <div class="kpi-value" id="kpi-rent">—</div>
+        <div class="kpi-sub">median % of income</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § 2 — Scatter + Bar -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">Minimum Wage vs. ACS Outcome</span>
+      <span class="section-sub">State-level cross-section</span>
+    </div>
+    <div class="grid-2-1">
+      <div class="card">
+        <div class="card-title">Scatter: Min Wage × <span id="scatter-title">Poverty Rate</span></div>
+        <div class="card-sub" id="scatter-sub">Each point = one state/jurisdiction · hover for details</div>
+        <div id="scatterLegend" class="legend"></div>
+        <div class="chart-wrap" style="height:360px"><canvas id="scatterChart"></canvas></div>
+        <div class="footnote">
+          Minimum wage = state rate for year selected. ACS 5-year estimates (Census Bureau).
+          Trendline = OLS regression. R² shown in chart.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">States Ranked by Min Wage</div>
+        <div class="card-sub">Colored by <span id="bar-color-by">census region</span></div>
+        <div class="chart-wrap" style="height:420px"><canvas id="barChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § 3 — Time trends -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <span class="section-title">Longitudinal Trends</span>
+      <span class="section-sub">2010 – 2024</span>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Min Wage Over Time — Select States</div>
+        <div class="card-sub">Click legend to toggle</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="trendStatePills"></div>
+        <div class="chart-wrap" style="height:260px"><canvas id="trendMWChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">ACS Outcome Over Time</div>
+        <div class="card-sub">Same states, same variable as scatter Y-axis</div>
+        <div class="chart-wrap" style="height:260px"><canvas id="trendACSChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § 4 — Correlation matrix + detail table -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <span class="section-title">Correlation Matrix</span>
+      <span class="section-sub">Pearson r across all states</span>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Variable Correlations</div>
+        <div class="card-sub">Pearson r · <span id="corr-year">2023</span> cross-section</div>
+        <div style="display:grid;grid-template-columns:80px 1fr;gap:4px;margin-top:8px">
+          <div></div>
+          <div id="corrMatrix"></div>
+        </div>
+        <div class="footnote" style="margin-top:12px">
+          Strong negative r (dark red) = higher min wage associated with lower value of that indicator.
+          Positive r (dark blue) = higher min wage associated with higher value.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Min Wage as % of Median Wage</div>
+        <div class="card-sub">Kaitz index proxy — how far min wage reaches into wage distribution</div>
+        <div class="chart-wrap" style="height:280px"><canvas id="kaitzChart"></canvas></div>
+        <div class="footnote">Estimated as (state min wage / (state median HH income / 2080)) × 100</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- § 5 — Data table -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <span class="section-title">State Data Table</span>
+      <span class="section-sub">Click column headers to sort</span>
+    </div>
+    <div class="card" style="padding:0">
+      <div class="tbl-wrap">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable('state')" data-col="state">State <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('region')" data-col="region">Region <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('minwage')" data-col="minwage">Min Wage <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('median_income')" data-col="median_income">Median Income <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('poverty')" data-col="poverty">Poverty % <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('unemployment')" data-col="unemployment">Unemp % <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('rent_burden')" data-col="rent_burden">Rent Burden <span class="sort-arrow">↕</span></th>
+              <th onclick="sortTable('kaitz')" data-col="kaitz">Kaitz Index <span class="sort-arrow">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="footnote" style="margin-top:8px">
+      Sources: State minimum wages — Vaghul &amp; Zipperer (2022) v1.4.0 + UCB Labor Center (2025).
+      ACS indicators — U.S. Census Bureau, American Community Survey 5-Year Estimates.
+      Unemployment — BLS Local Area Unemployment Statistics. All dollar values nominal.
+    </p>
+  </section>
+
+</div><!-- /main -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════════ */
+const REGIONS = {
+  Northeast: ['CT','ME','MA','NH','NJ','NY','PA','RI','VT'],
+  South:     ['AL','AR','DC','DE','FL','GA','KY','LA','MD','MS','NC','OK','SC','TN','TX','VA','WV'],
+  Midwest:   ['IL','IN','IA','KS','MI','MN','MO','NE','ND','OH','SD','WI'],
+  West:      ['AK','AZ','CA','CO','HI','ID','MT','NV','NM','OR','UT','WA','WY'],
+};
+const REGION_COLORS = {
+  Northeast: '#1a4a7a',
+  South:     '#b83232',
+  Midwest:   '#2a6644',
+  West:      '#8a5c00',
+};
+
+function getRegion(st) {
+  for (const [r,states] of Object.entries(REGIONS)) if (states.includes(st)) return r;
+  return 'Other';
+}
+
+// State min wages 2010–2024 (from Zipperer + current rates)
+const MW_HISTORY = {
+  AL:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  AK:{2010:7.75,2015:9.75,2018:9.84,2020:10.19,2022:10.34,2023:10.85,2024:11.73},
+  AZ:{2010:7.25,2015:8.05,2018:10.50,2020:12.00,2022:12.80,2023:13.85,2024:14.35},
+  AR:{2010:7.25,2015:8.00,2018:8.50,2020:10.00,2022:11.00,2023:11.00,2024:11.00},
+  CA:{2010:8.00,2015:9.00,2018:11.00,2020:13.00,2022:15.00,2023:15.50,2024:16.00},
+  CO:{2010:7.24,2015:8.23,2018:10.20,2020:12.00,2022:12.56,2023:13.65,2024:14.42},
+  CT:{2010:8.25,2015:9.15,2018:10.10,2020:12.00,2022:14.00,2023:15.00,2024:16.35},
+  DE:{2010:7.25,2015:8.25,2018:8.25,2020:9.25,2022:11.75,2023:13.25,2024:15.00},
+  DC:{2010:8.25,2015:10.50,2018:13.25,2020:15.00,2022:16.10,2023:17.00,2024:17.50},
+  FL:{2010:7.25,2015:8.05,2018:8.25,2020:8.65,2022:10.00,2023:12.00,2024:13.00},
+  GA:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  HI:{2010:7.25,2015:7.75,2018:10.10,2020:10.10,2022:12.00,2023:14.00,2024:14.00},
+  ID:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  IL:{2010:8.25,2015:8.25,2018:8.25,2020:9.25,2022:12.00,2023:13.00,2024:14.00},
+  IN:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  IA:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  KS:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  KY:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  LA:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  ME:{2010:7.50,2015:7.50,2018:10.00,2020:12.00,2022:13.80,2023:14.15,2024:14.65},
+  MD:{2010:7.25,2015:8.25,2018:10.10,2020:11.00,2022:12.50,2023:13.25,2024:15.00},
+  MA:{2010:8.00,2015:9.00,2018:12.00,2020:13.50,2022:15.00,2023:15.00,2024:15.00},
+  MI:{2010:7.40,2015:8.50,2018:9.25,2020:9.65,2022:9.87,2023:10.10,2024:10.33},
+  MN:{2010:7.25,2015:9.00,2018:9.65,2020:10.00,2022:10.33,2023:10.59,2024:10.85},
+  MS:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  MO:{2010:7.25,2015:7.65,2018:7.85,2020:9.45,2022:11.15,2023:12.00,2024:12.30},
+  MT:{2010:7.25,2015:8.05,2018:8.30,2020:8.65,2022:9.20,2023:9.95,2024:10.30},
+  NE:{2010:7.25,2015:8.00,2018:9.00,2020:9.00,2022:10.50,2023:11.00,2024:12.00},
+  NV:{2010:7.25,2015:8.25,2018:8.25,2020:8.00,2022:9.50,2023:10.25,2024:12.00},
+  NH:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  NJ:{2010:7.25,2015:8.38,2018:8.60,2020:11.00,2022:13.00,2023:14.13,2024:15.49},
+  NM:{2010:7.50,2015:7.50,2018:7.50,2020:9.00,2022:11.50,2023:12.00,2024:12.00},
+  NY:{2010:7.25,2015:8.75,2018:10.40,2020:11.80,2022:14.20,2023:14.20,2024:16.00},
+  NC:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  ND:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  OH:{2010:7.30,2015:8.10,2018:8.30,2020:8.70,2022:9.30,2023:10.10,2024:10.45},
+  OK:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  OR:{2010:8.40,2015:9.25,2018:10.75,2020:12.00,2022:13.50,2023:13.50,2024:14.70},
+  PA:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  RI:{2010:7.40,2015:9.00,2018:10.10,2020:11.50,2022:13.00,2023:14.00,2024:15.00},
+  SC:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  SD:{2010:7.25,2015:8.50,2018:8.85,2020:9.30,2022:9.95,2023:10.80,2024:11.20},
+  TN:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  TX:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  UT:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  VT:{2010:8.06,2015:9.15,2018:10.50,2020:11.75,2022:13.18,2023:13.67,2024:14.01},
+  VA:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:11.00,2023:12.00,2024:12.41},
+  WA:{2010:8.55,2015:9.47,2018:11.50,2020:13.50,2022:14.49,2023:15.74,2024:16.28},
+  WV:{2010:7.25,2015:8.00,2018:8.75,2020:8.75,2022:8.75,2023:8.75,2024:8.75},
+  WI:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+  WY:{2010:7.25,2015:7.25,2018:7.25,2020:7.25,2022:7.25,2023:7.25,2024:7.25},
+};
+
+// ACS data (Census Bureau ACS 5-yr estimates + BLS) keyed by year then state
+// median_income: $, poverty: %, unemployment: %, rent_burden: % of income
+const ACS = {
+  2010:{
+    AL:{median_income:41427,poverty:17.5,unemployment:9.8,rent_burden:30.1},
+    AK:{median_income:64576,poverty:9.9,unemployment:7.8,rent_burden:26.4},
+    AZ:{median_income:46709,poverty:16.5,unemployment:10.2,rent_burden:30.8},
+    AR:{median_income:38307,poverty:18.4,unemployment:7.9,rent_burden:28.4},
+    CA:{median_income:57708,poverty:15.3,unemployment:12.3,rent_burden:34.2},
+    CO:{median_income:55430,poverty:12.0,unemployment:8.9,rent_burden:30.4},
+    CT:{median_income:67034,poverty:10.1,unemployment:9.0,rent_burden:31.2},
+    DE:{median_income:55847,poverty:11.3,unemployment:8.4,rent_burden:30.8},
+    DC:{median_income:60902,poverty:18.7,unemployment:9.9,rent_burden:35.1},
+    FL:{median_income:44299,poverty:16.0,unemployment:11.0,rent_burden:34.1},
+    GA:{median_income:46007,poverty:17.9,unemployment:10.1,rent_burden:30.4},
+    HI:{median_income:60218,poverty:10.8,unemployment:6.4,rent_burden:34.5},
+    ID:{median_income:43490,poverty:14.3,unemployment:9.1,rent_burden:28.5},
+    IL:{median_income:54344,poverty:13.5,unemployment:10.2,rent_burden:31.0},
+    IN:{median_income:46438,poverty:14.7,unemployment:10.0,rent_burden:28.9},
+    IA:{median_income:49774,poverty:12.6,unemployment:6.0,rent_burden:27.8},
+    KS:{median_income:48964,poverty:13.3,unemployment:6.9,rent_burden:28.4},
+    KY:{median_income:40072,poverty:18.4,unemployment:10.3,rent_burden:28.5},
+    LA:{median_income:42505,poverty:19.0,unemployment:7.9,rent_burden:29.8},
+    ME:{median_income:46933,poverty:13.1,unemployment:8.0,rent_burden:29.8},
+    MD:{median_income:70004,poverty:9.5,unemployment:7.5,rent_burden:31.8},
+    MA:{median_income:62072,poverty:11.4,unemployment:8.8,rent_burden:32.8},
+    MI:{median_income:45981,poverty:16.8,unemployment:12.4,rent_burden:31.0},
+    MN:{median_income:57243,poverty:11.1,unemployment:7.3,rent_burden:28.8},
+    MS:{median_income:36919,poverty:21.9,unemployment:10.4,rent_burden:28.1},
+    MO:{median_income:45321,poverty:15.3,unemployment:9.4,rent_burden:29.1},
+    MT:{median_income:43872,poverty:14.5,unemployment:6.8,rent_burden:27.9},
+    NE:{median_income:50296,poverty:12.3,unemployment:4.7,rent_burden:27.5},
+    NV:{median_income:49875,poverty:15.4,unemployment:14.8,rent_burden:33.4},
+    NH:{median_income:62647,poverty:8.2,unemployment:6.4,rent_burden:28.9},
+    NJ:{median_income:67681,poverty:10.3,unemployment:9.5,rent_burden:33.1},
+    NM:{median_income:42090,poverty:19.0,unemployment:8.3,rent_burden:29.9},
+    NY:{median_income:54659,poverty:15.0,unemployment:8.5,rent_burden:34.8},
+    NC:{median_income:44142,poverty:16.9,unemployment:10.6,rent_burden:29.7},
+    ND:{median_income:49596,poverty:11.3,unemployment:3.8,rent_burden:25.8},
+    OH:{median_income:45395,poverty:15.8,unemployment:9.9,rent_burden:29.8},
+    OK:{median_income:44312,poverty:16.8,unemployment:6.7,rent_burden:27.8},
+    OR:{median_income:47101,poverty:14.5,unemployment:10.5,rent_burden:32.1},
+    PA:{median_income:50228,poverty:12.5,unemployment:8.6,rent_burden:29.9},
+    RI:{median_income:53636,poverty:13.2,unemployment:11.6,rent_burden:33.1},
+    SC:{median_income:42019,poverty:16.8,unemployment:10.6,rent_burden:29.6},
+    SD:{median_income:47234,poverty:13.7,unemployment:4.7,rent_burden:26.6},
+    TN:{median_income:41693,poverty:17.3,unemployment:9.9,rent_burden:29.2},
+    TX:{median_income:48615,poverty:17.0,unemployment:8.2,rent_burden:29.8},
+    UT:{median_income:55869,poverty:11.6,unemployment:7.7,rent_burden:28.4},
+    VT:{median_income:52977,poverty:11.3,unemployment:6.5,rent_burden:29.4},
+    VA:{median_income:60674,poverty:10.4,unemployment:6.8,rent_burden:29.6},
+    WA:{median_income:57244,poverty:12.2,unemployment:9.3,rent_burden:30.8},
+    WV:{median_income:37435,poverty:17.7,unemployment:9.0,rent_burden:27.6},
+    WI:{median_income:49001,poverty:12.6,unemployment:8.4,rent_burden:28.5},
+    WY:{median_income:54901,poverty:10.0,unemployment:6.7,rent_burden:24.8},
+  },
+  2015:{
+    AL:{median_income:43253,poverty:18.2,unemployment:6.1,rent_burden:30.5},
+    AK:{median_income:70760,poverty:10.3,unemployment:6.5,rent_burden:27.1},
+    AZ:{median_income:49928,poverty:17.4,unemployment:6.5,rent_burden:30.9},
+    AR:{median_income:40511,poverty:18.0,unemployment:5.0,rent_burden:28.6},
+    CA:{median_income:61818,poverty:15.3,unemployment:6.2,rent_burden:34.8},
+    CO:{median_income:60629,poverty:11.5,unemployment:4.3,rent_burden:30.4},
+    CT:{median_income:71346,poverty:10.5,unemployment:6.4,rent_burden:31.5},
+    DE:{median_income:58415,poverty:12.1,unemployment:4.9,rent_burden:30.9},
+    DC:{median_income:69235,poverty:18.6,unemployment:7.8,rent_burden:35.6},
+    FL:{median_income:47212,poverty:16.6,unemployment:5.5,rent_burden:34.4},
+    GA:{median_income:49321,poverty:17.1,unemployment:5.8,rent_burden:30.4},
+    HI:{median_income:66259,poverty:10.3,unemployment:4.0,rent_burden:35.2},
+    ID:{median_income:46767,poverty:13.8,unemployment:4.1,rent_burden:29.0},
+    IL:{median_income:57574,poverty:13.6,unemployment:6.1,rent_burden:31.1},
+    IN:{median_income:49446,poverty:14.0,unemployment:4.9,rent_burden:29.0},
+    IA:{median_income:54736,poverty:11.7,unemployment:3.8,rent_burden:27.9},
+    KS:{median_income:52205,poverty:13.1,unemployment:4.4,rent_burden:28.5},
+    KY:{median_income:43036,poverty:18.5,unemployment:5.4,rent_burden:28.7},
+    LA:{median_income:44991,poverty:19.8,unemployment:6.6,rent_burden:30.1},
+    ME:{median_income:49462,poverty:13.0,unemployment:4.7,rent_burden:29.8},
+    MD:{median_income:74551,poverty:9.7,unemployment:5.5,rent_burden:31.9},
+    MA:{median_income:67861,poverty:11.6,unemployment:5.0,rent_burden:33.0},
+    MI:{median_income:50803,poverty:15.8,unemployment:5.5,rent_burden:31.0},
+    MN:{median_income:61492,poverty:10.2,unemployment:3.7,rent_burden:28.5},
+    MS:{median_income:39031,poverty:22.0,unemployment:6.5,rent_burden:28.2},
+    MO:{median_income:48748,poverty:15.6,unemployment:5.1,rent_burden:29.2},
+    MT:{median_income:46972,poverty:14.8,unemployment:4.1,rent_burden:28.0},
+    NE:{median_income:54996,poverty:11.8,unemployment:3.0,rent_burden:27.5},
+    NV:{median_income:52431,poverty:15.2,unemployment:7.0,rent_burden:33.5},
+    NH:{median_income:68485,poverty:7.8,unemployment:3.6,rent_burden:29.0},
+    NJ:{median_income:72093,poverty:10.8,unemployment:6.5,rent_burden:33.3},
+    NM:{median_income:44803,poverty:20.4,unemployment:6.7,rent_burden:29.8},
+    NY:{median_income:58003,poverty:15.4,unemployment:5.3,rent_burden:34.9},
+    NC:{median_income:46334,poverty:16.4,unemployment:5.7,rent_burden:29.8},
+    ND:{median_income:55759,poverty:10.7,unemployment:2.8,rent_burden:25.6},
+    OH:{median_income:49429,poverty:15.0,unemployment:4.9,rent_burden:29.8},
+    OK:{median_income:47529,poverty:16.0,unemployment:4.3,rent_burden:27.9},
+    OR:{median_income:51075,poverty:15.2,unemployment:6.0,rent_burden:32.7},
+    PA:{median_income:53234,poverty:12.9,unemployment:5.3,rent_burden:29.9},
+    RI:{median_income:56361,poverty:13.4,unemployment:6.6,rent_burden:33.2},
+    SC:{median_income:44779,poverty:16.4,unemployment:6.0,rent_burden:29.7},
+    SD:{median_income:51174,poverty:13.2,unemployment:3.1,rent_burden:26.7},
+    TN:{median_income:44297,poverty:16.7,unemployment:5.8,rent_burden:29.3},
+    TX:{median_income:53035,poverty:15.9,unemployment:4.5,rent_burden:29.9},
+    UT:{median_income:61131,poverty:10.5,unemployment:3.6,rent_burden:28.4},
+    VT:{median_income:55057,poverty:11.4,unemployment:3.6,rent_burden:29.5},
+    VA:{median_income:65015,poverty:11.2,unemployment:4.4,rent_burden:29.7},
+    WA:{median_income:61062,poverty:12.2,unemployment:5.6,rent_burden:31.1},
+    WV:{median_income:40211,poverty:17.7,unemployment:6.8,rent_burden:27.6},
+    WI:{median_income:52622,poverty:12.4,unemployment:4.6,rent_burden:28.6},
+    WY:{median_income:57829,poverty:10.7,unemployment:4.5,rent_burden:24.9},
+  },
+  2019:{
+    AL:{median_income:51734,poverty:15.5,unemployment:3.0,rent_burden:30.3},
+    AK:{median_income:77640,poverty:9.9,unemployment:4.7,rent_burden:27.4},
+    AZ:{median_income:57100,poverty:13.5,unemployment:4.8,rent_burden:30.8},
+    AR:{median_income:47597,poverty:15.2,unemployment:3.5,rent_burden:28.5},
+    CA:{median_income:75235,poverty:11.8,unemployment:4.2,rent_burden:34.6},
+    CO:{median_income:72331,poverty:9.3,unemployment:2.8,rent_burden:31.3},
+    CT:{median_income:78833,poverty:9.6,unemployment:3.8,rent_burden:31.5},
+    DE:{median_income:64805,poverty:11.3,unemployment:3.8,rent_burden:30.9},
+    DC:{median_income:92266,poverty:13.7,unemployment:5.6,rent_burden:35.8},
+    FL:{median_income:55660,poverty:13.6,unemployment:3.5,rent_burden:34.6},
+    GA:{median_income:58700,poverty:14.3,unemployment:3.7,rent_burden:30.6},
+    HI:{median_income:83102,poverty:9.3,unemployment:2.8,rent_burden:35.8},
+    ID:{median_income:55785,poverty:11.2,unemployment:2.9,rent_burden:28.9},
+    IL:{median_income:65886,poverty:11.5,unemployment:4.0,rent_burden:31.5},
+    IN:{median_income:57603,poverty:12.0,unemployment:3.2,rent_burden:29.0},
+    IA:{median_income:60523,poverty:10.8,unemployment:2.7,rent_burden:27.9},
+    KS:{median_income:58218,poverty:12.0,unemployment:3.3,rent_burden:28.4},
+    KY:{median_income:52295,poverty:16.3,unemployment:4.3,rent_burden:28.7},
+    LA:{median_income:51073,poverty:18.6,unemployment:4.4,rent_burden:29.9},
+    ME:{median_income:58924,poverty:11.1,unemployment:3.3,rent_burden:29.9},
+    MD:{median_income:87063,poverty:8.1,unemployment:3.4,rent_burden:32.0},
+    MA:{median_income:81215,poverty:9.4,unemployment:3.0,rent_burden:33.4},
+    MI:{median_income:59584,poverty:13.1,unemployment:4.1,rent_burden:31.1},
+    MN:{median_income:74593,poverty:8.6,unemployment:3.3,rent_burden:28.6},
+    MS:{median_income:45081,poverty:19.6,unemployment:5.7,rent_burden:28.2},
+    MO:{median_income:55461,poverty:12.9,unemployment:3.3,rent_burden:29.2},
+    MT:{median_income:53386,poverty:12.7,unemployment:3.6,rent_burden:28.1},
+    NE:{median_income:63229,poverty:10.3,unemployment:3.0,rent_burden:27.6},
+    NV:{median_income:58003,poverty:13.7,unemployment:3.9,rent_burden:33.9},
+    NH:{median_income:76768,poverty:6.6,unemployment:2.6,rent_burden:29.0},
+    NJ:{median_income:85751,poverty:9.2,unemployment:4.2,rent_burden:33.5},
+    NM:{median_income:51945,poverty:18.2,unemployment:5.0,rent_burden:29.8},
+    NY:{median_income:68486,poverty:13.0,unemployment:4.1,rent_burden:34.8},
+    NC:{median_income:54602,poverty:14.0,unemployment:4.0,rent_burden:29.8},
+    ND:{median_income:64577,poverty:10.6,unemployment:2.3,rent_burden:25.3},
+    OH:{median_income:56111,poverty:13.1,unemployment:4.2,rent_burden:29.9},
+    OK:{median_income:52919,poverty:15.2,unemployment:3.4,rent_burden:27.8},
+    OR:{median_income:62818,poverty:11.4,unemployment:4.3,rent_burden:33.3},
+    PA:{median_income:61744,poverty:11.9,unemployment:4.4,rent_burden:30.0},
+    RI:{median_income:63870,poverty:11.3,unemployment:3.8,rent_burden:33.2},
+    SC:{median_income:54864,poverty:14.1,unemployment:3.4,rent_burden:29.7},
+    SD:{median_income:58275,poverty:11.9,unemployment:3.3,rent_burden:26.8},
+    TN:{median_income:52375,poverty:14.0,unemployment:3.4,rent_burden:29.3},
+    TX:{median_income:61874,poverty:13.6,unemployment:3.5,rent_burden:30.0},
+    UT:{median_income:74197,poverty:8.9,unemployment:2.7,rent_burden:28.5},
+    VT:{median_income:63477,poverty:10.2,unemployment:2.8,rent_burden:29.6},
+    VA:{median_income:76456,poverty:10.0,unemployment:2.9,rent_burden:29.9},
+    WA:{median_income:77006,poverty:10.0,unemployment:4.4,rent_burden:31.4},
+    WV:{median_income:48850,poverty:16.8,unemployment:5.3,rent_burden:27.7},
+    WI:{median_income:60773,poverty:10.4,unemployment:3.3,rent_burden:28.7},
+    WY:{median_income:65003,poverty:10.1,unemployment:4.0,rent_burden:24.9},
+  },
+  2021:{
+    AL:{median_income:54943,poverty:15.4,unemployment:3.8,rent_burden:30.4},
+    AK:{median_income:77790,poverty:10.9,unemployment:5.9,rent_burden:27.5},
+    AZ:{median_income:61529,poverty:13.5,unemployment:7.3,rent_burden:31.0},
+    AR:{median_income:50540,poverty:16.6,unemployment:3.9,rent_burden:28.6},
+    CA:{median_income:84097,poverty:11.5,unemployment:8.3,rent_burden:35.1},
+    CO:{median_income:77127,poverty:9.9,unemployment:6.5,rent_burden:31.8},
+    CT:{median_income:83771,poverty:9.9,unemployment:8.2,rent_burden:31.7},
+    DE:{median_income:69110,poverty:11.3,unemployment:6.5,rent_burden:31.0},
+    DC:{median_income:101722,poverty:13.4,unemployment:9.2,rent_burden:36.0},
+    FL:{median_income:59227,poverty:13.1,unemployment:5.3,rent_burden:35.2},
+    GA:{median_income:61980,poverty:14.0,unemployment:4.4,rent_burden:31.0},
+    HI:{median_income:83173,poverty:9.8,unemployment:8.9,rent_burden:36.2},
+    ID:{median_income:60999,poverty:10.5,unemployment:4.1,rent_burden:29.3},
+    IL:{median_income:68428,poverty:12.1,unemployment:7.5,rent_burden:31.8},
+    IN:{median_income:60555,poverty:12.4,unemployment:4.3,rent_burden:29.1},
+    IA:{median_income:62899,poverty:11.0,unemployment:3.7,rent_burden:28.0},
+    KS:{median_income:61091,poverty:11.5,unemployment:4.0,rent_burden:28.5},
+    KY:{median_income:55573,poverty:16.2,unemployment:5.4,rent_burden:28.8},
+    LA:{median_income:52087,poverty:18.6,unemployment:6.4,rent_burden:30.1},
+    ME:{median_income:64767,poverty:10.6,unemployment:4.7,rent_burden:30.0},
+    MD:{median_income:90203,poverty:8.5,unemployment:6.5,rent_burden:32.2},
+    MA:{median_income:89026,poverty:9.8,unemployment:7.5,rent_burden:33.7},
+    MI:{median_income:63202,poverty:13.3,unemployment:6.5,rent_burden:31.3},
+    MN:{median_income:77720,poverty:8.9,unemployment:5.2,rent_burden:28.8},
+    MS:{median_income:46637,poverty:19.6,unemployment:5.8,rent_burden:28.3},
+    MO:{median_income:58773,poverty:13.2,unemployment:4.2,rent_burden:29.4},
+    MT:{median_income:57153,poverty:12.5,unemployment:4.7,rent_burden:28.3},
+    NE:{median_income:66644,poverty:10.4,unemployment:3.4,rent_burden:27.7},
+    NV:{median_income:62043,poverty:13.8,unemployment:9.0,rent_burden:34.3},
+    NH:{median_income:84532,poverty:6.6,unemployment:4.0,rent_burden:29.2},
+    NJ:{median_income:89703,poverty:9.5,unemployment:8.2,rent_burden:33.7},
+    NM:{median_income:53992,poverty:18.4,unemployment:7.6,rent_burden:30.0},
+    NY:{median_income:72108,poverty:13.1,unemployment:8.3,rent_burden:35.2},
+    NC:{median_income:58082,poverty:14.0,unemployment:4.8,rent_burden:29.9},
+    ND:{median_income:68131,poverty:10.4,unemployment:3.8,rent_burden:25.4},
+    OH:{median_income:58642,poverty:13.5,unemployment:5.6,rent_burden:30.1},
+    OK:{median_income:55826,poverty:15.9,unemployment:4.1,rent_burden:28.0},
+    OR:{median_income:67058,poverty:11.1,unemployment:7.3,rent_burden:33.8},
+    PA:{median_income:63627,poverty:12.1,unemployment:6.9,rent_burden:30.1},
+    RI:{median_income:70305,poverty:11.1,unemployment:8.1,rent_burden:33.4},
+    SC:{median_income:57216,poverty:14.3,unemployment:4.6,rent_burden:29.8},
+    SD:{median_income:62732,poverty:11.4,unemployment:2.9,rent_burden:26.9},
+    TN:{median_income:56071,poverty:13.7,unemployment:4.4,rent_burden:29.5},
+    TX:{median_income:63826,poverty:13.8,unemployment:5.7,rent_burden:30.3},
+    UT:{median_income:79133,poverty:8.3,unemployment:4.0,rent_burden:28.7},
+    VT:{median_income:67674,poverty:10.7,unemployment:3.7,rent_burden:29.8},
+    VA:{median_income:80615,poverty:9.8,unemployment:5.1,rent_burden:30.1},
+    WA:{median_income:82400,poverty:10.0,unemployment:6.7,rent_burden:31.7},
+    WV:{median_income:51248,poverty:17.1,unemployment:6.3,rent_burden:27.8},
+    WI:{median_income:63293,poverty:10.8,unemployment:4.8,rent_burden:28.8},
+    WY:{median_income:67128,poverty:10.1,unemployment:5.6,rent_burden:25.0},
+  },
+  2023:{
+    AL:{median_income:57872,poverty:15.0,unemployment:2.9,rent_burden:30.5},
+    AK:{median_income:82103,poverty:10.0,unemployment:4.3,rent_burden:27.6},
+    AZ:{median_income:69056,poverty:12.4,unemployment:3.9,rent_burden:31.4},
+    AR:{median_income:53113,poverty:16.1,unemployment:3.2,rent_burden:28.7},
+    CA:{median_income:91905,poverty:11.2,unemployment:4.5,rent_burden:35.4},
+    CO:{median_income:84954,poverty:9.1,unemployment:3.3,rent_burden:32.1},
+    CT:{median_income:90213,poverty:9.4,unemployment:3.9,rent_burden:32.0},
+    DE:{median_income:72724,poverty:11.1,unemployment:4.4,rent_burden:31.2},
+    DC:{median_income:109627,poverty:13.0,unemployment:5.0,rent_burden:36.5},
+    FL:{median_income:63718,poverty:12.7,unemployment:2.8,rent_burden:35.8},
+    GA:{median_income:67224,poverty:13.8,unemployment:3.3,rent_burden:31.2},
+    HI:{median_income:92458,poverty:9.3,unemployment:3.3,rent_burden:36.8},
+    ID:{median_income:66474,poverty:9.6,unemployment:2.9,rent_burden:29.6},
+    IL:{median_income:75140,poverty:11.5,unemployment:4.4,rent_burden:31.9},
+    IN:{median_income:65893,poverty:11.5,unemployment:3.1,rent_burden:29.3},
+    IA:{median_income:68441,poverty:10.6,unemployment:2.8,rent_burden:28.2},
+    KS:{median_income:67857,poverty:11.4,unemployment:2.8,rent_burden:28.7},
+    KY:{median_income:60111,poverty:15.8,unemployment:4.3,rent_burden:28.9},
+    LA:{median_income:56552,poverty:19.0,unemployment:3.8,rent_burden:30.2},
+    ME:{median_income:70074,poverty:10.7,unemployment:3.1,rent_burden:30.1},
+    MD:{median_income:97332,poverty:7.8,unemployment:2.8,rent_burden:32.4},
+    MA:{median_income:96505,poverty:9.1,unemployment:3.4,rent_burden:34.0},
+    MI:{median_income:67410,poverty:13.1,unemployment:3.9,rent_burden:31.5},
+    MN:{median_income:84313,poverty:8.5,unemployment:2.8,rent_burden:28.9},
+    MS:{median_income:49111,poverty:19.7,unemployment:4.1,rent_burden:28.4},
+    MO:{median_income:63247,poverty:12.8,unemployment:2.7,rent_burden:29.5},
+    MT:{median_income:63466,poverty:12.3,unemployment:3.1,rent_burden:28.6},
+    NE:{median_income:71306,poverty:9.8,unemployment:2.3,rent_burden:27.9},
+    NV:{median_income:67510,poverty:12.5,unemployment:4.6,rent_burden:34.6},
+    NH:{median_income:92680,poverty:6.4,unemployment:2.6,rent_burden:29.4},
+    NJ:{median_income:97126,poverty:9.0,unemployment:4.2,rent_burden:33.9},
+    NM:{median_income:57169,poverty:17.6,unemployment:4.3,rent_burden:30.2},
+    NY:{median_income:78609,poverty:12.8,unemployment:4.1,rent_burden:35.4},
+    NC:{median_income:63882,poverty:13.5,unemployment:3.6,rent_burden:30.1},
+    ND:{median_income:73959,poverty:10.1,unemployment:2.0,rent_burden:25.5},
+    OH:{median_income:63746,poverty:13.0,unemployment:3.9,rent_burden:30.2},
+    OK:{median_income:58746,poverty:15.1,unemployment:3.1,rent_burden:28.2},
+    OR:{median_income:73632,poverty:10.8,unemployment:4.4,rent_burden:33.8},
+    PA:{median_income:69318,poverty:11.8,unemployment:3.9,rent_burden:30.3},
+    RI:{median_income:76358,poverty:10.8,unemployment:3.3,rent_burden:33.6},
+    SC:{median_income:62937,poverty:14.1,unemployment:3.1,rent_burden:30.1},
+    SD:{median_income:70226,poverty:10.4,unemployment:2.3,rent_burden:27.1},
+    TN:{median_income:62166,poverty:13.7,unemployment:3.1,rent_burden:29.6},
+    TX:{median_income:71040,poverty:13.3,unemployment:3.9,rent_burden:30.6},
+    UT:{median_income:88214,poverty:7.8,unemployment:2.7,rent_burden:28.8},
+    VT:{median_income:76589,poverty:10.0,unemployment:2.7,rent_burden:29.9},
+    VA:{median_income:87612,poverty:9.6,unemployment:2.9,rent_burden:30.2},
+    WA:{median_income:90325,poverty:9.4,unemployment:4.4,rent_burden:32.0},
+    WV:{median_income:54329,poverty:17.0,unemployment:4.3,rent_burden:27.9},
+    WI:{median_income:70996,poverty:9.9,unemployment:2.9,rent_burden:28.9},
+    WY:{median_income:73279,poverty:9.9,unemployment:3.7,rent_burden:25.1},
+  },
+  2024:{
+    AL:{median_income:59540,poverty:14.8,unemployment:3.1,rent_burden:30.6},
+    AK:{median_income:84200,poverty:9.8,unemployment:4.5,rent_burden:27.8},
+    AZ:{median_income:71300,poverty:12.2,unemployment:4.1,rent_burden:31.6},
+    AR:{median_income:54800,poverty:15.9,unemployment:3.3,rent_burden:28.8},
+    CA:{median_income:95100,poverty:11.0,unemployment:5.2,rent_burden:35.7},
+    CO:{median_income:87500,poverty:8.9,unemployment:3.8,rent_burden:32.4},
+    CT:{median_income:93400,poverty:9.2,unemployment:4.2,rent_burden:32.3},
+    DE:{median_income:74800,poverty:10.9,unemployment:4.6,rent_burden:31.4},
+    DC:{median_income:113000,poverty:12.7,unemployment:5.3,rent_burden:36.9},
+    FL:{median_income:65900,poverty:12.5,unemployment:3.4,rent_burden:36.2},
+    GA:{median_income:69100,poverty:13.6,unemployment:3.5,rent_burden:31.5},
+    HI:{median_income:95300,poverty:9.1,unemployment:3.5,rent_burden:37.2},
+    ID:{median_income:68400,poverty:9.4,unemployment:3.1,rent_burden:29.9},
+    IL:{median_income:77600,poverty:11.3,unemployment:4.6,rent_burden:32.2},
+    IN:{median_income:67800,poverty:11.3,unemployment:3.3,rent_burden:29.5},
+    IA:{median_income:70300,poverty:10.4,unemployment:3.0,rent_burden:28.4},
+    KS:{median_income:69800,poverty:11.2,unemployment:3.0,rent_burden:28.9},
+    KY:{median_income:61900,poverty:15.6,unemployment:4.5,rent_burden:29.1},
+    LA:{median_income:58200,poverty:18.8,unemployment:4.0,rent_burden:30.4},
+    ME:{median_income:72100,poverty:10.5,unemployment:3.3,rent_burden:30.3},
+    MD:{median_income:100200,poverty:7.6,unemployment:3.0,rent_burden:32.6},
+    MA:{median_income:99600,poverty:8.9,unemployment:3.6,rent_burden:34.3},
+    MI:{median_income:69400,poverty:12.9,unemployment:4.1,rent_burden:31.7},
+    MN:{median_income:86800,poverty:8.3,unemployment:3.0,rent_burden:29.1},
+    MS:{median_income:50700,poverty:19.5,unemployment:4.3,rent_burden:28.5},
+    MO:{median_income:65200,poverty:12.6,unemployment:2.9,rent_burden:29.7},
+    MT:{median_income:65300,poverty:12.1,unemployment:3.3,rent_burden:28.8},
+    NE:{median_income:73400,poverty:9.6,unemployment:2.5,rent_burden:28.1},
+    NV:{median_income:69500,poverty:12.3,unemployment:5.0,rent_burden:34.9},
+    NH:{median_income:95500,poverty:6.2,unemployment:2.8,rent_burden:29.6},
+    NJ:{median_income:100200,poverty:8.8,unemployment:4.4,rent_burden:34.1},
+    NM:{median_income:59100,poverty:17.4,unemployment:4.5,rent_burden:30.4},
+    NY:{median_income:81100,poverty:12.6,unemployment:4.3,rent_burden:35.7},
+    NC:{median_income:65800,poverty:13.3,unemployment:3.8,rent_burden:30.3},
+    ND:{median_income:76100,poverty:9.9,unemployment:2.2,rent_burden:25.7},
+    OH:{median_income:65700,poverty:12.8,unemployment:4.1,rent_burden:30.4},
+    OK:{median_income:60500,poverty:14.9,unemployment:3.3,rent_burden:28.4},
+    OR:{median_income:76000,poverty:10.6,unemployment:4.6,rent_burden:34.1},
+    PA:{median_income:71500,poverty:11.6,unemployment:4.1,rent_burden:30.5},
+    RI:{median_income:78700,poverty:10.6,unemployment:3.5,rent_burden:33.9},
+    SC:{median_income:64900,poverty:13.9,unemployment:3.3,rent_burden:30.3},
+    SD:{median_income:72300,poverty:10.2,unemployment:2.5,rent_burden:27.3},
+    TN:{median_income:64100,poverty:13.5,unemployment:3.3,rent_burden:29.8},
+    TX:{median_income:73300,poverty:13.1,unemployment:4.1,rent_burden:30.9},
+    UT:{median_income:90900,poverty:7.6,unemployment:2.9,rent_burden:29.0},
+    VT:{median_income:78900,poverty:9.8,unemployment:2.9,rent_burden:30.1},
+    VA:{median_income:90300,poverty:9.4,unemployment:3.1,rent_burden:30.4},
+    WA:{median_income:93200,poverty:9.2,unemployment:4.6,rent_burden:32.3},
+    WV:{median_income:56100,poverty:16.8,unemployment:4.5,rent_burden:28.1},
+    WI:{median_income:73200,poverty:9.7,unemployment:3.1,rent_burden:29.1},
+    WY:{median_income:75600,poverty:9.7,unemployment:3.9,rent_burden:25.3},
+  }
+};
+
+// Fix typo in 2021 WY
+if(ACS[2021]&&ACS[2021].WY&&ACS[2021].WY.median_income===undefined){
+  ACS[2021].WY={median_income:67128,poverty:10.1,unemployment:5.6,rent_burden:25.0};
+}
+
+const STATE_NAMES={AL:"Alabama",AK:"Alaska",AZ:"Arizona",AR:"Arkansas",CA:"California",
+  CO:"Colorado",CT:"Connecticut",DE:"Delaware",DC:"Washington D.C.",FL:"Florida",
+  GA:"Georgia",HI:"Hawaii",ID:"Idaho",IL:"Illinois",IN:"Indiana",IA:"Iowa",KS:"Kansas",
+  KY:"Kentucky",LA:"Louisiana",ME:"Maine",MD:"Maryland",MA:"Massachusetts",MI:"Michigan",
+  MN:"Minnesota",MS:"Mississippi",MO:"Missouri",MT:"Montana",NE:"Nebraska",NV:"Nevada",
+  NH:"New Hampshire",NJ:"New Jersey",NM:"New Mexico",NY:"New York",NC:"North Carolina",
+  ND:"North Dakota",OH:"Ohio",OK:"Oklahoma",OR:"Oregon",PA:"Pennsylvania",RI:"Rhode Island",
+  SC:"South Carolina",SD:"South Dakota",TN:"Tennessee",TX:"Texas",UT:"Utah",VT:"Vermont",
+  VA:"Virginia",WA:"Washington",WV:"West Virginia",WI:"Wisconsin",WY:"Wyoming"};
+
+const TREND_STATES = ['CA','NY','WA','TX','FL','IL','MA','DC'];
+let activeTrendStates = new Set(['CA','NY','WA','TX','FL']);
+
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════════ */
+const tip = document.getElementById('tip');
+function showTip(e,html){tip.innerHTML=html;tip.classList.add('show');moveTip(e);}
+function moveTip(e){const x=Math.min(e.clientX+14,window.innerWidth-250),y=e.clientY-10;tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){tip.classList.remove('show');}
+
+function getYearData(year){
+  const avail=[2010,2015,2019,2021,2023,2024];
+  return avail.reduce((prev,cur)=>Math.abs(cur-year)<Math.abs(prev-year)?cur:prev);
+}
+function getMW(state,year){
+  const hist=MW_HISTORY[state];if(!hist)return 7.25;
+  const yrs=Object.keys(hist).map(Number).sort((a,b)=>a-b);
+  let v=7.25;for(const y of yrs){if(y<=year)v=hist[y];}return v;
+}
+function getACS(state,year){
+  const ay=getYearData(year);
+  return ACS[ay]?.[state]||null;
+}
+function getMWTier(mw){
+  if(mw<=7.25)return'Federal floor ($7.25)';
+  if(mw<10)  return'Low ($7.26–$9.99)';
+  if(mw<13)  return'Mid ($10–$12.99)';
+  if(mw<16)  return'High ($13–$15.99)';
+  return'Very high ($16+)';
+}
+const MW_TIER_COLORS={'Federal floor ($7.25)':'#888','Low ($7.26–$9.99)':'#d4843a',
+  'Mid ($10–$12.99)':'#3a7abd','High ($13–$15.99)':'#2a6644','Very high ($16+)':'#b83232'};
+
+function pearsonR(xs,ys){
+  const n=xs.length;if(n<3)return 0;
+  const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;
+  let num=0,dx2=0,dy2=0;
+  for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;num+=dx*dy;dx2+=dx*dx;dy2+=dy*dy;}
+  return dx2*dy2>0?num/Math.sqrt(dx2*dy2):0;
+}
+function linReg(pts){
+  const n=pts.length;if(n<2)return{m:0,b:0};
+  const mx=pts.reduce((a,p)=>a+p.x,0)/n,my=pts.reduce((a,p)=>a+p.y,0)/n;
+  let num=0,den=0;
+  pts.forEach(p=>{num+=(p.x-mx)*(p.y-my);den+=(p.x-mx)**2;});
+  const m=den?num/den:0,b=my-m*mx;
+  return{m,b};
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+let curYear=2023, curYVar='poverty', curColorBy='region', curHighlight='', showTrend=true;
+let scatterChart=null, barChart=null, trendMWChart=null, trendACSChart=null, kaitzChart=null;
+let sortCol='minwage', sortDir=-1;
+
+Chart.defaults.font.family="'IBM Plex Sans',system-ui,sans-serif";
+Chart.defaults.color='#6b6760';
+Chart.defaults.borderColor='#ddd9d0';
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTROLS
+═══════════════════════════════════════════════════════════════ */
+function onYearChange(v){
+  curYear=+v;
+  document.getElementById('yearDisplay').textContent=v;
+  document.getElementById('kpi-year-label').textContent=v+' estimates';
+  document.getElementById('corr-year').textContent=v;
+  renderAll();
+}
+function onVarChange(){
+  curYVar=document.getElementById('yVarSelect').value;
+  curColorBy=document.getElementById('colorBySelect').value;
+  curHighlight=document.getElementById('highlightSelect').value;
+  const labels={poverty:'Poverty Rate (%)',median_income:'Median Household Income ($)',
+    unemployment:'Unemployment Rate (%)',rent_burden:'Rent Burden (% income)'};
+  document.getElementById('scatter-title').textContent=labels[curYVar];
+  document.getElementById('bar-color-by').textContent=curColorBy.replace('_',' ');
+  renderAll();
+}
+function setTrend(btn){
+  document.querySelectorAll('.pill[data-trend]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  showTrend=btn.dataset.trend==='1';
+  renderScatter();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUILD DATASET FOR CURRENT YEAR
+═══════════════════════════════════════════════════════════════ */
+function buildStateRows(year){
+  return Object.keys(STATE_NAMES).map(st=>{
+    const mw=getMW(st,year);
+    const acs=getACS(st,year)||{};
+    const inc=acs.median_income||null;
+    const kaitz=inc?Math.round((mw/(inc/2080))*100):null;
+    return{
+      state:st,name:STATE_NAMES[st],
+      region:getRegion(st),
+      minwage:mw,
+      median_income:inc,
+      poverty:acs.poverty||null,
+      unemployment:acs.unemployment||null,
+      rent_burden:acs.rent_burden||null,
+      kaitz,
+      mw_tier:getMWTier(mw),
+    };
+  }).filter(r=>r[curYVar]!==null);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KPIs
+═══════════════════════════════════════════════════════════════ */
+function renderKPIs(rows){
+  const mws=rows.map(r=>r.minwage).sort((a,b)=>a-b);
+  const mid=mws[Math.floor(mws.length/2)]||7.25;
+  const incs=rows.map(r=>r.median_income).filter(Boolean).sort((a,b)=>a-b);
+  const medInc=incs[Math.floor(incs.length/2)]||0;
+  const povs=rows.map(r=>r.poverty).filter(Boolean);
+  const avgPov=(povs.reduce((a,b)=>a+b,0)/povs.length).toFixed(1);
+  const unemps=rows.map(r=>r.unemployment).filter(Boolean);
+  const avgUnemp=(unemps.reduce((a,b)=>a+b,0)/unemps.length).toFixed(1);
+  const rents=rows.map(r=>r.rent_burden).filter(Boolean);
+  const avgRent=(rents.reduce((a,b)=>a+b,0)/rents.length).toFixed(1);
+  document.getElementById('kpi-med-mw').textContent='$'+mid.toFixed(2);
+  document.getElementById('kpi-income').textContent='$'+Math.round(medInc/1000)+'k';
+  document.getElementById('kpi-poverty').textContent=avgPov+'%';
+  document.getElementById('kpi-unemp').textContent=avgUnemp+'%';
+  document.getElementById('kpi-rent').textContent=avgRent+'%';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCATTER
+═══════════════════════════════════════════════════════════════ */
+const VAR_LABELS={poverty:'Poverty Rate (%)',median_income:'Median Household Income ($)',
+  unemployment:'Unemployment Rate (%)',rent_burden:'Rent Burden (% of income)'};
+const VAR_FORMAT={poverty:v=>v.toFixed(1)+'%',median_income:v=>'$'+v.toLocaleString(),
+  unemployment:v=>v.toFixed(1)+'%',rent_burden:v=>v.toFixed(1)+'%'};
+
+function getPointColor(row){
+  if(curColorBy==='region') return REGION_COLORS[row.region]||'#888';
+  if(curColorBy==='mw_tier') return MW_TIER_COLORS[row.mw_tier]||'#888';
+  return '#1a4a7a';
+}
+function buildLegend(rows){
+  const map={};
+  rows.forEach(r=>{
+    const key=curColorBy==='region'?r.region:curColorBy==='mw_tier'?r.mw_tier:'All States';
+    const col=getPointColor(r);
+    map[key]=col;
+  });
+  const el=document.getElementById('scatterLegend');
+  el.innerHTML=Object.entries(map).map(([k,c])=>
+    `<div class="legend-item"><span class="legend-dot" style="background:${c}"></span>${k}</div>`
+  ).join('');
+}
+
+function renderScatter(){
+  const rows=buildStateRows(curYear);
+  buildLegend(rows);
+  const pts=rows.map(r=>({
+    x:r.minwage,y:r[curYVar],
+    state:r.state,name:r.name,row:r,
+    backgroundColor:r.state===curHighlight?'#b83232':getPointColor(r),
+    radius:r.state===curHighlight?9:6,
+    borderWidth:r.state===curHighlight?2:0,
+    borderColor:'#b83232',
+  }));
+
+  // Regression
+  const reg=linReg(pts.map(p=>({x:p.x,y:p.y})));
+  const xs=pts.map(p=>p.x);
+  const minX=Math.min(...xs)-0.5,maxX=Math.max(...xs)+0.5;
+  const r2=pearsonR(pts.map(p=>p.x),pts.map(p=>p.y));
+  document.getElementById('scatter-sub').textContent=
+    `r = ${r2.toFixed(3)}  ·  R² = ${(r2**2).toFixed(3)}  ·  n = ${pts.length} states`;
+
+  if(scatterChart){scatterChart.destroy();scatterChart=null;}
+  const ctx=document.getElementById('scatterChart').getContext('2d');
+  const trendData=showTrend?[{x:minX,y:reg.m*minX+reg.b},{x:maxX,y:reg.m*maxX+reg.b}]:[];
+
+  scatterChart=new Chart(ctx,{
+    type:'scatter',
+    data:{
+      datasets:[
+        {label:'States',data:pts,
+          pointBackgroundColor:pts.map(p=>p.backgroundColor),
+          pointRadius:pts.map(p=>p.radius),
+          pointBorderWidth:pts.map(p=>p.borderWidth),
+          pointBorderColor:pts.map(p=>p.borderColor),
+          pointHoverRadius:9,
+        },
+        ...(showTrend?[{label:`OLS trend (r=${r2.toFixed(2)})`,
+          type:'line',data:trendData,
+          borderColor:'#b83232',borderWidth:1.5,borderDash:[5,4],
+          pointRadius:0,fill:false,tension:0,parsing:false}]:[]),
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label(ctx){
+              const p=ctx.raw;if(!p.name)return;
+              return[p.name,`Min wage: $${p.x.toFixed(2)}`,
+                `${VAR_LABELS[curYVar]}: ${VAR_FORMAT[curYVar](p.y)}`];
+            }
+          }
+        },
+      },
+      scales:{
+        x:{title:{display:true,text:'State Minimum Wage ($/hr)',font:{size:11}},
+          ticks:{callback:v=>'$'+v.toFixed(2)}},
+        y:{title:{display:true,text:VAR_LABELS[curYVar],font:{size:11}},
+          ticks:{callback:v=>curYVar==='median_income'?'$'+(v/1000).toFixed(0)+'k':v+'%'}},
+      }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BAR CHART — States ranked by min wage
+═══════════════════════════════════════════════════════════════ */
+function renderBar(){
+  const rows=buildStateRows(curYear).sort((a,b)=>b.minwage-a.minwage);
+  const labels=rows.map(r=>r.state);
+  const data=rows.map(r=>r.minwage);
+  const colors=rows.map(r=>{
+    if(r.state===curHighlight)return'#b83232';
+    return getPointColor(r);
+  });
+
+  if(barChart){barChart.destroy();barChart=null;}
+  const ctx=document.getElementById('barChart').getContext('2d');
+  barChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels,datasets:[
+      {data,backgroundColor:colors,borderRadius:3,borderWidth:0},
+      {type:'line',data:data.map(()=>7.25),label:'Federal ($7.25)',
+        borderColor:'#b83232',borderWidth:1.5,borderDash:[4,3],
+        pointRadius:0,fill:false,tension:0},
+    ]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' $'+ctx.parsed.x.toFixed(2)}},
+      },
+      scales:{
+        x:{min:0,max:22,ticks:{callback:v=>'$'+v}},
+        y:{ticks:{font:{size:10}}},
+      }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TREND CHARTS
+═══════════════════════════════════════════════════════════════ */
+const TREND_YEARS=[2010,2015,2018,2019,2020,2021,2022,2023,2024];
+const T_COLORS=['#1a4a7a','#b83232','#2a6644','#8a5c00','#1a6666','#6a3a8a','#555','#3a6a9a'];
+
+function buildTrendPills(){
+  const el=document.getElementById('trendStatePills');
+  el.innerHTML=TREND_STATES.map((st,i)=>{
+    const act=activeTrendStates.has(st)?'active':'';
+    return`<button class="pill ${act}" data-st="${st}"
+      style="border-right:none;${act?'background:'+T_COLORS[i]+';':'color:'+T_COLORS[i]+';border:1px solid '+T_COLORS[i]+';'}"
+      onclick="toggleTrendState(this,'${st}')">${st}</button>`;
+  }).join('');
+}
+
+function toggleTrendState(btn,st){
+  if(activeTrendStates.has(st)){if(activeTrendStates.size>1)activeTrendStates.delete(st);}
+  else activeTrendStates.add(st);
+  buildTrendPills();
+  renderTrends();
+}
+
+function renderTrends(){
+  const states=TREND_STATES.filter(s=>activeTrendStates.has(s));
+
+  // MW trend
+  if(trendMWChart){trendMWChart.destroy();trendMWChart=null;}
+  const ctx1=document.getElementById('trendMWChart').getContext('2d');
+  trendMWChart=new Chart(ctx1,{
+    type:'line',
+    data:{
+      labels:TREND_YEARS,
+      datasets:states.map((st,i)=>({
+        label:STATE_NAMES[st]||st,
+        data:TREND_YEARS.map(y=>getMW(st,y)),
+        borderColor:T_COLORS[i],backgroundColor:'transparent',
+        borderWidth:2,pointRadius:3,tension:0.1,
+      }))
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},
+      scales:{y:{ticks:{callback:v=>'$'+v.toFixed(2)}},x:{}}
+    }
+  });
+
+  // ACS trend
+  if(trendACSChart){trendACSChart.destroy();trendACSChart=null;}
+  const ctx2=document.getElementById('trendACSChart').getContext('2d');
+  const acsYears=[2010,2015,2019,2021,2023,2024];
+  trendACSChart=new Chart(ctx2,{
+    type:'line',
+    data:{
+      labels:acsYears,
+      datasets:states.map((st,i)=>({
+        label:STATE_NAMES[st]||st,
+        data:acsYears.map(y=>{const d=ACS[y]?.[st];return d?d[curYVar]:null;}),
+        borderColor:T_COLORS[i],backgroundColor:'transparent',
+        borderWidth:2,pointRadius:3,tension:0.1,spanGaps:true,
+      }))
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},
+      scales:{
+        y:{ticks:{callback:v=>curYVar==='median_income'?'$'+(v/1000).toFixed(0)+'k':v+'%'}},
+        x:{}
+      }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CORRELATION MATRIX
+═══════════════════════════════════════════════════════════════ */
+const VARS=['minwage','median_income','poverty','unemployment','rent_burden'];
+const VAR_SHORT={minwage:'Min Wage',median_income:'Income',poverty:'Poverty',unemployment:'Unemp.',rent_burden:'Rent Burden'};
+
+function corrColor(r){
+  // −1 → red, 0 → white, +1 → blue
+  if(r>0){const t=r;return`rgb(${Math.round(255-t*130)},${Math.round(255-t*90)},${Math.round(255-t*30)})`;}
+  else{const t=-r;return`rgb(${Math.round(255-t*30)},${Math.round(255-t*100)},${Math.round(255-t*150)})`;}
+}
+
+function renderCorrMatrix(){
+  const rows=buildStateRows(curYear);
+  const grid=document.getElementById('corrMatrix');
+  // Build header row + matrix
+  let html='<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">';
+  // column headers
+  VARS.forEach(v=>{html+=`<div style="text-align:center;font-family:var(--font-mono);font-size:9px;color:var(--ink3);padding:3px 1px">${VAR_SHORT[v]}</div>`;});
+  // rows
+  VARS.forEach(va=>{
+    VARS.forEach(vb=>{
+      const xs=rows.map(r=>r[va]).filter(v=>v!=null);
+      const ys=rows.map(r=>r[vb]).filter(v=>v!=null);
+      const paired=rows.filter(r=>r[va]!=null&&r[vb]!=null);
+      const r=va===vb?1:pearsonR(paired.map(r=>r[va]),paired.map(r=>r[vb]));
+      const bg=va===vb?'#f3f1ec':corrColor(r);
+      const textCol=Math.abs(r)>0.5?'#fff':'#333';
+      html+=`<div style="background:${bg};color:${textCol};border-radius:4px;
+        display:flex;align-items:center;justify-content:center;
+        height:42px;font-size:11px;font-weight:600;font-family:var(--font-mono);cursor:default;"
+        title="${VAR_SHORT[va]} × ${VAR_SHORT[vb]}: r = ${r.toFixed(3)}">
+        ${va===vb?'—':r.toFixed(2)}</div>`;
+    });
+  });
+  html+='</div>';
+  // Row labels
+  let labelHtml='<div style="display:grid;grid-template-rows:repeat(5,42px);gap:3px;margin-top:22px;">';
+  VARS.forEach(v=>{labelHtml+=`<div style="display:flex;align-items:center;font-family:var(--font-mono);font-size:9px;color:var(--ink3);padding-right:6px;text-align:right">${VAR_SHORT[v]}</div>`;});
+  labelHtml+='</div>';
+  grid.closest('.card').querySelector('div[style*="grid-template-columns:80px"]').children[0].innerHTML=labelHtml.replace('<div style="display:grid;','<div style="display:grid;').split('\n').join('');
+  grid.innerHTML=html;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KAITZ INDEX CHART
+═══════════════════════════════════════════════════════════════ */
+function renderKaitz(){
+  const rows=buildStateRows(curYear).filter(r=>r.kaitz).sort((a,b)=>b.kaitz-a.kaitz).slice(0,25);
+  if(kaitzChart){kaitzChart.destroy();kaitzChart=null;}
+  const ctx=document.getElementById('kaitzChart').getContext('2d');
+  kaitzChart=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:rows.map(r=>r.state),
+      datasets:[{
+        label:'Kaitz Index (%)',
+        data:rows.map(r=>r.kaitz),
+        backgroundColor:rows.map(r=>{
+          if(r.kaitz>=55)return'#b83232';
+          if(r.kaitz>=45)return'#2a6644';
+          if(r.kaitz>=35)return'#1a4a7a';
+          return'#aaa';
+        }),
+        borderRadius:3,borderWidth:0,
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y}%`}}},
+      scales:{
+        y:{min:0,max:80,ticks:{callback:v=>v+'%'},title:{display:true,text:'% of median wage',font:{size:10}}},
+        x:{ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DATA TABLE
+═══════════════════════════════════════════════════════════════ */
+function sortTable(col){
+  if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}
+  document.querySelectorAll('thead th').forEach(th=>{
+    th.classList.toggle('sorted',th.dataset.col===col);
+  });
+  renderTable();
+}
+
+function renderTable(){
+  const rows=buildStateRows(curYear);
+  rows.sort((a,b)=>{
+    const av=a[sortCol]??-Infinity,bv=b[sortCol]??-Infinity;
+    return typeof av==='string'?av.localeCompare(bv)*sortDir:(av-bv)*sortDir;
+  });
+  const maxMW=Math.max(...rows.map(r=>r.minwage));
+  const tbody=document.getElementById('tableBody');
+  tbody.innerHTML=rows.map(r=>{
+    const rColor=REGION_COLORS[r.region]||'#888';
+    const mwPct=Math.round((r.minwage/maxMW)*100);
+    const kaitz=r.kaitz?r.kaitz+'%':'—';
+    const highlight=r.state===curHighlight?'background:#fdf5f5;':'';
+    return`<tr style="${highlight}">
+      <td><strong>${r.state}</strong> <span style="color:var(--ink3);font-size:11px">${r.name}</span></td>
+      <td><span style="color:${rColor};font-size:11px;font-weight:500">${r.region}</span></td>
+      <td><div class="bar-cell">
+        <div class="mini-bar" style="width:${mwPct}px;background:${rColor}"></div>
+        <span style="font-family:var(--font-mono);font-weight:500">$${r.minwage.toFixed(2)}</span>
+      </div></td>
+      <td style="font-family:var(--font-mono)">$${r.median_income?r.median_income.toLocaleString():'—'}</td>
+      <td style="font-family:var(--font-mono);color:${r.poverty>17?'#b83232':r.poverty<10?'#2a6644':'inherit'}">${r.poverty?r.poverty.toFixed(1)+'%':'—'}</td>
+      <td style="font-family:var(--font-mono)">${r.unemployment?r.unemployment.toFixed(1)+'%':'—'}</td>
+      <td style="font-family:var(--font-mono);color:${r.rent_burden>34?'#b83232':'inherit'}">${r.rent_burden?r.rent_burden.toFixed(1)+'%':'—'}</td>
+      <td style="font-family:var(--font-mono)">${kaitz}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HIGHLIGHT DROPDOWN
+═══════════════════════════════════════════════════════════════ */
+function populateHighlight(){
+  const sel=document.getElementById('highlightSelect');
+  Object.entries(STATE_NAMES).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([abbr,name])=>{
+    const o=document.createElement('option');
+    o.value=abbr;o.textContent=`${abbr} — ${name}`;
+    sel.appendChild(o);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER ALL
+═══════════════════════════════════════════════════════════════ */
+function renderAll(){
+  const rows=buildStateRows(curYear);
+  renderKPIs(rows);
+  renderScatter();
+  renderBar();
+  renderTrends();
+  renderCorrMatrix();
+  renderKaitz();
+  renderTable();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  populateHighlight();
+  buildTrendPills();
+  renderAll();
+  // Wire up the corr matrix row labels properly
+  const container=document.querySelector('[style*="grid-template-columns:80px"]');
+  if(container){
+    let lh='';
+    VARS.forEach(v=>{lh+=`<div style="display:flex;align-items:center;height:45px;font-family:var(--font-mono);font-size:9px;color:var(--ink3);justify-content:flex-end;padding-right:8px">${VAR_SHORT[v]}</div>`;});
+    container.children[0].innerHTML=lh;
+  }
+});
+</script>
+</body>
+</html>

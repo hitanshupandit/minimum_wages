@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>U.S. Minimum Wage Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --bg:#0d0f14;--surface:#161922;--surface2:#1e2230;--border:#2a2f3e;
+  --accent:#f4c430;--accent2:#e07b39;--accent3:#5db8e8;
+  --text:#e8eaf0;--muted:#7a82a0;--green:#4ecb8d;--red:#e05c5c;
+  --font-head:'DM Serif Display',Georgia,serif;
+  --font-body:'DM Sans',system-ui,sans-serif;
+  --radius:12px;--shadow:0 4px 24px rgba(0,0,0,.45);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh}
+
+header{background:linear-gradient(135deg,#0d0f14 0%,#1a1f2e 60%,#0d1520 100%);border-bottom:1px solid var(--border);padding:40px 48px 32px;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;top:-60px;right:-60px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(244,196,48,.08) 0%,transparent 70%);pointer-events:none}
+.eyebrow{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;font-weight:600}
+header h1{font-family:var(--font-head);font-size:clamp(28px,5vw,46px);font-weight:400;line-height:1.1;color:#fff}
+header h1 em{font-style:italic;color:var(--accent)}
+.subtitle{margin-top:10px;color:var(--muted);font-size:14px;max-width:520px}
+.sources{margin-top:14px;display:flex;gap:16px;flex-wrap:wrap}
+.sources a{font-size:12px;color:var(--accent3);text-decoration:none;border:1px solid rgba(93,184,232,.3);padding:3px 10px;border-radius:20px;transition:background .2s}
+.sources a:hover{background:rgba(93,184,232,.1)}
+
+.kpi-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--border);border-bottom:1px solid var(--border)}
+.kpi{background:var(--surface);padding:20px 28px;display:flex;flex-direction:column;gap:4px}
+.kpi .label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi .value{font-family:var(--font-head);font-size:28px;color:var(--accent);line-height:1}
+.kpi .sub{font-size:12px;color:var(--muted)}
+
+main{padding:32px 48px;display:flex;flex-direction:column;gap:32px;max-width:1600px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.row-3{display:grid;grid-template-columns:2fr 1fr;gap:24px}
+.row-map{display:grid;grid-template-columns:3fr 2fr;gap:24px}
+@media(max-width:1100px){.row-2,.row-3,.row-map{grid-template-columns:1fr}main{padding:20px}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:var(--shadow)}
+.card-title{font-family:var(--font-head);font-size:18px;font-weight:400;color:#fff;margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.pill-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:6px 16px;border-radius:20px;font-size:13px;font-family:var(--font-body);cursor:pointer;transition:all .2s}
+.pill-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pill-btn.active{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+select,input[type=range]{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-family:var(--font-body);font-size:13px;cursor:pointer}
+select:focus{outline:none;border-color:var(--accent)}
+input[type=range]{padding:0;cursor:pointer;accent-color:var(--accent)}
+
+.chart-wrap{position:relative}
+canvas{width:100%!important}
+
+/* ── US MAP ── */
+.map-container{position:relative;width:100%}
+.map-container svg{width:100%;height:auto;display:block}
+.state-path{cursor:pointer;stroke:#0d0f14;stroke-width:0.8;transition:opacity .15s}
+.state-path:hover{opacity:.8;stroke:#fff;stroke-width:1.5}
+.state-path.selected{stroke:var(--accent);stroke-width:2;opacity:1}
+.map-legend{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-swatch{width:14px;height:14px;border-radius:3px;flex-shrink:0}
+
+/* ── MAP TOOLTIP ── */
+#mapTip{position:fixed;z-index:9999;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;pointer-events:none;opacity:0;transition:opacity .12s;box-shadow:var(--shadow);max-width:200px}
+#mapTip.show{opacity:1}
+#mapTip .tip-name{font-weight:600;color:#fff;margin-bottom:4px}
+#mapTip .tip-wage{font-family:var(--font-head);font-size:22px;color:var(--accent);line-height:1}
+#mapTip .tip-meta{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── COMPARISON PANEL ── */
+.compare-panel{display:flex;flex-direction:column;gap:12px}
+.compare-slot{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;cursor:pointer;transition:border-color .2s;position:relative}
+.compare-slot:hover{border-color:var(--accent3)}
+.compare-slot.filled{border-color:var(--accent)}
+.compare-slot .slot-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.compare-slot .slot-name{font-family:var(--font-head);font-size:16px;color:#fff}
+.compare-slot .slot-wage{font-family:var(--font-head);font-size:28px;color:var(--accent);line-height:1}
+.compare-slot .slot-meta{font-size:11px;color:var(--muted);margin-top:3px}
+.compare-slot .slot-clear{position:absolute;top:10px;right:12px;font-size:12px;color:var(--muted);cursor:pointer;line-height:1}
+.compare-slot .slot-clear:hover{color:var(--red)}
+.compare-empty{color:var(--muted);font-size:13px}
+.compare-diff{background:linear-gradient(135deg,rgba(244,196,48,.08),rgba(93,184,232,.06));border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:4px}
+.diff-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.diff-value{font-family:var(--font-head);font-size:24px}
+.diff-pos{color:var(--green)}
+.diff-neg{color:var(--red)}
+.diff-bar-wrap{margin-top:10px;display:flex;flex-direction:column;gap:4px}
+.diff-bar-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.diff-bar-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative;min-width:0}
+.diff-bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.diff-bar-label{min-width:36px;text-align:right;font-size:12px;color:var(--muted)}
+.hint-text{font-size:12px;color:var(--muted);text-align:center;padding:10px 0;line-height:1.5}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;max-height:420px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;background:var(--surface2);color:var(--muted);font-weight:500;text-align:left;padding:10px 14px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+th:hover{color:var(--accent)}
+td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04)}
+tr:hover td{background:rgba(255,255,255,.03)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-city{background:rgba(93,184,232,.15);color:var(--accent3)}
+.badge-county{background:rgba(244,196,48,.12);color:var(--accent)}
+.sparkline{display:inline-flex;align-items:flex-end;gap:2px;height:20px}
+.sparkline span{display:block;width:4px;background:var(--accent3);border-radius:1px}
+.search-wrap{position:relative}
+.search-wrap input{width:100%;padding:9px 14px 9px 36px;border-radius:8px;font-size:14px}
+.search-wrap .icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.empty{text-align:center;color:var(--muted);padding:40px;font-size:14px}
+
+footer{margin:0 48px 40px;padding-top:24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div id="mapTip"></div>
+
+<header>
+  <div class="eyebrow">U.S. Labor Policy · Interactive Explorer</div>
+  <h1>The <em>Minimum Wage</em><br>Landscape</h1>
+  <p class="subtitle">Federal, state, city &amp; county minimum wages. Click any state on the map to compare.</p>
+  <div class="sources">
+    <a href="https://github.com/benzipperer/historicalminwage" target="_blank">📊 Zipperer Dataset</a>
+    <a href="https://laborcenter.berkeley.edu/minimum-wage-living-wage-resources/" target="_blank">🏫 UC Berkeley Labor Center</a>
+  </div>
+</header>
+
+<div class="kpi-bar">
+  <div class="kpi"><span class="label">Federal Minimum</span><span class="value" id="kpi-federal">$7.25</span><span class="sub">Since July 2009</span></div>
+  <div class="kpi"><span class="label">Highest State</span><span class="value" id="kpi-highest-state">—</span><span class="sub" id="kpi-highest-state-name">—</span></div>
+  <div class="kpi"><span class="label">Local Jurisdictions</span><span class="value" id="kpi-localities">69</span><span class="sub">Cities &amp; Counties</span></div>
+  <div class="kpi"><span class="label">Highest Local</span><span class="value" id="kpi-highest-local">—</span><span class="sub" id="kpi-highest-local-name">—</span></div>
+  <div class="kpi"><span class="label">States Above Federal</span><span class="value" id="kpi-above-federal">—</span><span class="sub">out of 51 jurisdictions</span></div>
+</div>
+
+<main>
+
+  <!-- MAP + COMPARISON -->
+  <div class="row-map">
+    <div class="card">
+      <div class="card-title">State Minimum Wages</div>
+      <div class="card-sub">Click a state to select it · click again to compare two states</div>
+      <div class="map-container" id="mapWrap">
+        <!-- SVG map injected by JS -->
+      </div>
+      <div class="map-legend">
+        <span style="font-size:11px;color:var(--muted);margin-right:4px">$/hr:</span>
+        <div class="leg-item"><div class="leg-swatch" style="background:#1e3a2a"></div>$7.25 (federal)</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:#1e4a3e"></div>$7.26–$9.99</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:#1e4a6e"></div>$10–$12.99</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:#5a6a00"></div>$13–$15.99</div>
+        <div class="leg-item"><div class="leg-swatch" style="background:#8a4a00"></div>$16+</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">State Comparison</div>
+      <div class="card-sub" id="compare-sub">Click up to 2 states on the map</div>
+      <div class="compare-panel" id="comparePanel">
+        <div class="compare-slot" id="slot0">
+          <div class="slot-label">State A</div>
+          <div class="compare-empty hint-text">Click any state<br>on the map</div>
+        </div>
+        <div class="compare-slot" id="slot1">
+          <div class="slot-label">State B</div>
+          <div class="compare-empty hint-text">Click a second state<br>to compare</div>
+        </div>
+      </div>
+      <div id="compareDiff" style="display:none" class="compare-diff">
+        <div class="diff-label">Difference</div>
+        <div class="diff-value" id="diffValue">—</div>
+        <div class="diff-bar-wrap" id="diffBars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TREND CHART -->
+  <div class="row-3">
+    <div class="card">
+      <div class="card-title">Historical Minimum Wages Over Time</div>
+      <div class="card-sub">Federal floor vs. selected states · toggle individual states or show all that raised</div>
+      <div class="controls" id="trend-controls">
+        <button class="pill-btn active" data-key="federal" onclick="toggleTrend(this)">Federal</button>
+        <button class="pill-btn active" data-key="CA" onclick="toggleTrend(this)">CA</button>
+        <button class="pill-btn active" data-key="NY" onclick="toggleTrend(this)">NY</button>
+        <button class="pill-btn" data-key="WA" onclick="toggleTrend(this)">WA</button>
+        <button class="pill-btn" data-key="DC" onclick="toggleTrend(this)">DC</button>
+        <button class="pill-btn" data-key="FL" onclick="toggleTrend(this)">FL</button>
+        <button class="pill-btn" data-key="IL" onclick="toggleTrend(this)">IL</button>
+        <button class="pill-btn" data-key="MA" onclick="toggleTrend(this)">MA</button>
+        <button class="pill-btn" data-key="TX" onclick="toggleTrend(this)">TX</button>
+        <button class="pill-btn" id="allRaisersBtn" style="border-color:var(--green);color:var(--green)" onclick="toggleAllRaisers(this)">★ All 31 raisers</button>
+      </div>
+      <div id="allRaisersNote" style="display:none;font-size:11px;color:var(--muted);margin-bottom:8px">
+        Showing all states that raised above $7.25 · lighter lines = smaller raises · click individual buttons to deselect
+      </div>
+      <div class="chart-wrap" style="height:300px"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">State Minimum Wages Ranked</div>
+      <div class="card-sub">All 51 jurisdictions · adjust with slider</div>
+      <div class="controls" style="margin-bottom:12px">
+        <label style="font-size:12px;color:var(--muted)">Top
+          <input type="range" id="stateTopN" min="10" max="51" value="20" oninput="document.getElementById('stateTopNVal').textContent=this.value;renderStateBar()"/>
+          <span id="stateTopNVal">20</span> states
+        </label>
+      </div>
+      <div class="chart-wrap" style="height:280px"><canvas id="stateBarChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CALIFORNIA DEEP DIVE -->
+  <div class="card">
+    <div class="card-title">California — Historic Minimum Wage Deep Dive</div>
+    <div class="card-sub">Annual wage + year-on-year increase + distance above federal floor · 2000–2025</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <div class="controls" style="margin:0">
+        <button class="pill-btn active" data-cv="wage"   onclick="setCAView(this)">Wage ($/hr)</button>
+        <button class="pill-btn" data-cv="yoy"    onclick="setCAView(this)">Year-on-Year Increase</button>
+        <button class="pill-btn" data-cv="above"  onclick="setCAView(this)">Above Federal Floor</button>
+        <button class="pill-btn" data-cv="pct"    onclick="setCAView(this)">Cumulative % Rise</button>
+      </div>
+      <select id="caStateSelect" onchange="onCAStateChange()" style="margin-left:auto">
+        <option value="CA">California</option>
+        <option value="NY">New York</option>
+        <option value="WA">Washington</option>
+        <option value="DC">Washington D.C.</option>
+        <option value="CT">Connecticut</option>
+        <option value="NJ">New Jersey</option>
+        <option value="MA">Massachusetts</option>
+        <option value="OR">Oregon</option>
+        <option value="CO">Colorado</option>
+        <option value="IL">Illinois</option>
+        <option value="FL">Florida</option>
+        <option value="AZ">Arizona</option>
+        <option value="VT">Vermont</option>
+        <option value="MD">Maryland</option>
+        <option value="MN">Minnesota</option>
+      </select>
+    </div>
+    <div class="row-2" style="gap:16px;margin-bottom:16px">
+      <div style="background:var(--surface2);border-radius:8px;padding:14px 18px">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Current Rate</div>
+        <div id="ca-current" style="font-family:var(--font-head);font-size:28px;color:var(--accent)">—</div>
+        <div id="ca-current-sub" style="font-size:11px;color:var(--muted);margin-top:2px">—</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px 18px">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Total Increase Since 2000</div>
+        <div id="ca-total" style="font-family:var(--font-head);font-size:28px;color:var(--green)">—</div>
+        <div id="ca-total-sub" style="font-size:11px;color:var(--muted);margin-top:2px">—</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px 18px">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Above Federal Floor</div>
+        <div id="ca-above" style="font-family:var(--font-head);font-size:28px;color:var(--accent3)">—</div>
+        <div id="ca-above-sub" style="font-size:11px;color:var(--muted);margin-top:2px">—</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:14px 18px">
+        <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Increase Steps</div>
+        <div id="ca-steps" style="font-family:var(--font-head);font-size:28px;color:var(--accent2)">—</div>
+        <div id="ca-steps-sub" style="font-size:11px;color:var(--muted);margin-top:2px">since 2000</div>
+      </div>
+    </div>
+    <div class="chart-wrap" style="height:280px"><canvas id="caChart"></canvas></div>
+    <div style="margin-top:10px;font-size:11px;color:var(--muted)">
+      ▲ markers = years the minimum wage actually changed · dashed line = federal floor ($7.25)
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Local Minimum Wages — Cities &amp; Counties</div>
+    <div class="card-sub">UC Berkeley Labor Center Inventory · Last updated Dec 2025</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <div class="search-wrap" style="flex:1;min-width:200px;max-width:320px">
+        <span class="icon">🔍</span>
+        <input type="text" id="localSearch" placeholder="Search city or state…" oninput="renderLocalTable()"/>
+      </div>
+      <div class="controls" style="margin:0">
+        <button class="pill-btn active" data-lv="all" onclick="filterLevel(this)">All</button>
+        <button class="pill-btn" data-lv="City" onclick="filterLevel(this)">Cities</button>
+        <button class="pill-btn" data-lv="County" onclick="filterLevel(this)">Counties</button>
+      </div>
+      <select id="stateFilter" onchange="renderLocalTable()"><option value="">All States</option></select>
+      <select id="sortSelect" onchange="renderLocalTable()">
+        <option value="current_wage_desc">Wage ↓</option>
+        <option value="current_wage_asc">Wage ↑</option>
+        <option value="name_asc">Name A–Z</option>
+        <option value="increase_desc">Biggest Increase ↓</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Locality</th><th>State</th><th>Type</th>
+          <th>Initial Wage</th><th>Current Wage</th>
+          <th>Increase</th><th>Steps</th><th>Wage Path</th>
+        </tr></thead>
+        <tbody id="localTableBody"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted)" id="localCount"></div>
+  </div>
+
+  <!-- LOCAL BAR -->
+  <div class="card">
+    <div class="card-title">Top 20 Local Minimum Wages</div>
+    <div class="card-sub">Highest current wages among cities &amp; counties</div>
+    <div class="chart-wrap" style="height:320px"><canvas id="localBarChart"></canvas></div>
+  </div>
+
+</main>
+
+<footer>
+  <strong style="color:var(--text)">Data Sources</strong><br>
+  Federal &amp; State: Vaghul &amp; Zipperer (2022), v1.4.0. <a href="https://github.com/benzipperer/historicalminwage" style="color:var(--accent3)">github.com/benzipperer/historicalminwage</a><br>
+  Local: UC Berkeley Center for Labor Research and Education, <a href="https://laborcenter.berkeley.edu/minimum-wage-living-wage-resources/" style="color:var(--accent3)">Inventory of Local Minimum Wage Ordinances</a>, Dec 2025.
+</footer>
+
+<script>
+/* ── DATA ── */
+const STATE_DATA=[
+  {state:"AL",name:"Alabama",minwage:7.25},{state:"AK",name:"Alaska",minwage:11.91},
+  {state:"AZ",name:"Arizona",minwage:14.35},{state:"AR",name:"Arkansas",minwage:11.0},
+  {state:"CA",name:"California",minwage:16.50},{state:"CO",name:"Colorado",minwage:14.42},
+  {state:"CT",name:"Connecticut",minwage:16.35},{state:"DE",name:"Delaware",minwage:15.0},
+  {state:"DC",name:"Washington D.C.",minwage:17.50},{state:"FL",name:"Florida",minwage:13.0},
+  {state:"GA",name:"Georgia",minwage:7.25},{state:"HI",name:"Hawaii",minwage:14.0},
+  {state:"ID",name:"Idaho",minwage:7.25},{state:"IL",name:"Illinois",minwage:14.0},
+  {state:"IN",name:"Indiana",minwage:7.25},{state:"IA",name:"Iowa",minwage:7.25},
+  {state:"KS",name:"Kansas",minwage:7.25},{state:"KY",name:"Kentucky",minwage:7.25},
+  {state:"LA",name:"Louisiana",minwage:7.25},{state:"ME",name:"Maine",minwage:14.65},
+  {state:"MD",name:"Maryland",minwage:15.0},{state:"MA",name:"Massachusetts",minwage:15.0},
+  {state:"MI",name:"Michigan",minwage:10.33},{state:"MN",name:"Minnesota",minwage:10.85},
+  {state:"MS",name:"Mississippi",minwage:7.25},{state:"MO",name:"Missouri",minwage:12.30},
+  {state:"MT",name:"Montana",minwage:10.55},{state:"NE",name:"Nebraska",minwage:12.0},
+  {state:"NV",name:"Nevada",minwage:12.0},{state:"NH",name:"New Hampshire",minwage:7.25},
+  {state:"NJ",name:"New Jersey",minwage:15.49},{state:"NM",name:"New Mexico",minwage:12.0},
+  {state:"NY",name:"New York",minwage:16.0},{state:"NC",name:"North Carolina",minwage:7.25},
+  {state:"ND",name:"North Dakota",minwage:7.25},{state:"OH",name:"Ohio",minwage:10.45},
+  {state:"OK",name:"Oklahoma",minwage:7.25},{state:"OR",name:"Oregon",minwage:14.70},
+  {state:"PA",name:"Pennsylvania",minwage:7.25},{state:"RI",name:"Rhode Island",minwage:15.0},
+  {state:"SC",name:"South Carolina",minwage:7.25},{state:"SD",name:"South Dakota",minwage:11.20},
+  {state:"TN",name:"Tennessee",minwage:7.25},{state:"TX",name:"Texas",minwage:7.25},
+  {state:"UT",name:"Utah",minwage:7.25},{state:"VT",name:"Vermont",minwage:14.01},
+  {state:"VA",name:"Virginia",minwage:12.41},{state:"WA",name:"Washington",minwage:16.66},
+  {state:"WV",name:"West Virginia",minwage:8.75},{state:"WI",name:"Wisconsin",minwage:7.25},
+  {state:"WY",name:"Wyoming",minwage:7.25}
+];
+const STMAP=Object.fromEntries(STATE_DATA.map(s=>[s.state,s]));
+
+const UCB_EMBEDDED=[
+  {locality:"Alameda, CA",state:"CA",level:"City",initial_wage:12.0,current_wage:17.46,n_steps:6,wage_history:"12|13.5|15|15.75|16.52|17.02|17.46",wage_increase:5.46},
+  {locality:"Belmont, CA",state:"CA",level:"City",initial_wage:12.0,current_wage:18.95,n_steps:6,wage_history:"12|13.5|15|15.75|16.75|17.35|18.95",wage_increase:6.95},
+  {locality:"Berkeley, CA",state:"CA",level:"City",initial_wage:11.0,current_wage:19.18,n_steps:7,wage_history:"11|12.53|13.75|15|16.32|18.07|18.67|19.18",wage_increase:8.18},
+  {locality:"Burlingame, CA",state:"CA",level:"City",initial_wage:12.0,current_wage:17.86,n_steps:5,wage_history:"12|13.5|15|16.5|17.35|17.86",wage_increase:5.86},
+  {locality:"Cupertino, CA",state:"CA",level:"City",initial_wage:10.0,current_wage:18.70,n_steps:6,wage_history:"10|12|13.5|15|16.4|17.95|18.70",wage_increase:8.70},
+  {locality:"Daly City, CA",state:"CA",level:"City",initial_wage:13.0,current_wage:17.50,n_steps:4,wage_history:"13|15|16.07|17.07|17.50",wage_increase:4.50},
+  {locality:"East Palo Alto, CA",state:"CA",level:"City",initial_wage:13.0,current_wage:17.90,n_steps:4,wage_history:"13|15|16.07|17.07|17.90",wage_increase:4.90},
+  {locality:"El Cerrito, CA",state:"CA",level:"City",initial_wage:10.0,current_wage:18.82,n_steps:6,wage_history:"10|11.6|12.25|13.6|15|16.46|18.00|18.82",wage_increase:8.82},
+  {locality:"Emeryville, CA",state:"CA",level:"City",initial_wage:9.0,current_wage:19.90,n_steps:4,wage_history:"9|14.44|17.13|19.36|19.90",wage_increase:10.90},
+  {locality:"Foster City, CA",state:"CA",level:"City",initial_wage:15.0,current_wage:17.85,n_steps:4,wage_history:"15|15.75|16.5|17.25|17.85",wage_increase:2.85},
+  {locality:"Fremont, CA",state:"CA",level:"City",initial_wage:12.0,current_wage:17.75,n_steps:5,wage_history:"12|13.5|15|16.0|17.02|17.75",wage_increase:5.75},
+  {locality:"Half Moon Bay, CA",state:"CA",level:"City",initial_wage:13.0,current_wage:17.91,n_steps:4,wage_history:"13|15|16.07|17.07|17.91",wage_increase:4.91},
+  {locality:"Hayward, CA",state:"CA",level:"City",initial_wage:13.0,current_wage:17.79,n_steps:5,wage_history:"13|14|15|15.5|16.34|17.79",wage_increase:4.79},
+  {locality:"Los Angeles, CA",state:"CA",level:"City",initial_wage:10.0,current_wage:17.87,n_steps:9,wage_history:"10|10.5|12|13.25|14.25|15|16.04|16.78|17.28|17.87",wage_increase:7.87},
+  {locality:"Los Angeles County, CA",state:"CA",level:"County",initial_wage:10.0,current_wage:17.81,n_steps:9,wage_history:"10|10.5|12|13.25|14.25|15|16.04|16.90|17.27|17.81",wage_increase:7.81},
+  {locality:"Malibu, CA",state:"CA",level:"City",initial_wage:10.0,current_wage:17.27,n_steps:8,wage_history:"10|10.5|12|13.25|14.25|15|16.04|17.27",wage_increase:7.27},
+  {locality:"Menlo Park, CA",state:"CA",level:"City",initial_wage:12.0,current_wage:17.55,n_steps:5,wage_history:"12|13.5|15|16.5|17.10|17.55",wage_increase:5.55},
+  {locality:"Milpitas, CA",state:"CA",level:"City",initial_wage:10.5,current_wage:18.20,n_steps:6,wage_history:"10.5|11|12|13.5|15|16.65|18.20",wage_increase:7.70},
+  {locality:"Mountain View, CA",state:"CA",level:"City",initial_wage:10.3,current_wage:19.70,n_steps:7,wage_history:"10.3|11|13|15|17.1|18.75|19.20|19.70",wage_increase:9.40},
+  {locality:"Novato, CA",state:"CA",level:"City",initial_wage:13.0,current_wage:17.73,n_steps:5,wage_history:"13|14|15|16.04|17.13|17.73",wage_increase:4.73},
+  {locality:"Oakland, CA",state:"CA",level:"City",initial_wage:9.0,current_wage:17.34,n_steps:5,wage_history:"9|12.25|15|16.5|17.02|17.34",wage_increase:8.34},
+  {locality:"Palo Alto, CA",state:"CA",level:"City",initial_wage:9.0,current_wage:18.70,n_steps:7,wage_history:"9|11|12|13.5|15|16.45|17.95|18.70",wage_increase:9.70},
+  {locality:"Pasadena, CA",state:"CA",level:"City",initial_wage:10.0,current_wage:18.04,n_steps:8,wage_history:"10|10.5|12|13.25|14.25|15|16.11|17.50|18.04",wage_increase:8.04},
+  {locality:"Petaluma, CA",state:"CA",level:"City",initial_wage:12.0,current_wage:18.31,n_steps:5,wage_history:"12|13.5|15|17.06|17.97|18.31",wage_increase:6.31},
+  {locality:"Redwood City, CA",state:"CA",level:"City",initial_wage:11.0,current_wage:18.65,n_steps:6,wage_history:"11|13.5|15|16.5|17.40|18.15|18.65",wage_increase:7.65},
+  {locality:"Richmond, CA",state:"CA",level:"City",initial_wage:9.0,current_wage:19.18,n_steps:7,wage_history:"9|9.6|11.52|12.3|15|17.02|18.18|19.18",wage_increase:10.18},
+  {locality:"San Carlos, CA",state:"CA",level:"City",initial_wage:13.0,current_wage:17.75,n_steps:4,wage_history:"13|15|16.5|17.10|17.75",wage_increase:4.75},
+  {locality:"San Diego, CA",state:"CA",level:"City",initial_wage:9.0,current_wage:17.75,n_steps:6,wage_history:"9|9.75|10.5|11.5|16.85|17.25|17.75",wage_increase:8.75},
+  {locality:"San Francisco, CA",state:"CA",level:"City",initial_wage:11.05,current_wage:19.18,n_steps:8,wage_history:"11.05|12.25|13|14|15|16.99|18.07|18.67|19.18",wage_increase:8.13},
+  {locality:"San Jose, CA",state:"CA",level:"City",initial_wage:10.5,current_wage:18.45,n_steps:6,wage_history:"10.5|12|13.5|15|16.2|17.55|18.45",wage_increase:7.95},
+  {locality:"San Mateo, CA",state:"CA",level:"City",initial_wage:10.0,current_wage:18.60,n_steps:6,wage_history:"10|12|13.5|15|16.5|17.60|18.60",wage_increase:8.60},
+  {locality:"San Mateo County, CA",state:"CA",level:"County",initial_wage:15.5,current_wage:17.95,n_steps:3,wage_history:"15.5|16.5|17.06|17.95",wage_increase:2.45},
+  {locality:"Santa Clara, CA",state:"CA",level:"City",initial_wage:9.0,current_wage:18.70,n_steps:6,wage_history:"9|11|13|15|16.35|17.95|18.70",wage_increase:9.70},
+  {locality:"Santa Monica, CA",state:"CA",level:"City",initial_wage:10.0,current_wage:17.81,n_steps:9,wage_history:"10|10.5|12|13.25|14.25|15|16.04|16.90|17.27|17.81",wage_increase:7.81},
+  {locality:"Santa Rosa, CA",state:"CA",level:"City",initial_wage:13.0,current_wage:18.21,n_steps:4,wage_history:"13|15|17.06|17.97|18.21",wage_increase:5.21},
+  {locality:"Sonoma, CA",state:"CA",level:"City",initial_wage:12.0,current_wage:18.47,n_steps:5,wage_history:"12|13.5|15|16|17.97|18.47",wage_increase:6.47},
+  {locality:"South San Francisco, CA",state:"CA",level:"City",initial_wage:12.0,current_wage:18.15,n_steps:5,wage_history:"12|15|16.5|17.25|17.70|18.15",wage_increase:6.15},
+  {locality:"Sunnyvale, CA",state:"CA",level:"City",initial_wage:9.0,current_wage:19.50,n_steps:7,wage_history:"9|10.3|11|13|15|18.55|19.30|19.50",wage_increase:10.50},
+  {locality:"West Hollywood, CA",state:"CA",level:"City",initial_wage:14.0,current_wage:19.65,n_steps:6,wage_history:"14|15.5|16.5|17.5|19.08|19.36|19.65",wage_increase:5.65},
+  {locality:"Albuquerque, NM",state:"NM",level:"City",initial_wage:7.5,current_wage:12.5,n_steps:3,wage_history:"7.5|8.5|12.5",wage_increase:5.0},
+  {locality:"Boulder, CO",state:"CO",level:"City",initial_wage:14.42,current_wage:18.17,n_steps:4,wage_history:"14.42|15.57|16.82|18.17",wage_increase:3.75},
+  {locality:"Boulder County, CO",state:"CO",level:"County",initial_wage:13.65,current_wage:19.53,n_steps:5,wage_history:"13.65|15.69|16.57|17.99|19.53",wage_increase:5.88},
+  {locality:"Chicago, IL",state:"IL",level:"City",initial_wage:8.25,current_wage:16.2,n_steps:7,wage_history:"8.25|10|10.5|11|12|13|14|15|16.2",wage_increase:7.95},
+  {locality:"Cook County, IL",state:"IL",level:"County",initial_wage:8.25,current_wage:14,n_steps:5,wage_history:"8.25|10|11|12|13|14",wage_increase:5.75},
+  {locality:"Denver, CO",state:"CO",level:"City",initial_wage:11.1,current_wage:18.29,n_steps:6,wage_history:"11.1|12.85|14.77|15.87|17.29|18.29",wage_increase:7.19},
+  {locality:"Everett, WA",state:"WA",level:"City",initial_wage:16.66,current_wage:20.24,n_steps:2,wage_history:"16.66|20.24",wage_increase:3.58},
+  {locality:"Flagstaff, AZ",state:"AZ",level:"City",initial_wage:10,current_wage:17.4,n_steps:5,wage_history:"10|10.5|11|12|17.4",wage_increase:7.4},
+  {locality:"Howard County, MD",state:"MD",level:"County",initial_wage:12.5,current_wage:16.25,n_steps:5,wage_history:"12.5|14|15|16|16.25",wage_increase:3.75},
+  {locality:"King County, WA",state:"WA",level:"County",initial_wage:17.25,current_wage:20.29,n_steps:2,wage_history:"17.25|20.29",wage_increase:3.04},
+  {locality:"Minneapolis, MN",state:"MN",level:"City",initial_wage:7.75,current_wage:15.57,n_steps:6,wage_history:"7.75|10|11.25|12.25|13.25|15|15.57",wage_increase:7.82},
+  {locality:"Montgomery County, MD",state:"MD",level:"County",initial_wage:11.5,current_wage:17.15,n_steps:7,wage_history:"11.5|12.25|13|14|15|15.65|16.7|17.15",wage_increase:5.65},
+  {locality:"Portland, ME",state:"ME",level:"City",initial_wage:7.5,current_wage:15.5,n_steps:6,wage_history:"7.5|10.1|10.68|13|14|15|15.5",wage_increase:8.0},
+  {locality:"Prince George's County, MD",state:"MD",level:"County",initial_wage:7.25,current_wage:16.25,n_steps:5,wage_history:"7.25|8.4|9.55|10.75|16.25",wage_increase:9.0},
+  {locality:"Saint Paul, MN",state:"MN",level:"City",initial_wage:9.86,current_wage:15.57,n_steps:4,wage_history:"9.86|12.5|15|15.57",wage_increase:5.71},
+  {locality:"Santa Fe, NM",state:"NM",level:"City",initial_wage:5.15,current_wage:15,n_steps:4,wage_history:"5.15|8.5|9.5|15",wage_increase:9.85},
+  {locality:"Seattle, WA",state:"WA",level:"City",initial_wage:9.54,current_wage:20.76,n_steps:6,wage_history:"9.54|11|13|15|16.39|20.76",wage_increase:11.22},
+  {locality:"Tukwila, WA",state:"WA",level:"City",initial_wage:15.74,current_wage:20.29,n_steps:3,wage_history:"15.74|19.06|20.29",wage_increase:4.55},
+  {locality:"Washington D.C.",state:"DC",level:"City",initial_wage:8.25,current_wage:17.5,n_steps:9,wage_history:"8.25|9.5|10.5|11.5|12.5|13.25|15|16.1|17.5",wage_increase:9.25},
+];
+
+const FEDERAL_HIST=[
+  {year:1938,v:0.25},{year:1945,v:0.40},{year:1950,v:0.75},{year:1956,v:1.00},
+  {year:1961,v:1.15},{year:1963,v:1.25},{year:1967,v:1.40},{year:1968,v:1.60},
+  {year:1974,v:2.00},{year:1975,v:2.10},{year:1976,v:2.30},{year:1978,v:2.65},
+  {year:1979,v:2.90},{year:1980,v:3.10},{year:1981,v:3.35},{year:1990,v:3.80},
+  {year:1991,v:4.25},{year:1996,v:4.75},{year:1997,v:5.15},{year:2007,v:5.85},
+  {year:2008,v:6.55},{year:2009,v:7.25},{year:2025,v:7.25}
+];
+const STATE_HIST={
+  CA:[{year:2000,v:6.75},{year:2007,v:7.5},{year:2008,v:8.0},{year:2014,v:9.0},{year:2016,v:10.0},{year:2017,v:10.5},{year:2018,v:11.0},{year:2019,v:12.0},{year:2020,v:13.0},{year:2021,v:14.0},{year:2022,v:15.0},{year:2023,v:15.5},{year:2024,v:16.0},{year:2025,v:16.5}],
+  NY:[{year:2000,v:5.15},{year:2005,v:6.0},{year:2006,v:6.75},{year:2007,v:7.15},{year:2009,v:7.25},{year:2014,v:8.0},{year:2015,v:8.75},{year:2016,v:9.0},{year:2017,v:9.7},{year:2018,v:10.4},{year:2019,v:11.1},{year:2020,v:11.8},{year:2021,v:12.5},{year:2022,v:14.2},{year:2023,v:14.2},{year:2024,v:16.0}],
+  WA:[{year:2000,v:6.5},{year:2001,v:6.72},{year:2005,v:7.35},{year:2006,v:7.63},{year:2007,v:7.93},{year:2008,v:8.07},{year:2009,v:8.55},{year:2012,v:9.04},{year:2015,v:9.47},{year:2016,v:9.53},{year:2017,v:11.0},{year:2018,v:11.5},{year:2019,v:12.0},{year:2020,v:13.5},{year:2021,v:13.69},{year:2022,v:14.49},{year:2023,v:15.74},{year:2024,v:16.28},{year:2025,v:16.66}],
+  DC:[{year:2004,v:6.6},{year:2008,v:7.55},{year:2009,v:8.25},{year:2014,v:9.5},{year:2015,v:10.5},{year:2016,v:11.5},{year:2017,v:12.5},{year:2018,v:13.25},{year:2019,v:14.0},{year:2020,v:15.0},{year:2021,v:15.2},{year:2022,v:16.1},{year:2023,v:17.0},{year:2024,v:17.5}],
+  CT:[{year:2000,v:6.15},{year:2004,v:7.1},{year:2006,v:7.4},{year:2007,v:7.65},{year:2009,v:8.0},{year:2010,v:8.25},{year:2014,v:8.7},{year:2015,v:9.15},{year:2016,v:9.6},{year:2017,v:10.1},{year:2020,v:12.0},{year:2021,v:13.0},{year:2022,v:14.0},{year:2023,v:15.0},{year:2024,v:16.35}],
+  NJ:[{year:2000,v:5.15},{year:2005,v:6.15},{year:2006,v:7.15},{year:2009,v:7.25},{year:2014,v:8.25},{year:2019,v:10.0},{year:2020,v:11.0},{year:2021,v:12.0},{year:2022,v:13.0},{year:2023,v:14.13},{year:2024,v:15.49}],
+  DE:[{year:2000,v:5.65},{year:2007,v:7.15},{year:2009,v:7.25},{year:2014,v:7.75},{year:2015,v:8.25},{year:2019,v:9.25},{year:2021,v:10.5},{year:2022,v:11.75},{year:2023,v:13.25},{year:2024,v:15.0}],
+  MD:[{year:2000,v:5.15},{year:2007,v:6.15},{year:2009,v:7.25},{year:2014,v:8.0},{year:2015,v:8.25},{year:2018,v:10.1},{year:2020,v:11.0},{year:2021,v:11.75},{year:2022,v:12.5},{year:2023,v:13.25},{year:2024,v:15.0}],
+  MA:[{year:2000,v:6.75},{year:2007,v:7.5},{year:2008,v:8.0},{year:2015,v:9.0},{year:2016,v:10.0},{year:2017,v:11.0},{year:2018,v:12.0},{year:2019,v:12.75},{year:2020,v:13.5},{year:2021,v:14.25},{year:2022,v:15.0}],
+  RI:[{year:2000,v:6.15},{year:2004,v:6.75},{year:2006,v:7.1},{year:2007,v:7.4},{year:2013,v:7.75},{year:2014,v:8.0},{year:2015,v:9.0},{year:2019,v:10.5},{year:2020,v:11.5},{year:2021,v:12.25},{year:2022,v:13.0},{year:2023,v:14.0},{year:2024,v:15.0}],
+  OR:[{year:2000,v:6.5},{year:2003,v:6.9},{year:2005,v:7.25},{year:2007,v:7.8},{year:2009,v:8.4},{year:2016,v:9.75},{year:2017,v:10.25},{year:2018,v:10.75},{year:2019,v:11.25},{year:2020,v:12.0},{year:2022,v:13.5},{year:2024,v:14.7}],
+  ME:[{year:2000,v:5.15},{year:2006,v:6.5},{year:2007,v:7.0},{year:2009,v:7.5},{year:2017,v:9.0},{year:2018,v:10.0},{year:2019,v:11.0},{year:2020,v:12.0},{year:2021,v:12.15},{year:2022,v:13.8},{year:2023,v:14.15},{year:2024,v:14.65}],
+  CO:[{year:2000,v:5.15},{year:2007,v:6.85},{year:2009,v:7.28},{year:2017,v:9.3},{year:2018,v:10.2},{year:2019,v:11.1},{year:2020,v:12.0},{year:2022,v:12.56},{year:2023,v:13.65},{year:2024,v:14.42}],
+  AZ:[{year:2007,v:6.75},{year:2009,v:7.25},{year:2017,v:10.0},{year:2018,v:10.5},{year:2019,v:11.0},{year:2020,v:12.0},{year:2022,v:12.8},{year:2023,v:13.85},{year:2024,v:14.35}],
+  VT:[{year:2000,v:5.75},{year:2004,v:7.0},{year:2007,v:7.53},{year:2009,v:8.06},{year:2015,v:9.15},{year:2016,v:9.6},{year:2017,v:10.0},{year:2018,v:10.5},{year:2019,v:10.96},{year:2020,v:11.75},{year:2021,v:12.55},{year:2022,v:13.18},{year:2023,v:13.67},{year:2024,v:14.01}],
+  HI:[{year:2000,v:5.75},{year:2007,v:7.25},{year:2015,v:7.75},{year:2016,v:8.5},{year:2017,v:9.25},{year:2018,v:10.1},{year:2022,v:12.0},{year:2023,v:14.0},{year:2024,v:14.0}],
+  IL:[{year:2000,v:5.15},{year:2004,v:5.5},{year:2005,v:6.5},{year:2008,v:7.5},{year:2009,v:8.0},{year:2011,v:8.25},{year:2020,v:9.25},{year:2021,v:10.0},{year:2022,v:12.0},{year:2023,v:13.0},{year:2024,v:14.0},{year:2025,v:15.0}],
+  FL:[{year:2000,v:5.15},{year:2005,v:6.15},{year:2009,v:7.25},{year:2021,v:8.65},{year:2022,v:10.0},{year:2023,v:12.0},{year:2024,v:13.0}],
+  VA:[{year:2000,v:5.15},{year:2009,v:7.25},{year:2021,v:9.5},{year:2022,v:11.0},{year:2023,v:12.0},{year:2024,v:12.41}],
+  MO:[{year:2000,v:5.15},{year:2007,v:6.5},{year:2009,v:7.25},{year:2015,v:7.65},{year:2019,v:8.6},{year:2020,v:9.45},{year:2021,v:10.3},{year:2022,v:11.15},{year:2023,v:12.0},{year:2024,v:12.3}],
+  NE:[{year:2000,v:5.15},{year:2009,v:7.25},{year:2015,v:8.0},{year:2016,v:9.0},{year:2022,v:10.5},{year:2023,v:11.0},{year:2024,v:12.0}],
+  NV:[{year:2000,v:5.15},{year:2006,v:6.15},{year:2009,v:7.25},{year:2010,v:8.25},{year:2021,v:8.75},{year:2022,v:9.5},{year:2023,v:10.25},{year:2024,v:12.0}],
+  NM:[{year:2000,v:4.25},{year:2009,v:7.5},{year:2020,v:9.0},{year:2021,v:10.5},{year:2022,v:11.5},{year:2023,v:12.0},{year:2024,v:12.0}],
+  AK:[{year:2000,v:5.65},{year:2003,v:7.15},{year:2009,v:7.25},{year:2013,v:7.75},{year:2014,v:8.75},{year:2015,v:9.75},{year:2016,v:9.89},{year:2017,v:9.8},{year:2018,v:9.84},{year:2019,v:10.19},{year:2020,v:10.34},{year:2022,v:10.34},{year:2023,v:10.85},{year:2024,v:11.73}],
+  SD:[{year:2000,v:5.15},{year:2009,v:7.25},{year:2015,v:8.5},{year:2016,v:8.55},{year:2017,v:8.65},{year:2018,v:8.85},{year:2019,v:9.1},{year:2020,v:9.3},{year:2021,v:9.45},{year:2022,v:9.95},{year:2023,v:10.8},{year:2024,v:11.2}],
+  AR:[{year:2000,v:5.15},{year:2009,v:7.25},{year:2015,v:8.0},{year:2016,v:8.5},{year:2019,v:9.25},{year:2020,v:10.0},{year:2021,v:11.0},{year:2024,v:11.0}],
+  MN:[{year:2000,v:5.15},{year:2009,v:7.25},{year:2014,v:8.0},{year:2015,v:9.0},{year:2018,v:9.65},{year:2019,v:9.86},{year:2020,v:10.0},{year:2022,v:10.33},{year:2023,v:10.59},{year:2024,v:10.85}],
+  MT:[{year:2000,v:5.15},{year:2007,v:6.15},{year:2009,v:7.25},{year:2015,v:8.05},{year:2022,v:9.2},{year:2023,v:9.95},{year:2024,v:10.55}],
+  OH:[{year:2000,v:4.25},{year:2006,v:6.85},{year:2008,v:7.1},{year:2009,v:7.3},{year:2015,v:8.1},{year:2018,v:8.3},{year:2022,v:9.3},{year:2023,v:10.1},{year:2024,v:10.45}],
+  MI:[{year:2000,v:5.15},{year:2006,v:6.95},{year:2008,v:7.4},{year:2014,v:8.15},{year:2015,v:8.5},{year:2018,v:9.25},{year:2020,v:9.65},{year:2023,v:10.1},{year:2024,v:10.33}],
+  WV:[{year:2000,v:5.15},{year:2009,v:7.25},{year:2015,v:8.0},{year:2016,v:8.75},{year:2024,v:8.75}],
+  TX:[{year:2000,v:5.15},{year:2009,v:7.25}],
+};
+const COLORS=['#f4c430','#5db8e8','#4ecb8d','#e07b39','#c97de0','#e05c5c','#7ae0c9','#e0b05c'];
+
+/* ── MAP STATE ── */
+let selectedStates=[];
+let trendChart=null,localBarChart=null,stateBarChart=null;
+let activeTrendKeys=new Set(['federal','CA','NY']);
+let activeLevelFilter='all';
+
+/* ── WAGE COLOR ── */
+function wageColor(w){
+  if(w<=7.25)return'#1e3a2a';
+  if(w<10)  return'#1e4a3e';
+  if(w<13)  return'#1e4a6e';
+  if(w<16)  return'#5a6a00';
+  return'#8a4a00';
+}
+
+/* ── KPIs ── */
+function updateKPIs(){
+  const sorted=[...STATE_DATA].sort((a,b)=>b.minwage-a.minwage);
+  const above=STATE_DATA.filter(s=>s.minwage>7.25).length;
+  const topLocal=[...UCB_EMBEDDED].sort((a,b)=>b.current_wage-a.current_wage)[0];
+  document.getElementById('kpi-highest-state').textContent='$'+sorted[0].minwage.toFixed(2);
+  document.getElementById('kpi-highest-state-name').textContent=sorted[0].name;
+  document.getElementById('kpi-localities').textContent=UCB_EMBEDDED.length;
+  document.getElementById('kpi-highest-local').textContent='$'+topLocal.current_wage.toFixed(2);
+  document.getElementById('kpi-highest-local-name').textContent=topLocal.locality;
+  document.getElementById('kpi-above-federal').textContent=above;
+}
+
+/* ── SVG MAP (Albers-like simplified US) ── */
+/* State paths use simplified but geographically correct positions */
+const STATE_PATHS={
+  AL:"M 520 290 L 545 290 L 550 370 L 530 375 L 515 355 Z",
+  AK:"M 80 370 L 180 370 L 195 420 L 165 445 L 110 435 L 75 405 Z",
+  AZ:"M 155 265 L 215 265 L 220 340 L 155 340 Z",
+  AR:"M 480 275 L 525 275 L 525 315 L 480 315 Z",
+  CA:"M 80 185 L 130 175 L 155 265 L 120 340 L 80 310 Z",
+  CO:"M 215 230 L 305 230 L 305 275 L 215 275 Z",
+  CT:"M 650 175 L 675 175 L 675 195 L 650 195 Z",
+  DE:"M 640 205 L 655 205 L 655 225 L 640 225 Z",
+  DC:"M 628 218 L 635 218 L 635 226 L 628 226 Z",
+  FL:"M 530 360 L 590 355 L 605 410 L 570 430 L 530 400 Z",
+  GA:"M 545 290 L 590 290 L 590 350 L 550 360 L 530 355 Z",
+  HI:"M 200 430 L 260 430 L 260 455 L 200 455 Z",
+  ID:"M 155 130 L 215 130 L 215 215 L 175 215 L 155 185 Z",
+  IL:"M 490 195 L 525 195 L 525 270 L 490 270 Z",
+  IN:"M 525 195 L 555 195 L 555 260 L 525 260 Z",
+  IA:"M 440 185 L 490 185 L 490 225 L 440 225 Z",
+  KS:"M 345 250 L 435 250 L 435 285 L 345 285 Z",
+  KY:"M 525 255 L 600 255 L 600 280 L 525 280 Z",
+  LA:"M 460 340 L 510 340 L 520 380 L 490 390 L 455 375 Z",
+  ME:"M 680 125 L 710 125 L 710 165 L 680 165 Z",
+  MD:"M 605 215 L 640 215 L 640 235 L 605 235 Z",
+  MA:"M 650 155 L 700 155 L 700 175 L 650 175 Z",
+  MI:"M 535 145 L 580 145 L 580 195 L 535 195 Z",
+  MN:"M 415 125 L 465 125 L 465 185 L 415 185 Z",
+  MS:"M 490 295 L 525 295 L 525 375 L 495 378 L 485 355 Z",
+  MO:"M 435 250 L 490 250 L 490 295 L 435 295 Z",
+  MT:"M 155 100 L 305 100 L 305 155 L 155 155 Z",
+  NE:"M 340 205 L 435 205 L 435 250 L 340 250 Z",
+  NV:"M 115 195 L 160 185 L 175 265 L 155 265 L 115 260 Z",
+  NH:"M 660 140 L 680 140 L 680 175 L 660 175 Z",
+  NJ:"M 635 185 L 655 185 L 655 210 L 635 210 Z",
+  NM:"M 215 270 L 300 270 L 300 340 L 215 340 Z",
+  NY:"M 590 145 L 650 145 L 650 195 L 590 195 Z",
+  NC:"M 560 265 L 640 265 L 645 290 L 560 290 Z",
+  ND:"M 310 100 L 415 100 L 415 140 L 310 140 Z",
+  OH:"M 555 195 L 600 195 L 600 245 L 555 245 Z",
+  OK:"M 340 285 L 460 285 L 460 325 L 340 325 Z",
+  OR:"M 80 130 L 155 130 L 155 185 L 80 185 Z",
+  PA:"M 575 185 L 640 185 L 640 220 L 575 220 Z",
+  RI:"M 675 170 L 690 170 L 690 185 L 675 185 Z",
+  SC:"M 570 295 L 610 295 L 615 330 L 575 335 Z",
+  SD:"M 310 140 L 415 140 L 415 185 L 340 185 L 310 185 Z",
+  TN:"M 490 270 L 580 268 L 580 290 L 490 292 Z",
+  TX:"M 300 295 L 450 295 L 460 390 L 400 410 L 300 370 Z",
+  UT:"M 175 210 L 220 210 L 220 275 L 175 275 Z",
+  VT:"M 650 130 L 665 130 L 665 160 L 650 160 Z",
+  VA:"M 570 240 L 640 238 L 645 265 L 570 267 Z",
+  WA:"M 80 95 L 155 95 L 155 135 L 80 135 Z",
+  WV:"M 575 220 L 615 218 L 620 255 L 575 255 Z",
+  WI:"M 460 140 L 515 140 L 520 195 L 460 195 Z",
+  WY:"M 215 155 L 310 155 L 310 210 L 215 210 Z",
+};
+/* Label positions for state abbreviations */
+const STATE_LABEL_POS={
+  AL:[533,330],AK:[130,405],AZ:[183,305],AR:[502,293],CA:[107,255],
+  CO:[258,252],CT:[660,185],DE:[645,215],DC:[629,221],FL:[562,390],
+  GA:[562,318],HI:[228,442],ID:[183,172],IL:[506,232],IN:[538,227],
+  IA:[463,205],KS:[388,267],KY:[560,267],LA:[484,362],ME:[692,145],
+  MD:[620,225],MA:[672,165],MI:[555,170],MN:[438,155],MS:[505,335],
+  MO:[460,272],MT:[228,127],NE:[385,227],NV:[140,228],NH:[668,157],
+  NJ:[643,197],NM:[255,305],NY:[618,170],NC:[600,277],ND:[360,120],
+  OH:[576,220],OK:[398,305],OR:[115,157],PA:[606,202],RI:[680,177],
+  SC:[590,312],SD:[360,162],TN:[533,280],TX:[377,348],UT:[196,242],
+  VT:[656,145],VA:[605,252],WA:[115,115],WV:[594,237],WI:[487,167],WY:[260,182],
+};
+
+function buildMap(){
+  const wrap=document.getElementById('mapWrap');
+  let svg=`<svg viewBox="70 90 660 380" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">`;
+  STATE_DATA.forEach(s=>{
+    const path=STATE_PATHS[s.state];
+    if(!path)return;
+    const fill=wageColor(s.minwage);
+    svg+=`<path class="state-path" id="path-${s.state}" d="${path}" fill="${fill}"
+      data-state="${s.state}"
+      onmouseenter="onStateHover(event,'${s.state}')"
+      onmouseleave="onStateLeave()"
+      onclick="onStateClick('${s.state}')"/>`;
+  });
+  /* State labels */
+  STATE_DATA.forEach(s=>{
+    const pos=STATE_LABEL_POS[s.state];
+    if(!pos)return;
+    svg+=`<text x="${pos[0]}" y="${pos[1]}" text-anchor="middle" dominant-baseline="central"
+      style="font-size:7px;font-family:var(--font-body);fill:rgba(255,255,255,.7);pointer-events:none;user-select:none">${s.state}</text>`;
+  });
+  svg+=`</svg>`;
+  wrap.innerHTML=svg;
+}
+
+/* ── MAP INTERACTIONS ── */
+const tip=document.getElementById('mapTip');
+function onStateHover(e,abbr){
+  const s=STMAP[abbr];if(!s)return;
+  tip.innerHTML=`<div class="tip-name">${s.name}</div><div class="tip-wage">$${s.minwage.toFixed(2)}/hr</div><div class="tip-meta">${s.minwage===7.25?'At federal floor':'Above federal floor'}</div>`;
+  tip.classList.add('show');
+  const x=Math.min(e.clientX+14,window.innerWidth-210);
+  tip.style.left=x+'px';tip.style.top=(e.clientY-10)+'px';
+}
+function onStateLeave(){tip.classList.remove('show');}
+function onStateClick(abbr){
+  const idx=selectedStates.indexOf(abbr);
+  if(idx>=0){
+    selectedStates.splice(idx,1);
+    document.getElementById('path-'+abbr)?.classList.remove('selected');
+  } else {
+    if(selectedStates.length>=2){
+      const removed=selectedStates.shift();
+      document.getElementById('path-'+removed)?.classList.remove('selected');
+    }
+    selectedStates.push(abbr);
+    document.getElementById('path-'+abbr)?.classList.add('selected');
+  }
+  updateCompare();
+}
+
+/* ── COMPARE PANEL ── */
+/* ── helpers for local wages ── */
+function getLocals(stateAbbr){
+  return UCB_EMBEDDED
+    .filter(r=>r.state===stateAbbr)
+    .sort((a,b)=>b.current_wage-a.current_wage);
+}
+function localBadge(w,stateW){
+  const premium=(w-stateW).toFixed(2);
+  const pct=((w-stateW)/stateW*100).toFixed(0);
+  return `<span style="font-size:10px;background:rgba(78,203,141,.12);color:var(--green);
+    border-radius:3px;padding:1px 5px;margin-left:4px">+$${premium} (${pct}%)</span>`;
+}
+function renderLocalBars(locals, stateW, accentColor){
+  if(!locals.length) return '';
+  const MAX_WAGE = 25;
+  const rows = locals.slice(0,5).map(r=>{
+    const prem = r.current_wage > stateW;
+    const badge = prem ? localBadge(r.current_wage, stateW) : '';
+    const shortName = r.locality.replace(/,\s*[A-Z]{2}.*$/,'');
+    const levelDot = r.level==='County'
+      ? `<span style="font-size:9px;color:var(--accent);margin-right:3px">◆</span>`
+      : `<span style="font-size:9px;color:var(--accent3);margin-right:3px">●</span>`;
+    return `<div class="diff-bar-row" style="margin-top:5px">
+      <span style="min-width:100px;font-size:11px;color:var(--muted);display:flex;align-items:center">
+        ${levelDot}${shortName}${badge}
+      </span>
+      <div class="diff-bar-track">
+        <div class="diff-bar-fill" style="width:${(stateW/MAX_WAGE*100).toFixed(1)}%;background:rgba(122,130,160,.2)"></div>
+        <div class="diff-bar-fill" style="position:absolute;top:0;left:0;width:${(r.current_wage/MAX_WAGE*100).toFixed(1)}%;background:${accentColor};opacity:.85"></div>
+      </div>
+      <span class="diff-bar-label" style="color:${accentColor}">$${r.current_wage.toFixed(2)}</span>
+    </div>`;
+  }).join('');
+
+  const more = locals.length>5
+    ? `<div style="font-size:11px;color:var(--muted);margin-top:5px;padding-left:4px">+${locals.length-5} more localities…</div>`
+    : '';
+
+  return `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2,#1e2230)">
+    <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">
+      Local ordinances (${locals.length})
+      <span style="margin-left:8px;font-size:10px;color:var(--muted);font-weight:400">● city &nbsp;◆ county</span>
+    </div>
+    ${rows}${more}
+  </div>`;
+}
+
+function updateCompare(){
+  const [a,b]=selectedStates.map(s=>STMAP[s]||null);
+  const s0=document.getElementById('slot0');
+  const s1=document.getElementById('slot1');
+  const diff=document.getElementById('compareDiff');
+
+  function renderSlot(el,label,data,accentColor){
+    if(!data){
+      el.className='compare-slot';
+      el.innerHTML=`<div class="slot-label">${label}</div><div class="compare-empty hint-text">Click any state<br>on the map</div>`;
+      return;
+    }
+    const region=data.minwage>7.25?'Above federal':'At federal floor';
+    const locals=getLocals(data.state);
+    const localSection=renderLocalBars(locals, data.minwage, accentColor);
+    el.className='compare-slot filled';
+    el.innerHTML=`<div class="slot-label">${label}</div>
+      <div class="slot-name">${data.name}</div>
+      <div class="slot-wage">$${data.minwage.toFixed(2)}<span style="font-size:13px;color:var(--muted)">/hr</span></div>
+      <div class="slot-meta">${region} · ${data.state}${locals.length?` · <span style="color:var(--green)">${locals.length} local ord.</span>`:''}</div>
+      ${localSection}
+      <div class="slot-clear" onclick="clearSlot('${data.state}')">✕</div>`;
+  }
+  renderSlot(s0,'State A',a||null,'var(--accent)');
+  renderSlot(s1,'State B',b||null,'var(--accent3)');
+
+  if(a&&b){
+    const delta=(b.minwage-a.minwage);
+    const absDelta=Math.abs(delta).toFixed(2);
+    const pct=((Math.abs(delta)/a.minwage)*100).toFixed(1);
+    diff.style.display='block';
+    document.getElementById('diffValue').innerHTML=
+      `<span class="${delta>=0?'diff-pos':'diff-neg'}">${delta>=0?'+':'-'}$${absDelta}/hr</span>
+       <span style="font-size:13px;color:var(--muted);margin-left:6px">(${pct}%)</span>`;
+
+    /* State bars + highest local bars side by side */
+    const aLocals=getLocals(a.state), bLocals=getLocals(b.state);
+    const aTopLocal=aLocals[0]||null, bTopLocal=bLocals[0]||null;
+    const MAX=25;
+    let rows=`
+      <div class="diff-bar-row">
+        <span style="min-width:100px;font-size:12px;color:var(--muted)">${a.state} state</span>
+        <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${(a.minwage/MAX*100).toFixed(1)}%;background:var(--accent)"></div></div>
+        <span class="diff-bar-label">$${a.minwage.toFixed(2)}</span>
+      </div>`;
+    if(aTopLocal) rows+=`
+      <div class="diff-bar-row">
+        <span style="min-width:100px;font-size:11px;color:var(--muted);padding-left:10px">↳ ${aTopLocal.locality.replace(/,\s*[A-Z]{2}.*$/,'')}</span>
+        <div class="diff-bar-track">
+          <div class="diff-bar-fill" style="width:${(a.minwage/MAX*100).toFixed(1)}%;background:rgba(244,196,48,.2)"></div>
+          <div class="diff-bar-fill" style="position:absolute;top:0;left:0;width:${(aTopLocal.current_wage/MAX*100).toFixed(1)}%;background:var(--accent);opacity:.6"></div>
+        </div>
+        <span class="diff-bar-label" style="color:var(--accent)">$${aTopLocal.current_wage.toFixed(2)}</span>
+      </div>`;
+    rows+=`
+      <div class="diff-bar-row" style="margin-top:4px">
+        <span style="min-width:100px;font-size:12px;color:var(--muted)">${b.state} state</span>
+        <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${(b.minwage/MAX*100).toFixed(1)}%;background:var(--accent3)"></div></div>
+        <span class="diff-bar-label">$${b.minwage.toFixed(2)}</span>
+      </div>`;
+    if(bTopLocal) rows+=`
+      <div class="diff-bar-row">
+        <span style="min-width:100px;font-size:11px;color:var(--muted);padding-left:10px">↳ ${bTopLocal.locality.replace(/,\s*[A-Z]{2}.*$/,'')}</span>
+        <div class="diff-bar-track">
+          <div class="diff-bar-fill" style="width:${(b.minwage/MAX*100).toFixed(1)}%;background:rgba(93,184,232,.2)"></div>
+          <div class="diff-bar-fill" style="position:absolute;top:0;left:0;width:${(bTopLocal.current_wage/MAX*100).toFixed(1)}%;background:var(--accent3);opacity:.6"></div>
+        </div>
+        <span class="diff-bar-label" style="color:var(--accent3)">$${bTopLocal.current_wage.toFixed(2)}</span>
+      </div>`;
+    rows+=`
+      <div class="diff-bar-row" style="margin-top:6px">
+        <span style="min-width:100px;font-size:12px;color:var(--muted)">Federal floor</span>
+        <div class="diff-bar-track"><div class="diff-bar-fill" style="width:${(7.25/MAX*100).toFixed(1)}%;background:var(--muted)"></div></div>
+        <span class="diff-bar-label">$7.25</span>
+      </div>`;
+
+    document.getElementById('diffBars').innerHTML=rows;
+    document.getElementById('compare-sub').textContent=`Comparing ${a.name} vs ${b.name}`;
+  } else {
+    diff.style.display='none';
+    document.getElementById('compare-sub').textContent='Click up to 2 states on the map';
+  }
+}
+
+function clearSlot(abbr){
+  const idx=selectedStates.indexOf(abbr);
+  if(idx>=0){selectedStates.splice(idx,1);document.getElementById('path-'+abbr)?.classList.remove('selected');}
+  updateCompare();
+}
+
+/* ── TREND CHART ── */
+function buildTrendSeries(key){
+  const src=key==='federal'?FEDERAL_HIST:STATE_HIST[key];
+  if(!src)return[];
+  const pts=[];
+  for(let i=0;i<src.length;i++){
+    const c=src[i],n=src[i+1];
+    const cv=key==='federal'?c.v:c.v;
+    pts.push({x:c.year,y:cv});
+    if(n)pts.push({x:n.year-0.01,y:cv});
+  }
+  return pts;
+}
+function renderTrendChart(){
+  if(trendChart){trendChart.destroy();trendChart=null;}
+  const ctx=document.getElementById('trendChart').getContext('2d');
+  const keys=Array.from(activeTrendKeys);
+  const latestWages=Object.fromEntries(
+    STATE_DATA.map(s=>[s.state,s.minwage])
+  );
+  const maxWage=Math.max(...STATE_DATA.map(s=>s.minwage));
+  const allRaisingMode=keys.length>6;
+
+  const palette=['#f4c430','#5db8e8','#4ecb8d','#e07b39','#c97de0','#e05c5c','#7ae0c9','#e0b05c',
+    '#a0c4ff','#ffd6a5','#caffbf','#9bf6ff','#bdb2ff','#ffc6ff','#fffffc',
+    '#f4a261','#e76f51','#2a9d8f','#e9c46a','#264653','#606c38','#dda15e',
+    '#bc6c25','#8ecae6','#219ebc','#023047','#ffb703','#fb8500','#40916c','#52b788','#74c69d'];
+
+  const datasets=keys.map((k,i)=>{
+    const isFed=k==='federal';
+    const w=latestWages[k]||7.25;
+    // In all-raisers mode: opacity scales with current wage (higher wage = more opaque)
+    const alpha=allRaisingMode&&!isFed?0.35+0.65*(w/maxWage):1;
+    const col=isFed?'#e05c5c':palette[i%palette.length];
+    return{
+      label:isFed?'Federal':k,
+      data:buildTrendSeries(k),
+      borderColor:col,
+      backgroundColor:'transparent',
+      borderWidth:isFed?2:(allRaisingMode?1.2:1.8),
+      borderDash:isFed?[6,3]:[],
+      pointRadius:0,
+      tension:0,
+      parsing:false,
+      borderColor:col+(Math.round(alpha*255).toString(16).padStart(2,'0')),
+    };
+  });
+
+  trendChart=new Chart(ctx,{
+    type:'line',
+    data:{datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{
+          position:'top',
+          display:!allRaisingMode,
+          labels:{boxWidth:12,padding:10,font:{size:11}}
+        },
+        tooltip:{callbacks:{
+          label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}`
+        }}
+      },
+      scales:{
+        x:{type:'linear',min:1995,max:2025,ticks:{stepSize:5,callback:v=>v},grid:{color:'rgba(255,255,255,.03)'}},
+        y:{ticks:{callback:v=>'$'+v.toFixed(2)},min:0,grid:{color:'rgba(255,255,255,.03)'}}
+      }
+    }
+  });
+}
+function toggleTrend(btn){
+  const k=btn.dataset.key;
+  if(activeTrendKeys.has(k)){activeTrendKeys.delete(k);btn.classList.remove('active');}
+  else{activeTrendKeys.add(k);btn.classList.add('active');}
+  renderTrendChart();
+}
+
+/* ── STATE BAR ── */
+function renderStateBar(){
+  if(stateBarChart){stateBarChart.destroy();stateBarChart=null;}
+  const n=parseInt(document.getElementById('stateTopN').value);
+  const data=[...STATE_DATA].sort((a,b)=>b.minwage-a.minwage).slice(0,n);
+  const ctx=document.getElementById('stateBarChart').getContext('2d');
+  stateBarChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:data.map(s=>s.state),datasets:[
+      {label:'Min Wage',data:data.map(s=>s.minwage),
+        backgroundColor:data.map(s=>s.minwage>=15?COLORS[0]:s.minwage>=12?COLORS[2]:s.minwage>7.25?COLORS[1]:'#3a4040'),
+        borderRadius:4,borderWidth:0},
+      {label:'Federal ($7.25)',data:data.map(()=>7.25),type:'line',
+        borderColor:COLORS[3],borderWidth:1.5,borderDash:[4,4],pointRadius:0,fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:12,padding:12,font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}`}}},
+      scales:{y:{min:0,max:22,ticks:{callback:v=>'$'+v}},x:{ticks:{font:{size:11}}}}}
+  });
+}
+
+/* ── LOCAL TABLE ── */
+function filterLevel(btn){
+  document.querySelectorAll('[data-lv]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeLevelFilter=btn.dataset.lv;
+  renderLocalTable();
+}
+function makeSparkline(h){
+  const vals=(h||'').split('|').map(Number).filter(v=>v>0);
+  if(!vals.length)return'';
+  const mx=Math.max(...vals);
+  return'<div class="sparkline">'+vals.map(v=>`<span style="height:${Math.round((v/mx)*20)}px"></span>`).join('')+'</div>';
+}
+function renderLocalTable(){
+  const q=document.getElementById('localSearch').value.toLowerCase();
+  const sf=document.getElementById('stateFilter').value;
+  const sort=document.getElementById('sortSelect').value;
+  let rows=UCB_EMBEDDED.filter(r=>{
+    if(activeLevelFilter!=='all'&&r.level!==activeLevelFilter)return false;
+    if(sf&&r.state!==sf)return false;
+    if(q&&!r.locality.toLowerCase().includes(q)&&!r.state.toLowerCase().includes(q))return false;
+    return true;
+  });
+  const[sk,dir]=sort.split('_');
+  rows.sort((a,b)=>{
+    const av=sk==='current'?a.current_wage:sk==='name'?a.locality:a.wage_increase;
+    const bv=sk==='current'?b.current_wage:sk==='name'?b.locality:b.wage_increase;
+    if(av<bv)return dir==='desc'?1:-1;
+    if(av>bv)return dir==='desc'?-1:1;
+    return 0;
+  });
+  document.getElementById('localCount').textContent=`Showing ${rows.length} of ${UCB_EMBEDDED.length} localities`;
+  const tbody=document.getElementById('localTableBody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" class="empty">No results.</td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    const ic=r.wage_increase>5?'var(--green)':r.wage_increase>2?'var(--accent)':'var(--muted)';
+    const badge=r.level==='City'?'<span class="badge badge-city">City</span>':'<span class="badge badge-county">County</span>';
+    const pct=r.initial_wage?((r.wage_increase/r.initial_wage)*100).toFixed(0):0;
+    return`<tr><td style="font-weight:500">${r.locality}</td><td>${r.state}</td><td>${badge}</td>
+      <td>$${r.initial_wage?r.initial_wage.toFixed(2):'—'}</td>
+      <td style="font-weight:600;color:var(--accent)">$${r.current_wage.toFixed(2)}</td>
+      <td style="color:${ic}">+$${r.wage_increase.toFixed(2)} <span style="color:var(--muted);font-size:11px">(${pct}%)</span></td>
+      <td style="color:var(--muted)">${r.n_steps}</td>
+      <td>${makeSparkline(r.wage_history)}</td></tr>`;
+  }).join('');
+}
+function populateStateFilter(){
+  const states=[...new Set(UCB_EMBEDDED.map(r=>r.state))].sort();
+  const sel=document.getElementById('stateFilter');
+  states.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+}
+
+/* ── LOCAL BAR ── */
+function renderLocalBar(){
+  if(localBarChart){localBarChart.destroy();localBarChart=null;}
+  const top20=[...UCB_EMBEDDED].sort((a,b)=>b.current_wage-a.current_wage).slice(0,20);
+  const wages=top20.map(r=>r.current_wage);
+  const maxW=Math.max(...wages);
+  const ctx=document.getElementById('localBarChart').getContext('2d');
+  localBarChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:top20.map(r=>r.locality.replace(/,\s*[A-Z]{2}.*/,'')),
+      datasets:[{label:'Current Wage',data:wages,
+        backgroundColor:wages.map(w=>w>=maxW*.95?COLORS[3]:w>=maxW*.85?COLORS[0]:COLORS[2]),
+        borderRadius:4,borderWidth:0}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` $${ctx.parsed.x.toFixed(2)}`}}},
+      scales:{x:{min:0,max:25,ticks:{callback:v=>'$'+v}},y:{ticks:{font:{size:11}}}}}
+  });
+}
+
+/* ── ALL RAISERS ── */
+const ALL_RAISER_STATES=['DC','WA','CA','CT','NY','NJ','DE','MD','MA','RI','OR','ME','CO','AZ','VT','HI','IL','FL','VA','MO','NE','NV','NM','AK','SD','AR','MN','MT','OH','MI','WV'];
+let showingAllRaisers=false;
+
+function toggleAllRaisers(btn){
+  showingAllRaisers=!showingAllRaisers;
+  btn.classList.toggle('active',showingAllRaisers);
+  btn.style.background=showingAllRaisers?'var(--green)':'transparent';
+  btn.style.color=showingAllRaisers?'#000':'var(--green)';
+  btn.style.borderColor='var(--green)';
+  document.getElementById('allRaisersNote').style.display=showingAllRaisers?'block':'none';
+  if(showingAllRaisers){
+    activeTrendKeys=new Set(['federal',...ALL_RAISER_STATES]);
+    document.querySelectorAll('#trend-controls .pill-btn[data-key]').forEach(b=>{
+      if(ALL_RAISER_STATES.includes(b.dataset.key)||b.dataset.key==='federal') b.classList.add('active');
+    });
+  } else {
+    activeTrendKeys=new Set(['federal','CA','NY']);
+    document.querySelectorAll('#trend-controls .pill-btn[data-key]').forEach(b=>{
+      b.classList.toggle('active',['federal','CA','NY'].includes(b.dataset.key));
+    });
+  }
+  renderTrendChart();
+}
+
+/* ── CALIFORNIA DEEP-DIVE ── */
+let caChart=null, caView='wage', caState='CA';
+const CA_COLORS={wage:'#f4c430',yoy:'#4ecb8d',above:'#5db8e8',pct:'#e07b39'};
+const CA_LABELS={wage:'Min Wage ($/hr)',yoy:'Year-on-Year Increase ($/hr)',above:'Above Federal Floor ($/hr)',pct:'Cumulative % Rise Since 2000'};
+
+function buildCAData(abbr){
+  const hist=STATE_HIST[abbr];if(!hist)return null;
+  const sorted=[...hist].sort((a,b)=>a.year-b.year);
+  const years=[],wages=[],yoy=[],above=[],pct=[];
+  const base=sorted[0].v;
+  let prev=null;
+  for(const{year,v}of sorted){
+    years.push(year);
+    wages.push(+v.toFixed(2));
+    yoy.push(prev!==null?+(v-prev).toFixed(2):0);
+    above.push(+Math.max(0,v-7.25).toFixed(2));
+    pct.push(+((v/base-1)*100).toFixed(1));
+    prev=v;
+  }
+  const stepYears=sorted.filter((p,i)=>i>0&&p.v>sorted[i-1].v).map(p=>p.year);
+  return{abbr,years,wages,yoy,above,pct,stepYears,latest:sorted[sorted.length-1].v,base};
+}
+
+function updateCAStats(abbr){
+  const d=buildCAData(abbr);if(!d)return;
+  const sn=STATE_NAMES[abbr]||abbr;
+  document.getElementById('ca-current').textContent='$'+d.latest.toFixed(2);
+  document.getElementById('ca-current-sub').textContent=sn+' · 2024–2025';
+  const totalInc=(d.latest-d.base).toFixed(2);
+  const pctInc=((d.latest/d.base-1)*100).toFixed(0);
+  document.getElementById('ca-total').textContent='+$'+totalInc;
+  document.getElementById('ca-total-sub').textContent=`+${pctInc}% since ${d.years[0]}`;
+  document.getElementById('ca-above').textContent='$'+Math.max(0,d.latest-7.25).toFixed(2);
+  document.getElementById('ca-above-sub').textContent='above $7.25 federal floor';
+  document.getElementById('ca-steps').textContent=d.stepYears.length;
+}
+
+function renderCAChart(){
+  const d=buildCAData(caState);if(!d)return;
+  if(caChart){caChart.destroy();caChart=null;}
+
+  const dataMap={wage:d.wages,yoy:d.yoy,above:d.above,pct:d.pct};
+  const vals=dataMap[caView];
+  const color=CA_COLORS[caView];
+
+  // Step markers (▲ on years with increases)
+  const pointStyles=d.years.map(y=>d.stepYears.includes(y)?'triangle':'circle');
+  const pointRadii=d.years.map(y=>d.stepYears.includes(y)?7:3);
+  const pointColors=d.years.map(y=>d.stepYears.includes(y)?color:'transparent');
+
+  const ctx=document.getElementById('caChart').getContext('2d');
+  const datasets=[{
+    label:CA_LABELS[caView],
+    data:vals,
+    borderColor:color,
+    backgroundColor:color+'18',
+    borderWidth:2.5,
+    pointStyle:pointStyles,
+    pointRadius:pointRadii,
+    pointBackgroundColor:pointColors,
+    pointBorderColor:pointColors,
+    tension:0,
+    fill:caView!=='yoy',
+  }];
+
+  // Federal floor reference line (only on wage + above views)
+  if(caView==='wage'){
+    datasets.push({
+      label:'Federal ($7.25)',
+      data:d.years.map(()=>7.25),
+      borderColor:'var(--muted)',
+      borderWidth:1,
+      borderDash:[4,4],
+      pointRadius:0,
+      fill:false,
+      tension:0,
+    });
+  }
+
+  caChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:d.years,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{position:'top',labels:{boxWidth:12,font:{size:11}}},
+        tooltip:{callbacks:{
+          label:ctx=>{
+            const v=ctx.parsed.y;
+            const isStep=d.stepYears.includes(+ctx.label);
+            const suffix=isStep?' ▲ increase year':'';
+            return` ${ctx.dataset.label}: ${caView==='pct'?v+'%':'$'+v.toFixed(2)}${suffix}`;
+          }
+        }},
+      },
+      scales:{
+        x:{ticks:{maxRotation:45,font:{size:10}},grid:{color:'rgba(255,255,255,.04)'}},
+        y:{
+          ticks:{callback:v=>caView==='pct'?v+'%':'$'+v.toFixed(2),font:{size:10}},
+          grid:{color:'rgba(255,255,255,.04)'},
+          min:caView==='yoy'?undefined:0,
+        }
+      }
+    }
+  });
+}
+
+function setCAView(btn){
+  document.querySelectorAll('[data-cv]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  caView=btn.dataset.cv;
+  renderCAChart();
+}
+
+function onCAStateChange(){
+  caState=document.getElementById('caStateSelect').value;
+  updateCAStats(caState);
+  renderCAChart();
+}
+
+/* ── INIT ── */
+Chart.defaults.color='#7a82a0';
+Chart.defaults.borderColor='#2a2f3e';
+Chart.defaults.font.family="'DM Sans',system-ui,sans-serif";
+
+window.addEventListener('DOMContentLoaded',()=>{
+  updateKPIs();
+  buildMap();
+  updateCompare();
+  renderTrendChart();
+  renderStateBar();
+  populateStateFilter();
+  renderLocalTable();
+  renderLocalBar();
+  updateCAStats('CA');
+  renderCAChart();
+});
+</script>
+</body>
+</html>

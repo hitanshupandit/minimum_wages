@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>U.S. Minimum Wage — Inequality & Distribution Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Mulish:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:        #f6f4ef;
+  --bg2:       #efecea;
+  --bg3:       #e8e4de;
+  --white:     #ffffff;
+  --ink:       #18160f;
+  --ink2:      #3a3826;
+  --ink3:      #7a7760;
+  --rule:      #d4d0c4;
+  --rule2:     #e2dfd6;
+  --teal:      #1a5c5c;
+  --teal-lt:   #e0f0f0;
+  --rust:      #b84a2a;
+  --rust-lt:   #faeee9;
+  --indigo:    #2a3a7a;
+  --indigo-lt: #eaedfa;
+  --gold:      #8a6800;
+  --gold-lt:   #faf3d9;
+  --plum:      #6a2a6a;
+  --plum-lt:   #f5eaf5;
+  --green:     #2a6040;
+  --green-lt:  #e6f4ec;
+  --font-s:    'Libre Baskerville', Georgia, serif;
+  --font-b:    'Mulish', system-ui, sans-serif;
+  --font-m:    'Fira Code', monospace;
+  --r:         8px;
+  --sh:        0 1px 6px rgba(0,0,0,.07);
+  --sh2:       0 4px 20px rgba(0,0,0,.11);
+  --trans:     .17s ease;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-b); line-height: 1.65; }
+
+/* ══ HEADER ══ */
+.hdr { background: var(--ink); padding: 0; }
+.hdr-in {
+  max-width: 1360px; margin: 0 auto; padding: 44px 52px 36px;
+  display: grid; grid-template-columns: 1fr 320px; gap: 40px; align-items: start;
+}
+.hdr-eye {
+  font-family: var(--font-m); font-size: 10px; letter-spacing: .18em;
+  text-transform: uppercase; color: #a09878; margin-bottom: 10px;
+}
+.hdr h1 {
+  font-family: var(--font-s); font-size: clamp(22px, 3.5vw, 40px);
+  font-weight: 700; color: #fff; line-height: 1.1;
+}
+.hdr h1 em { font-style: italic; font-weight: 400; color: #d4b48a; }
+.hdr-desc { margin-top: 10px; font-size: 13.5px; color: #9a9480; line-height: 1.75; max-width: 520px; }
+.hdr-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.hdr-tag {
+  font-family: var(--font-m); font-size: 10px; letter-spacing: .08em;
+  border: 1px solid rgba(255,255,255,.15); color: #c0b8a0;
+  padding: 3px 10px; border-radius: 3px;
+}
+/* stat box */
+.hdr-stat {
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1);
+  border-radius: var(--r); padding: 20px 22px; margin-top: 4px;
+}
+.hdr-stat-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.hdr-stat-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.hdr-stat-lbl { font-family: var(--font-m); font-size: 9.5px; color: #8a8268; text-transform: uppercase; letter-spacing: .1em; }
+.hdr-stat-val { font-family: var(--font-s); font-size: 22px; color: #d4b48a; }
+.hdr-bar { height: 3px; background: linear-gradient(90deg, var(--teal) 0%, #2a8a8a 40%, var(--rust) 100%); }
+
+/* ══ STICKY CONTROLS ══ */
+.ctrl {
+  background: var(--bg2); border-bottom: 1px solid var(--rule);
+  position: sticky; top: 0; z-index: 200; box-shadow: var(--sh);
+}
+.ctrl-in {
+  max-width: 1360px; margin: 0 auto; padding: 11px 52px;
+  display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+}
+.cg { display: flex; flex-direction: column; gap: 3px; }
+.cl { font-family: var(--font-m); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); }
+select, input[type=range] {
+  font-family: var(--font-b); font-size: 12.5px;
+  background: var(--white); border: 1px solid var(--rule); color: var(--ink);
+  padding: 5px 9px; border-radius: 6px; cursor: pointer;
+}
+select:hover, select:focus { border-color: var(--ink2); outline: none; }
+input[type=range] { padding: 0; min-width: 100px; accent-color: var(--teal); }
+.yr-v { font-family: var(--font-m); font-size: 14px; font-weight: 500; min-width: 36px; }
+.sep { width: 1px; height: 30px; background: var(--rule); align-self: center; flex-shrink: 0; }
+.pgroup { display: flex; }
+.pb {
+  font-family: var(--font-m); font-size: 10px; letter-spacing: .04em;
+  padding: 4px 11px; background: var(--white); border: 1px solid var(--rule);
+  border-right: none; cursor: pointer; color: var(--ink3); transition: all var(--trans);
+}
+.pb:first-child { border-radius: 5px 0 0 5px; }
+.pb:last-child { border-radius: 0 5px 5px 0; border-right: 1px solid var(--rule); }
+.pb:hover { background: var(--bg2); }
+.pb.on { background: var(--teal); color: #fff; border-color: var(--teal); }
+.pb.on + .pb { border-left-color: var(--teal); }
+
+/* ══ MAIN LAYOUT ══ */
+.main { max-width: 1360px; margin: 0 auto; padding: 36px 52px 72px; }
+@media(max-width:900px){ .main{padding:20px 16px} .hdr-in{grid-template-columns:1fr;padding:28px 16px 0} .ctrl-in{padding:10px 16px} }
+.section { margin-bottom: 52px; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.section { animation: fadeUp .35s ease both; }
+.section:nth-child(2){animation-delay:.05s} .section:nth-child(3){animation-delay:.09s}
+.section:nth-child(4){animation-delay:.13s} .section:nth-child(5){animation-delay:.17s}
+.section:nth-child(6){animation-delay:.21s}
+
+.shead {
+  display: flex; align-items: baseline; gap: 10px;
+  border-bottom: 2px solid var(--ink); padding-bottom: 9px; margin-bottom: 24px;
+}
+.snum { font-family: var(--font-m); font-size: 10px; color: var(--ink3); }
+.stitle { font-family: var(--font-s); font-size: 19px; font-weight: 400; }
+.ssub { margin-left: auto; font-family: var(--font-m); font-size: 10px; color: var(--ink3); }
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
+.g21{ display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+.g12{ display: grid; grid-template-columns: 1fr 2fr; gap: 24px; }
+@media(max-width:1100px){ .g2,.g21,.g12{grid-template-columns:1fr} .g3{grid-template-columns:1fr 1fr} .g4{grid-template-columns:1fr 1fr} }
+@media(max-width:600px){ .g3,.g4{grid-template-columns:1fr} }
+
+/* ══ CARDS ══ */
+.card { background: var(--white); border: 1px solid var(--rule); border-radius: var(--r); padding: 22px 24px; box-shadow: var(--sh); }
+
+/* KPI */
+.kpi { background: var(--white); border: 1px solid var(--rule); border-top: 3px solid var(--rule); border-radius: var(--r); padding: 18px 20px; box-shadow: var(--sh); transition: box-shadow var(--trans); }
+.kpi:hover { box-shadow: var(--sh2); }
+.kpi.tl{border-top-color:var(--teal)} .kpi.rs{border-top-color:var(--rust)} .kpi.in{border-top-color:var(--indigo)} .kpi.gd{border-top-color:var(--gold)} .kpi.pl{border-top-color:var(--plum)} .kpi.gr{border-top-color:var(--green)}
+.kl { font-family: var(--font-m); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 5px; }
+.kv { font-family: var(--font-s); font-size: 26px; font-weight: 700; line-height: 1; }
+.ks { font-size: 11px; color: var(--ink3); margin-top: 4px; }
+
+/* ══ CHART CARD HEADER with hover tooltip ══ */
+.chart-hdr {
+  display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px;
+}
+.chart-title { font-family: var(--font-s); font-size: 15px; font-weight: 700; }
+.chart-sub { font-family: var(--font-m); font-size: 10px; color: var(--ink3); margin-bottom: 14px; }
+.info-btn {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--rule);
+  font-size: 10px; font-weight: 700; color: var(--ink3);
+  cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  transition: all var(--trans); position: relative; margin-top: 1px;
+  font-family: var(--font-b);
+}
+.info-btn:hover { background: var(--teal); border-color: var(--teal); color: #fff; }
+
+/* ══ INFO TOOLTIP POPUP ══ */
+.info-popup {
+  position: absolute; z-index: 500;
+  top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  width: 300px;
+  background: var(--ink); color: #e8e4d8;
+  border-radius: var(--r); padding: 14px 16px;
+  box-shadow: var(--sh2); font-size: 12.5px; line-height: 1.65;
+  pointer-events: none; opacity: 0; transition: opacity .15s;
+}
+.info-popup.show { opacity: 1; pointer-events: auto; }
+.info-popup::before {
+  content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-bottom-color: var(--ink);
+}
+.info-popup strong { display: block; font-family: var(--font-s); font-size: 13.5px; color: #fff; margin-bottom: 7px; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 6px; }
+.info-popup .formula { font-family: var(--font-m); font-size: 11px; background: rgba(255,255,255,.08); border-radius: 4px; padding: 5px 9px; margin: 7px 0; color: #d4e4f4; }
+.info-popup .interp { font-size: 11.5px; color: #b0a890; margin-top: 6px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 6px; }
+
+/* ══ LORENZ / GINI SECTION ══ */
+.lorenz-controls {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;
+}
+.lorenz-controls select { min-width: 200px; }
+.lorenz-legend {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.ll { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--ink3); }
+.ll-line { width: 24px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+.ll-dash { width: 24px; height: 0; border-top: 2px dashed; flex-shrink: 0; }
+
+/* Gini gauge */
+.gini-gauge-wrap { display: flex; flex-direction: column; gap: 16px; }
+.gini-card {
+  background: var(--bg2); border: 1px solid var(--rule); border-radius: var(--r);
+  padding: 16px 18px;
+}
+.gini-card .gc-label { font-family: var(--font-m); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin-bottom: 4px; }
+.gini-card .gc-val { font-family: var(--font-s); font-size: 28px; font-weight: 700; color: var(--ink); }
+.gini-card .gc-sub { font-size: 11.5px; color: var(--ink3); margin-top: 3px; }
+.gini-bar-wrap { margin-top: 10px; }
+.gini-bar-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--green) 0%, var(--gold) 40%, var(--rust) 100%); position: relative; }
+.gini-bar-marker { position: absolute; top: 50%; transform: translate(-50%,-50%); width: 12px; height: 12px; border-radius: 50%; background: var(--ink); border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,.3); transition: left .4s ease; }
+.gini-bar-labels { display: flex; justify-content: space-between; margin-top: 4px; font-family: var(--font-m); font-size: 9px; color: var(--ink3); }
+
+/* min wage annotation on Lorenz chart */
+.mw-annotation { font-family: var(--font-m); font-size: 10.5px; color: var(--rust); }
+
+/* ══ FOOTNOTE ══ */
+.fn { font-family: var(--font-m); font-size: 10.5px; color: var(--ink3); margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--rule2); line-height: 1.7; }
+
+/* ══ TABLE ══ */
+.tw { overflow: auto; border-radius: var(--r); border: 1px solid var(--rule); max-height: 380px; }
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th { background: var(--bg2); font-family: var(--font-m); font-size: 9.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--ink3); padding: 9px 12px; border-bottom: 1px solid var(--rule); text-align: left; cursor: pointer; position: sticky; top: 0; white-space: nowrap; }
+th:hover { color: var(--ink); }
+th.sorted { color: var(--teal); }
+td { padding: 8px 12px; border-bottom: 1px solid var(--rule2); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg2); }
+
+/* badges */
+.badge { display: inline-block; font-family: var(--font-m); font-size: 9.5px; padding: 2px 7px; border-radius: 3px; }
+.b-fed{background:var(--rust-lt);color:var(--rust)} .b-sta{background:var(--indigo-lt);color:var(--indigo)}
+.b-cit{background:var(--teal-lt);color:var(--teal)} .b-cou{background:var(--gold-lt);color:var(--gold)}
+
+/* spark */
+.sp { display: inline-flex; align-items: flex-end; gap: 1.5px; height: 14px; vertical-align: middle; }
+.sp span { display: block; width: 3px; border-radius: 1px; }
+
+/* ══ GLOBAL TOOLTIP ══ */
+#tip { position: fixed; z-index: 9999; background: var(--ink); border-radius: var(--r); padding: 10px 14px; pointer-events: none; opacity: 0; transition: opacity .12s; box-shadow: var(--sh2); font-size: 12px; max-width: 240px; line-height: 1.6; color: #e8e4d8; }
+#tip.show { opacity: 1; }
+#tip .tn { font-family: var(--font-s); font-size: 13px; font-weight: 700; color: #fff; display: block; border-bottom: 1px solid rgba(255,255,255,.1); padding-bottom: 5px; margin-bottom: 5px; }
+#tip .tr { display: flex; justify-content: space-between; gap: 12px; }
+#tip .tk { color: #9a9278; }
+#tip .tv { font-family: var(--font-m); font-weight: 500; color: #d4e0b8; }
+
+/* ══ SCATTER legend ══ */
+.sleg { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.sli { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink3); }
+.sld { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* city comparison table in gini section */
+.city-gini-table { overflow: auto; border-radius: var(--r); border: 1px solid var(--rule); }
+.city-gini-table table { font-size: 12px; }
+</style>
+</head>
+<body>
+<div id="tip"></div>
+
+<!-- ══ HEADER ══ -->
+<div class="hdr">
+  <div class="hdr-in">
+    <div>
+      <div class="hdr-eye">U.S. Labor Policy · Inequality Explorer · 2025</div>
+      <h1>Minimum Wage,<br><em>Inequality &amp; Distribution</em></h1>
+      <p class="hdr-desc">
+        Federal, state, and local minimum wages against ACS economic indicators.
+        Includes Lorenz curves, Gini coefficients, and Kaitz index — with plain-English
+        explanations for every figure.
+      </p>
+      <div class="hdr-tags">
+        <span class="hdr-tag">121 Jurisdictions</span>
+        <span class="hdr-tag">Zipperer (2022)</span>
+        <span class="hdr-tag">UCB Labor Center (2025)</span>
+        <span class="hdr-tag">ACS 5-yr Estimates</span>
+        <span class="hdr-tag">Hover ℹ on any chart title to learn how to read it</span>
+      </div>
+    </div>
+    <div class="hdr-stat">
+      <div class="hdr-stat-row">
+        <span class="hdr-stat-lbl">Federal Floor</span>
+        <span class="hdr-stat-val" id="hdr-fed">$7.25</span>
+      </div>
+      <div class="hdr-stat-row">
+        <span class="hdr-stat-lbl">Highest State</span>
+        <span class="hdr-stat-val" id="hdr-top-st">$17.50</span>
+      </div>
+      <div class="hdr-stat-row">
+        <span class="hdr-stat-lbl">Highest Local</span>
+        <span class="hdr-stat-val" id="hdr-top-loc">$20.76</span>
+      </div>
+    </div>
+  </div>
+  <div class="hdr-bar"></div>
+</div>
+
+<!-- ══ CONTROLS ══ -->
+<div class="ctrl">
+  <div class="ctrl-in">
+    <div class="cg">
+      <span class="cl">Year</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" id="yrSlider" min="1990" max="2025" value="2024" step="1" oninput="onYear(this.value)"/>
+        <span class="yr-v" id="yrVal">2024</span>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="cg">
+      <span class="cl">ACS Outcome</span>
+      <select id="yVar" onchange="onVarChange()">
+        <option value="poverty">Poverty Rate (%)</option>
+        <option value="median_income">Median Household Income ($)</option>
+        <option value="unemployment">Unemployment Rate (%)</option>
+        <option value="rent_burden">Rent Burden (% income)</option>
+      </select>
+    </div>
+    <div class="cg">
+      <span class="cl">Color by</span>
+      <select id="colorBy" onchange="renderScatter()">
+        <option value="region">Census Region</option>
+        <option value="tier">Min Wage Tier</option>
+      </select>
+    </div>
+    <div class="sep"></div>
+    <div class="cg">
+      <span class="cl">Level filter</span>
+      <div class="pgroup">
+        <button class="pb on" data-lv="all" onclick="setLv(this)">All</button>
+        <button class="pb" data-lv="State" onclick="setLv(this)">State</button>
+        <button class="pb" data-lv="City" onclick="setLv(this)">City</button>
+        <button class="pb" data-lv="County" onclick="setLv(this)">County</button>
+      </div>
+    </div>
+    <div class="cg">
+      <span class="cl">Highlight</span>
+      <select id="hlSt" onchange="renderScatter();renderTable()">
+        <option value="">— none —</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+<!-- §1 KPIs -->
+<section class="section">
+  <div class="shead">
+    <span class="snum">01</span>
+    <span class="stitle">Snapshot</span>
+    <span class="ssub" id="kpi-yr">2024 estimates</span>
+  </div>
+  <div class="g4" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi tl"><div class="kl">Federal Floor</div><div class="kv" id="kf">$7.25</div><div class="ks">Since Jul 2009</div></div>
+    <div class="kpi rs"><div class="kl">Median State MW</div><div class="kv" id="ksm">—</div><div class="ks">across 51 states</div></div>
+    <div class="kpi in"><div class="kl">Above Federal</div><div class="kv" id="kab">—</div><div class="ks">states with own floor</div></div>
+    <div class="kpi gd"><div class="kl">Highest Local MW</div><div class="kv" id="khl">—</div><div class="ks" id="khln">—</div></div>
+    <div class="kpi gr"><div class="kl">Active Local Ord.</div><div class="kv" id="kloc">—</div><div class="ks">cities &amp; counties</div></div>
+  </div>
+</section>
+
+<!-- §2 Scatter + Bar -->
+<section class="section">
+  <div class="shead">
+    <span class="snum">02</span>
+    <span class="stitle">Min Wage vs. ACS Outcomes</span>
+    <span class="ssub">Cross-section · state level</span>
+  </div>
+  <div class="g21">
+    <div class="card">
+      <div class="chart-hdr">
+        <div>
+          <div class="chart-title">Scatter: Min Wage × <span id="sc-var-lbl">Poverty Rate</span></div>
+          <div class="chart-sub" id="sc-sub">State-level · hover for details</div>
+        </div>
+        <div class="info-btn" id="ib-scatter" onmouseenter="showInfo('scatter')" onmouseleave="hideInfo('scatter')">ℹ
+          <div class="info-popup" id="ip-scatter">
+            <strong>How to read this scatter plot</strong>
+            Each dot is one U.S. state. The X-axis shows the state minimum wage for the selected year. The Y-axis shows the ACS outcome you've chosen (e.g., poverty rate).<br><br>
+            <span class="formula">Trendline = OLS regression (least-squares fit)</span>
+            A downward-sloping trendline means states with higher minimum wages tend to have lower poverty rates. This is a correlation, not causation — many other factors differ between states.<br>
+            <span class="interp">r = Pearson correlation coefficient (−1 to +1). R² = share of variation explained by the trendline alone.</span>
+          </div>
+        </div>
+      </div>
+      <div id="scLeg" class="sleg"></div>
+      <div style="position:relative;height:340px"><canvas id="scChart"></canvas></div>
+      <div class="fn">ACS 5-yr estimates · OLS trendline · <span id="sc-r"></span></div>
+    </div>
+    <div class="card">
+      <div class="chart-hdr">
+        <div>
+          <div class="chart-title">States Ranked by Min Wage</div>
+          <div class="chart-sub">Selected year · federal floor shown as dashed line</div>
+        </div>
+        <div class="info-btn" id="ib-bar" onmouseenter="showInfo('bar')" onmouseleave="hideInfo('bar')">ℹ
+          <div class="info-popup" id="ip-bar">
+            <strong>How to read this chart</strong>
+            States are sorted from highest to lowest minimum wage. The dashed red line marks the federal minimum ($7.25/hr since 2009). Any bar above the line means that state has set its own higher floor. States at the line defer to the federal rate.
+            <span class="interp">Colors indicate Census region: Northeast (blue), South (red), Midwest (green), West (gold).</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:420px"><canvas id="rankChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- §3 Trends -->
+<section class="section">
+  <div class="shead">
+    <span class="snum">03</span>
+    <span class="stitle">Historical Trajectories</span>
+    <span class="ssub">1990–2025</span>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="chart-hdr">
+        <div>
+          <div class="chart-title">Min Wage Over Time — States</div>
+          <div class="chart-sub">Toggle states with buttons below</div>
+        </div>
+        <div class="info-btn" id="ib-trend" onmouseenter="showInfo('trend')" onmouseleave="hideInfo('trend')">ℹ
+          <div class="info-popup" id="ip-trend">
+            <strong>How to read this chart</strong>
+            Each line shows one state's minimum wage history. The step-like pattern reflects that minimum wages change in discrete legislative jumps, not gradually. Periods of flat lines mean no change was enacted. States that follow the federal floor ($7.25 since 2009) appear as a flat line from 2009 onward.
+            <span class="interp">Use the toggle buttons to add or remove states from the chart.</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px" id="trendPills"></div>
+      <div style="position:relative;height:250px"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="chart-hdr">
+        <div>
+          <div class="chart-title">ACS Outcome Over Time</div>
+          <div class="chart-sub" id="acs-trend-sub">Poverty rate · same states</div>
+        </div>
+        <div class="info-btn" id="ib-acstrend" onmouseenter="showInfo('acstrend')" onmouseleave="hideInfo('acstrend')">ℹ
+          <div class="info-popup" id="ip-acstrend">
+            <strong>How to read this chart</strong>
+            This shows the same states as the left chart, but for the ACS economic indicator you've selected in the controls. Comparing these two charts side-by-side lets you see whether periods of rising minimum wages coincide with changes in poverty, unemployment, or housing cost burden in the same states.
+            <span class="interp">Note: correlation in trends still does not imply causation. Use as exploratory context, not causal evidence.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:250px"><canvas id="acsTrendChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- §4 Kaitz + Correlation -->
+<section class="section">
+  <div class="shead">
+    <span class="snum">04</span>
+    <span class="stitle">Kaitz Index &amp; Correlation Matrix</span>
+    <span class="ssub">How far the minimum wage reaches into the distribution</span>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="chart-hdr">
+        <div>
+          <div class="chart-title">Kaitz Index by State</div>
+          <div class="chart-sub">Min wage as % of estimated median wage · <span id="kaitz-yr">2024</span></div>
+        </div>
+        <div class="info-btn" id="ib-kaitz" onmouseenter="showInfo('kaitz')" onmouseleave="hideInfo('kaitz')">ℹ
+          <div class="info-popup" id="ip-kaitz">
+            <strong>What is the Kaitz Index?</strong>
+            The Kaitz Index measures how high the minimum wage is relative to the typical wage in a state — expressed as a percentage.
+            <span class="formula">Kaitz = Min Wage / Median Individual Wage × 100</span>
+            A Kaitz of 50% means the minimum wage is half the median wage. A higher Kaitz means the minimum wage covers a larger share of the workforce. International comparisons: France ≈ 60%, UK ≈ 55%, U.S. federal ≈ 25%.<br><br>
+            <span class="interp">Here, median individual wage is estimated as (ACS median household income × 0.55) ÷ 2,080 annual hours. Colors: red &gt; 55% (binding), green 40–55% (moderate), grey &lt; 40% (non-binding).</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:300px"><canvas id="kaitzChart"></canvas></div>
+      <div class="fn">Median individual wage estimated from ACS median HH income × 0.55 ÷ 2,080 hrs. Lower estimate — actual binding effect may be stronger.</div>
+    </div>
+    <div class="card">
+      <div class="chart-hdr">
+        <div>
+          <div class="chart-title">Correlation Matrix</div>
+          <div class="chart-sub">Pearson r between min wage &amp; ACS variables · <span id="corr-yr">2024</span></div>
+        </div>
+        <div class="info-btn" id="ib-corr" onmouseenter="showInfo('corr')" onmouseleave="hideInfo('corr')">ℹ
+          <div class="info-popup" id="ip-corr">
+            <strong>How to read the correlation matrix</strong>
+            Each cell shows the Pearson r between the row variable and the column variable across all states.
+            <span class="formula">r ranges from −1 (perfect inverse) to +1 (perfect direct)</span>
+            <strong style="font-size:11px;color:#d4b48a;display:inline">Color guide:</strong><br>
+            🔵 Blue = positive r (both variables rise together)<br>
+            🔴 Red = negative r (one rises as the other falls)<br>
+            ⬜ White ≈ no linear relationship<br><br>
+            <span class="interp">Example: if Min Wage × Poverty shows r = −0.45 (red), states with higher minimums tend to have lower poverty rates on average.</span>
+          </div>
+        </div>
+      </div>
+      <div id="corrMatrix" style="margin-top:8px"></div>
+      <div class="fn">Cross-section of 51 states/DC. Pearson r only detects linear relationships. Does not control for other variables.</div>
+    </div>
+  </div>
+</section>
+
+<!-- §5 Lorenz / Gini — THE NEW SECTION -->
+<section class="section">
+  <div class="shead">
+    <span class="snum">05</span>
+    <span class="stitle">Lorenz Curve &amp; Gini Coefficient</span>
+    <span class="ssub">Income inequality + where the minimum wage sits</span>
+  </div>
+
+  <!-- explainer banner -->
+  <div style="background:var(--teal-lt);border:1px solid #a0d0d0;border-radius:var(--r);padding:16px 20px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-start">
+    <div style="font-size:20px;flex-shrink:0;margin-top:2px">📐</div>
+    <div>
+      <div style="font-family:var(--font-s);font-weight:700;font-size:14px;margin-bottom:5px">How to read the Lorenz Curve &amp; Gini Coefficient</div>
+      <div style="font-size:13px;color:var(--ink2);line-height:1.7">
+        The <strong>Lorenz curve</strong> plots cumulative income share (Y) against cumulative population share (X), sorted from poorest to richest.
+        The <strong>line of perfect equality</strong> (diagonal) is where everyone has the same income.
+        The further the Lorenz curve bows below the diagonal, the more unequal the distribution.
+        The <strong>Gini coefficient</strong> is twice the area between the diagonal and the Lorenz curve — it ranges from 0 (perfect equality) to 1 (one person has everything).
+        The <strong>vertical red line</strong> marks where full-time minimum wage workers fall in the income distribution — showing how far up (or down) the min wage reaches.
+      </div>
+    </div>
+  </div>
+
+  <div class="g21">
+    <div class="card">
+      <div class="lorenz-controls">
+        <div class="cg">
+          <span class="cl">Select state</span>
+          <select id="lorenzState" onchange="renderLorenz()">
+            <option value="CA">California</option>
+            <option value="NY">New York</option>
+            <option value="WA">Washington</option>
+            <option value="DC">Washington D.C.</option>
+            <option value="TX">Texas</option>
+            <option value="FL">Florida</option>
+            <option value="MA">Massachusetts</option>
+            <option value="IL">Illinois</option>
+            <option value="MS">Mississippi</option>
+            <option value="AL">Alabama</option>
+            <option value="MN">Minnesota</option>
+            <option value="CO">Colorado</option>
+            <option value="OR">Oregon</option>
+            <option value="CT">Connecticut</option>
+            <option value="AK">Alaska</option>
+            <option value="NJ">New Jersey</option>
+            <option value="MD">Maryland</option>
+            <option value="WI">Wisconsin</option>
+            <option value="AR">Arkansas</option>
+            <option value="AZ">Arizona</option>
+          </select>
+        </div>
+        <div class="cg">
+          <span class="cl">Compare with</span>
+          <select id="lorenzCompare" onchange="renderLorenz()">
+            <option value="">— none —</option>
+            <option value="CA">California</option>
+            <option value="NY">New York</option>
+            <option value="WA">Washington</option>
+            <option value="DC">Washington D.C.</option>
+            <option value="TX">Texas</option>
+            <option value="FL">Florida</option>
+            <option value="MA">Massachusetts</option>
+            <option value="IL">Illinois</option>
+            <option value="MS">Mississippi</option>
+            <option value="AL">Alabama</option>
+            <option value="MN">Minnesota</option>
+            <option value="CO">Colorado</option>
+          </select>
+        </div>
+        <div class="cg">
+          <span class="cl">Also show local city</span>
+          <select id="lorenzCity" onchange="renderLorenz()">
+            <option value="">— none —</option>
+            <option value="Seattle">Seattle, WA ($20.76)</option>
+            <option value="Emeryville">Emeryville, CA ($19.36)</option>
+            <option value="Mountain View">Mountain View, CA ($19.20)</option>
+            <option value="San Francisco">San Francisco, CA ($18.67)</option>
+            <option value="Denver">Denver, CO ($18.29)</option>
+            <option value="Chicago">Chicago, IL ($16.20)</option>
+            <option value="Washington DC">Washington D.C. ($17.50)</option>
+            <option value="Los Angeles">Los Angeles, CA ($17.28)</option>
+            <option value="Boulder County">Boulder County, CO ($19.53)</option>
+            <option value="Santa Fe">Santa Fe, NM ($15.00)</option>
+          </select>
+        </div>
+      </div>
+      <div class="lorenz-legend" id="lorenzLegend"></div>
+      <div style="position:relative;height:340px"><canvas id="lorenzChart"></canvas></div>
+      <div class="fn" id="lorenz-fn">Income shares from ACS 5-yr estimates (quintile distribution). Min wage position estimated assuming full-time (2,080 hrs/yr) employment relative to state median individual wage.</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <!-- Gini display card -->
+      <div class="card">
+        <div class="chart-hdr">
+          <div>
+            <div class="chart-title">Gini Coefficient</div>
+            <div class="chart-sub">Selected state(s) · <span id="gini-yr-lbl">2024</span></div>
+          </div>
+          <div class="info-btn" id="ib-gini" onmouseenter="showInfo('gini')" onmouseleave="hideInfo('gini')">ℹ
+            <div class="info-popup" id="ip-gini">
+              <strong>What is the Gini Coefficient?</strong>
+              The Gini coefficient is the most widely used measure of income inequality. It is calculated as twice the area between the line of perfect equality and the Lorenz curve.
+              <span class="formula">Gini = 2 × (Area between diagonal and Lorenz curve)</span>
+              <strong style="color:#d4b48a;font-size:11px">Scale:</strong><br>
+              0.0 = Perfect equality (everyone earns the same)<br>
+              0.25–0.35 = Low inequality (Scandinavia)<br>
+              0.35–0.45 = Moderate (most U.S. states)<br>
+              0.45–0.55 = High (D.C., NY, CA)<br>
+              1.0 = Perfect inequality<br><br>
+              <span class="interp">U.S. national Gini ≈ 0.49 (2023, Census Bureau). Calculated here from ACS income quintile shares.</span>
+            </div>
+          </div>
+        </div>
+        <div id="giniCards" class="gini-gauge-wrap"></div>
+      </div>
+
+      <!-- City comparison table -->
+      <div class="card" style="padding:18px 20px">
+        <div class="chart-hdr">
+          <div>
+            <div class="chart-title">Local Min Wages vs. State</div>
+            <div class="chart-sub">How city ordinances sit above state floor</div>
+          </div>
+          <div class="info-btn" id="ib-localvstate" onmouseenter="showInfo('localvstate')" onmouseleave="hideInfo('localvstate')">ℹ
+            <div class="info-popup" id="ip-localvstate">
+              <strong>Local vs. State minimum wage</strong>
+              Many cities and counties set their own minimum wage above the state floor. This table shows selected cities, the applicable state rate, and the premium the local ordinance adds. A higher local premium means lower-wage workers in that city earn meaningfully more than state law requires. The Kaitz column shows how the local minimum wage compares to the estimated local median wage.
+              <span class="interp">Source: UCB Labor Center inventory (Dec 2025). State wages from Zipperer (2022) + updates.</span>
+            </div>
+          </div>
+        </div>
+        <div class="city-gini-table">
+          <table>
+            <thead><tr>
+              <th>City</th><th>St.</th>
+              <th>City MW</th><th>State MW</th>
+              <th>Premium</th><th>Kaitz</th>
+            </tr></thead>
+            <tbody id="cityTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §6 Full data table -->
+<section class="section">
+  <div class="shead">
+    <span class="snum">06</span>
+    <span class="stitle">Full Dataset Table</span>
+    <span class="ssub">All 121 jurisdictions · sortable</span>
+  </div>
+  <div class="card" style="padding:0">
+    <div style="padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div style="font-size:12px;color:var(--ink3)">Showing <span id="tbl-n">—</span> rows</div>
+      <input type="text" id="tblQ" placeholder="Search jurisdiction…" oninput="renderTable()"
+        style="border:1px solid var(--rule);border-radius:6px;padding:5px 10px;font-size:12px;width:210px"/>
+    </div>
+    <div class="tw" style="border:none;border-top:1px solid var(--rule);margin-top:12px">
+      <table><thead><tr>
+        <th onclick="sortTbl('jurisdiction')" data-col="jurisdiction">Jurisdiction</th>
+        <th onclick="sortTbl('state')" data-col="state">St.</th>
+        <th onclick="sortTbl('level')" data-col="level">Level</th>
+        <th onclick="sortTbl('wage')" data-col="wage">MW</th>
+        <th onclick="sortTbl('kaitz')" data-col="kaitz">Kaitz</th>
+        <th onclick="sortTbl('source_s')" data-col="source_s">Source</th>
+        <th>Wage path</th>
+      </tr></thead>
+      <tbody id="tblBody"></tbody></table>
+    </div>
+  </div>
+</section>
+
+</div><!-- /main -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════ */
+const REGIONS={Northeast:['CT','ME','MA','NH','NJ','NY','PA','RI','VT'],South:['AL','AR','DC','DE','FL','GA','KY','LA','MD','MS','NC','OK','SC','TN','TX','VA','WV'],Midwest:['IL','IN','IA','KS','MI','MN','MO','NE','ND','OH','SD','WI'],West:['AK','AZ','CA','CO','HI','ID','MT','NV','NM','OR','UT','WA','WY']};
+const RCOLS={Northeast:'#2a3a7a',South:'#b84a2a',Midwest:'#2a6040',West:'#8a6800',Other:'#6a6a6a'};
+function getR(st){for(const[r,ss]of Object.entries(REGIONS))if(ss.includes(st))return r;return'Other';}
+const SN={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'Washington D.C.',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
+
+// State minimum wages (key years)
+const MW={
+  AL:{1990:3.80,2009:7.25,2024:7.25},AK:{1990:3.85,2000:5.65,2003:7.15,2009:7.25,2013:7.75,2015:9.75,2017:9.80,2020:10.34,2023:10.85,2024:11.73},
+  AZ:{2007:6.75,2009:7.25,2017:10.00,2018:10.50,2019:11.00,2020:12.00,2023:13.85,2024:14.35},AR:{1990:3.80,2009:7.25,2015:8.00,2019:9.25,2020:10.00,2021:11.00,2024:11.00},
+  CA:{1990:4.25,2000:6.75,2008:8.00,2014:9.00,2016:10.00,2018:11.00,2019:12.00,2020:13.00,2021:14.00,2022:15.00,2023:15.50,2024:16.00,2025:16.50},
+  CO:{1990:3.28,2007:6.85,2009:7.28,2017:9.30,2018:10.20,2019:11.10,2020:12.00,2022:12.56,2023:13.65,2024:14.42},
+  CT:{1990:4.27,2000:6.15,2006:7.40,2009:8.00,2014:8.70,2016:9.60,2018:10.10,2020:12.00,2022:14.00,2023:15.00,2024:16.35},
+  DE:{1990:3.80,2009:7.25,2019:9.25,2021:10.50,2022:11.75,2023:13.25,2024:15.00},
+  DC:{1990:4.85,2010:8.25,2014:9.50,2015:10.50,2016:11.50,2017:12.50,2018:13.25,2019:14.00,2020:15.00,2022:16.10,2023:17.00,2024:17.50},
+  FL:{1990:3.80,2009:7.25,2021:8.65,2022:10.00,2023:12.00,2024:13.00},
+  GA:{1990:3.80,2009:7.25,2024:7.25},HI:{1990:3.85,2006:7.25,2015:7.75,2016:8.50,2018:10.10,2022:12.00,2023:14.00,2024:14.00},
+  ID:{1990:3.80,2009:7.25,2024:7.25},IL:{1990:3.80,2004:5.50,2008:7.50,2009:8.00,2020:9.25,2021:10.00,2022:12.00,2023:13.00,2024:14.00},
+  IN:{1990:3.80,2009:7.25,2024:7.25},IA:{1990:3.80,2009:7.25,2024:7.25},KS:{1990:3.80,2009:7.25,2024:7.25},KY:{1990:3.80,2009:7.25,2024:7.25},
+  LA:{1990:3.80,2009:7.25,2024:7.25},ME:{1990:3.80,2009:7.25,2017:9.00,2018:10.00,2020:12.00,2022:13.80,2023:14.15,2024:14.65},
+  MD:{1990:3.80,2009:7.25,2018:10.10,2020:11.00,2022:12.50,2024:15.00},
+  MA:{1990:3.85,2000:6.75,2008:8.00,2015:9.00,2018:12.00,2020:13.50,2022:15.00,2024:15.00},
+  MI:{1990:3.85,2006:6.95,2008:7.40,2014:8.15,2018:9.25,2020:9.65,2023:10.10,2024:10.33},
+  MN:{1990:3.85,2000:5.15,2014:8.00,2015:9.00,2017:9.50,2019:9.86,2021:10.08,2023:10.59,2024:10.85},
+  MS:{1990:3.80,2009:7.25,2024:7.25},MO:{1990:3.80,2009:7.25,2019:8.60,2020:9.45,2022:11.15,2023:12.00,2024:12.30},
+  MT:{1990:3.80,2007:6.15,2009:7.25,2015:8.05,2022:9.20,2023:9.95,2024:10.30},
+  NE:{1990:3.80,2009:7.25,2015:8.00,2022:10.50,2023:11.00,2024:12.00},
+  NV:{1990:4.25,2004:5.15,2009:7.25,2022:9.50,2023:10.25,2024:12.00},
+  NH:{1990:3.80,2009:7.25,2024:7.25},NJ:{1990:3.80,2005:6.15,2009:7.25,2019:10.00,2020:11.00,2022:13.00,2023:14.13,2024:15.49},
+  NM:{1990:3.80,2009:7.50,2020:9.00,2021:10.50,2022:11.50,2023:12.00,2024:12.00},
+  NY:{1990:3.80,2000:5.15,2009:7.25,2014:8.00,2016:9.00,2018:10.40,2020:11.80,2022:14.20,2023:14.20,2024:16.00},
+  NC:{1990:3.80,2009:7.25,2024:7.25},ND:{1990:3.80,2009:7.25,2024:7.25},
+  OH:{1990:3.80,2006:6.85,2009:7.30,2011:7.40,2015:8.10,2019:8.55,2022:9.30,2023:10.10,2024:10.45},
+  OK:{1990:3.80,2009:7.25,2024:7.25},OR:{1990:3.85,2004:7.05,2009:8.40,2016:9.75,2018:10.75,2020:12.00,2022:13.50,2024:14.70},
+  PA:{1990:3.80,2009:7.25,2024:7.25},RI:{1990:3.85,2000:6.15,2007:7.40,2013:7.75,2015:9.00,2019:10.50,2020:11.50,2022:13.00,2023:14.00,2024:15.00},
+  SC:{1990:3.80,2009:7.25,2024:7.25},SD:{1990:3.80,2009:7.25,2015:8.50,2022:9.95,2023:10.80,2024:11.20},
+  TN:{1990:3.80,2009:7.25,2024:7.25},TX:{1990:3.80,2009:7.25,2024:7.25},UT:{1990:3.80,2009:7.25,2024:7.25},
+  VT:{1990:3.85,2000:5.75,2006:7.25,2009:8.06,2015:9.15,2018:10.50,2020:11.75,2022:13.18,2024:14.01},
+  VA:{1990:3.80,2009:7.25,2021:9.50,2022:11.00,2023:12.00,2024:12.41},
+  WA:{1990:3.85,2000:6.50,2009:8.55,2013:9.19,2017:11.00,2019:12.00,2020:13.50,2022:14.49,2023:15.74,2024:16.28},
+  WV:{1990:3.80,2009:7.25,2015:8.00,2016:8.75,2024:8.75},WI:{1990:3.80,2009:7.25,2024:7.25},WY:{1990:3.80,2009:7.25,2024:7.25}
+};
+function getMW(st,yr){const h=MW[st];if(!h)return 7.25;const ks=Object.keys(h).map(Number).sort((a,b)=>a-b);let v=7.25;for(const k of ks){if(k<=yr)v=h[k];}return v;}
+
+// Local city wages
+const CITY_MW={
+  'Seattle, WA':           {state:'WA',wages:{2015:13.00,2016:13.00,2017:15.00,2018:15.00,2020:16.39,2021:16.69,2022:17.27,2023:18.69,2024:20.29,2025:20.76}},
+  'Emeryville, CA':        {state:'CA',wages:{2015:9.00,2016:14.82,2017:15.20,2018:15.69,2019:16.30,2020:16.84,2021:17.13,2022:17.68,2023:18.67,2024:19.36}},
+  'Mountain View, CA':     {state:'CA',wages:{2015:10.30,2016:11.00,2017:13.00,2018:15.00,2019:16.05,2020:16.05,2021:16.30,2022:17.10,2023:18.15,2024:19.20}},
+  'Sunnyvale, CA':         {state:'CA',wages:{2015:11.00,2016:11.00,2018:15.00,2019:16.05,2020:16.05,2021:16.30,2022:17.10,2023:18.55,2024:19.30}},
+  'Boulder County, CO':    {state:'CO',wages:{2023:13.65,2024:15.69,2025:19.53}},
+  'San Francisco, CA':     {state:'CA',wages:{2014:11.05,2015:12.25,2016:13.00,2017:14.00,2018:15.00,2019:15.59,2020:16.07,2021:16.32,2022:16.99,2023:18.07,2024:18.67}},
+  'Denver, CO':            {state:'CO',wages:{2020:12.85,2021:14.77,2022:15.87,2023:17.29,2024:18.29}},
+  'Tukwila, WA':           {state:'WA',wages:{2022:15.74,2023:19.06,2024:20.29}},
+  'West Hollywood, CA':    {state:'CA',wages:{2022:15.50,2023:17.50,2024:19.08}},
+  'Washington D.C.':       {state:'DC',wages:{2013:8.25,2015:10.50,2017:12.50,2018:13.25,2020:15.00,2022:16.10,2023:17.00,2024:17.50}},
+  'Chicago, IL':           {state:'IL',wages:{2015:10.50,2016:10.50,2017:11.00,2018:12.00,2019:13.00,2020:13.00,2021:15.00,2023:15.80,2024:16.20}},
+  'Los Angeles, CA':       {state:'CA',wages:{2016:10.50,2017:12.00,2018:13.25,2019:14.25,2020:15.00,2021:15.00,2022:16.04,2023:16.78,2024:17.28}},
+  'Santa Fe, NM':          {state:'NM',wages:{2004:8.50,2006:9.50,2012:10.51,2014:10.84,2020:12.10,2021:12.32,2022:14.03,2023:14.03,2024:15.00}},
+  'Oakland, CA':           {state:'CA',wages:{2015:12.25,2016:12.55,2017:12.86,2018:13.23,2019:13.80,2020:14.14,2021:14.36,2022:15.00,2023:15.97,2024:16.50}},
+  'Minneapolis, MN':       {state:'MN',wages:{2018:10.00,2019:11.25,2020:13.25,2021:14.25,2022:15.00,2023:15.19,2024:15.57}},
+};
+function getCityMW(city,yr){const c=CITY_MW[city];if(!c)return null;const ks=Object.keys(c.wages).map(Number).sort((a,b)=>a-b);if(yr<ks[0])return null;let v=null;for(const k of ks){if(k<=yr)v=c.wages[k];}return v;}
+
+// ACS data (key years)
+const ACS={
+  2015:{AL:{p:18.2,i:43253,u:6.1,r:30.5},AK:{p:10.3,i:70760,u:6.5,r:27.1},AZ:{p:17.4,i:49928,u:6.5,r:30.9},AR:{p:18.0,i:40511,u:5.0,r:28.6},CA:{p:15.3,i:61818,u:6.2,r:34.8},CO:{p:11.5,i:60629,u:4.3,r:30.4},CT:{p:10.5,i:71346,u:6.4,r:31.5},DC:{p:18.6,i:69235,u:7.8,r:35.6},DE:{p:12.1,i:58415,u:4.9,r:30.9},FL:{p:16.6,i:47212,u:5.5,r:34.4},GA:{p:17.1,i:49321,u:5.8,r:30.4},HI:{p:10.3,i:66259,u:4.0,r:35.2},ID:{p:13.8,i:46767,u:4.1,r:29.0},IL:{p:13.6,i:57574,u:6.1,r:31.1},IN:{p:14.0,i:49446,u:4.9,r:29.0},IA:{p:11.7,i:54736,u:3.8,r:27.9},KS:{p:13.1,i:52205,u:4.4,r:28.5},KY:{p:18.5,i:43036,u:5.4,r:28.7},LA:{p:19.8,i:44991,u:6.6,r:30.1},ME:{p:13.0,i:49462,u:4.7,r:29.8},MD:{p:9.7,i:74551,u:5.5,r:31.9},MA:{p:11.6,i:67861,u:5.0,r:33.0},MI:{p:15.8,i:50803,u:5.5,r:31.0},MN:{p:10.2,i:61492,u:3.7,r:28.5},MS:{p:22.0,i:39031,u:6.5,r:28.2},MO:{p:15.6,i:48748,u:5.1,r:29.2},MT:{p:14.8,i:46972,u:4.1,r:28.0},NE:{p:11.8,i:54996,u:3.0,r:27.5},NV:{p:15.2,i:52431,u:7.0,r:33.5},NH:{p:7.8,i:68485,u:3.6,r:29.0},NJ:{p:10.8,i:72093,u:6.5,r:33.3},NM:{p:20.4,i:44803,u:6.7,r:29.8},NY:{p:15.4,i:58003,u:5.3,r:34.9},NC:{p:16.4,i:46334,u:5.7,r:29.8},ND:{p:10.7,i:55759,u:2.8,r:25.6},OH:{p:15.0,i:49429,u:4.9,r:29.8},OK:{p:16.0,i:47529,u:4.3,r:27.9},OR:{p:15.2,i:51075,u:6.0,r:32.7},PA:{p:12.9,i:53234,u:5.3,r:29.9},RI:{p:13.4,i:56361,u:6.6,r:33.2},SC:{p:16.4,i:44779,u:6.0,r:29.7},SD:{p:13.2,i:51174,u:3.1,r:26.7},TN:{p:16.7,i:44297,u:5.8,r:29.3},TX:{p:15.9,i:53035,u:4.5,r:29.9},UT:{p:10.5,i:61131,u:3.6,r:28.4},VT:{p:11.4,i:55057,u:3.6,r:29.5},VA:{p:11.2,i:65015,u:4.4,r:29.7},WA:{p:12.2,i:61062,u:5.6,r:31.1},WV:{p:17.7,i:40211,u:6.8,r:27.6},WI:{p:12.4,i:52622,u:4.6,r:28.6},WY:{p:10.7,i:57829,u:4.5,r:24.9}},
+  2019:{AL:{p:15.5,i:51734,u:3.0,r:30.3},AK:{p:9.9,i:77640,u:4.7,r:27.4},AZ:{p:13.5,i:57100,u:4.8,r:30.8},AR:{p:15.2,i:47597,u:3.5,r:28.5},CA:{p:11.8,i:75235,u:4.2,r:34.6},CO:{p:9.3,i:72331,u:2.8,r:31.3},CT:{p:9.6,i:78833,u:3.8,r:31.5},DC:{p:13.7,i:92266,u:5.6,r:35.8},DE:{p:11.3,i:64805,u:3.8,r:30.9},FL:{p:13.6,i:55660,u:3.5,r:34.6},GA:{p:14.3,i:58700,u:3.7,r:30.6},HI:{p:9.3,i:83102,u:2.8,r:35.8},ID:{p:11.2,i:55785,u:2.9,r:28.9},IL:{p:11.5,i:65886,u:4.0,r:31.5},IN:{p:12.0,i:57603,u:3.2,r:29.0},IA:{p:10.8,i:60523,u:2.7,r:27.9},KS:{p:12.0,i:58218,u:3.3,r:28.4},KY:{p:16.3,i:52295,u:4.3,r:28.7},LA:{p:18.6,i:51073,u:4.4,r:29.9},ME:{p:11.1,i:58924,u:3.3,r:29.9},MD:{p:8.1,i:87063,u:3.4,r:32.0},MA:{p:9.4,i:81215,u:3.0,r:33.4},MI:{p:13.1,i:59584,u:4.1,r:31.1},MN:{p:8.6,i:74593,u:3.3,r:28.6},MS:{p:19.6,i:45081,u:5.7,r:28.2},MO:{p:12.9,i:55461,u:3.3,r:29.2},MT:{p:12.7,i:53386,u:3.6,r:28.1},NE:{p:10.3,i:63229,u:3.0,r:27.6},NV:{p:13.7,i:58003,u:3.9,r:33.9},NH:{p:6.6,i:76768,u:2.6,r:29.0},NJ:{p:9.2,i:85751,u:4.2,r:33.5},NM:{p:18.2,i:51945,u:5.0,r:29.8},NY:{p:13.0,i:68486,u:4.1,r:34.8},NC:{p:14.0,i:54602,u:4.0,r:29.8},ND:{p:10.6,i:64577,u:2.3,r:25.3},OH:{p:13.1,i:56111,u:4.2,r:29.9},OK:{p:15.2,i:52919,u:3.4,r:27.8},OR:{p:11.4,i:62818,u:4.3,r:33.3},PA:{p:11.9,i:61744,u:4.4,r:30.0},RI:{p:11.3,i:63870,u:3.8,r:33.2},SC:{p:14.1,i:54864,u:3.4,r:29.7},SD:{p:11.9,i:58275,u:3.3,r:26.8},TN:{p:14.0,i:52375,u:3.4,r:29.3},TX:{p:13.6,i:61874,u:3.5,r:30.0},UT:{p:8.9,i:74197,u:2.7,r:28.5},VT:{p:10.2,i:63477,u:2.8,r:29.6},VA:{p:10.0,i:76456,u:2.9,r:29.9},WA:{p:10.0,i:77006,u:4.4,r:31.4},WV:{p:16.8,i:48850,u:5.3,r:27.7},WI:{p:10.4,i:60773,u:3.3,r:28.7},WY:{p:10.1,i:65003,u:4.0,r:24.9}},
+  2023:{AL:{p:15.0,i:57872,u:2.9,r:30.5},AK:{p:10.0,i:82103,u:4.3,r:27.6},AZ:{p:12.4,i:69056,u:3.9,r:31.4},AR:{p:16.1,i:53113,u:3.2,r:28.7},CA:{p:11.2,i:91905,u:4.5,r:35.4},CO:{p:9.1,i:84954,u:3.3,r:32.1},CT:{p:9.4,i:90213,u:3.9,r:32.0},DC:{p:13.0,i:109627,u:5.0,r:36.5},DE:{p:11.1,i:72724,u:4.4,r:31.2},FL:{p:12.7,i:63718,u:2.8,r:35.8},GA:{p:13.8,i:67224,u:3.3,r:31.2},HI:{p:9.3,i:92458,u:3.3,r:36.8},ID:{p:9.6,i:66474,u:2.9,r:29.6},IL:{p:11.5,i:75140,u:4.4,r:31.9},IN:{p:11.5,i:65893,u:3.1,r:29.3},IA:{p:10.6,i:68441,u:2.8,r:28.2},KS:{p:11.4,i:67857,u:2.8,r:28.7},KY:{p:15.8,i:60111,u:4.3,r:28.9},LA:{p:19.0,i:56552,u:3.8,r:30.2},ME:{p:10.7,i:70074,u:3.1,r:30.1},MD:{p:7.8,i:97332,u:2.8,r:32.4},MA:{p:9.1,i:96505,u:3.4,r:34.0},MI:{p:13.1,i:67410,u:3.9,r:31.5},MN:{p:8.5,i:84313,u:2.8,r:28.9},MS:{p:19.7,i:49111,u:4.1,r:28.4},MO:{p:12.8,i:63247,u:2.7,r:29.5},MT:{p:12.3,i:63466,u:3.1,r:28.6},NE:{p:9.8,i:71306,u:2.3,r:27.9},NV:{p:12.5,i:67510,u:4.6,r:34.6},NH:{p:6.4,i:92680,u:2.6,r:29.4},NJ:{p:9.0,i:97126,u:4.2,r:33.9},NM:{p:17.6,i:57169,u:4.3,r:30.2},NY:{p:12.8,i:78609,u:4.1,r:35.4},NC:{p:13.5,i:63882,u:3.6,r:30.1},ND:{p:10.1,i:73959,u:2.0,r:25.5},OH:{p:13.0,i:63746,u:3.9,r:30.2},OK:{p:15.1,i:58746,u:3.1,r:28.2},OR:{p:10.8,i:73632,u:4.4,r:33.8},PA:{p:11.8,i:69318,u:3.9,r:30.3},RI:{p:10.8,i:76358,u:3.3,r:33.6},SC:{p:14.1,i:62937,u:3.1,r:30.1},SD:{p:10.4,i:70226,u:2.3,r:27.1},TN:{p:13.7,i:62166,u:3.1,r:29.6},TX:{p:13.3,i:71040,u:3.9,r:30.6},UT:{p:7.8,i:88214,u:2.7,r:28.8},VT:{p:10.0,i:76589,u:2.7,r:29.9},VA:{p:9.6,i:87612,u:2.9,r:30.2},WA:{p:9.4,i:90325,u:4.4,r:32.0},WV:{p:17.0,i:54329,u:4.3,r:27.9},WI:{p:9.9,i:70996,u:2.9,r:28.9},WY:{p:9.9,i:73279,u:3.7,r:25.1}},
+  2024:{AL:{p:14.8,i:59540,u:3.1,r:30.6},AK:{p:9.8,i:84200,u:4.5,r:27.8},AZ:{p:12.2,i:71300,u:4.1,r:31.6},AR:{p:15.9,i:54800,u:3.3,r:28.8},CA:{p:11.0,i:95100,u:5.2,r:35.7},CO:{p:8.9,i:87500,u:3.8,r:32.4},CT:{p:9.2,i:93400,u:4.2,r:32.3},DC:{p:12.7,i:113000,u:5.3,r:36.9},DE:{p:10.9,i:74800,u:4.6,r:31.4},FL:{p:12.5,i:65900,u:3.4,r:36.2},GA:{p:13.6,i:69100,u:3.5,r:31.5},HI:{p:9.1,i:95300,u:3.5,r:37.2},ID:{p:9.4,i:68400,u:3.1,r:29.9},IL:{p:11.3,i:77600,u:4.6,r:32.2},IN:{p:11.3,i:67800,u:3.3,r:29.5},IA:{p:10.4,i:70300,u:3.0,r:28.4},KS:{p:11.2,i:69800,u:3.0,r:28.9},KY:{p:15.6,i:61900,u:4.5,r:29.1},LA:{p:18.8,i:58200,u:4.0,r:30.4},ME:{p:10.5,i:72100,u:3.3,r:30.3},MD:{p:7.6,i:100200,u:3.0,r:32.6},MA:{p:8.9,i:99600,u:3.6,r:34.3},MI:{p:12.9,i:69400,u:4.1,r:31.7},MN:{p:8.3,i:86800,u:3.0,r:29.1},MS:{p:19.5,i:50700,u:4.3,r:28.5},MO:{p:12.6,i:65200,u:2.9,r:29.7},MT:{p:12.1,i:65300,u:3.3,r:28.8},NE:{p:9.6,i:73400,u:2.5,r:28.1},NV:{p:12.3,i:69500,u:5.0,r:34.9},NH:{p:6.2,i:95500,u:2.8,r:29.6},NJ:{p:8.8,i:100200,u:4.4,r:34.1},NM:{p:17.4,i:59100,u:4.5,r:30.4},NY:{p:12.6,i:81100,u:4.3,r:35.7},NC:{p:13.3,i:65800,u:3.8,r:30.3},ND:{p:9.9,i:76100,u:2.2,r:25.7},OH:{p:12.8,i:65700,u:4.1,r:30.4},OK:{p:14.9,i:60500,u:3.3,r:28.4},OR:{p:10.6,i:76000,u:4.6,r:34.1},PA:{p:11.6,i:71500,u:4.1,r:30.5},RI:{p:10.6,i:78700,u:3.5,r:33.9},SC:{p:13.9,i:64900,u:3.3,r:30.3},SD:{p:10.2,i:72300,u:2.5,r:27.3},TN:{p:13.5,i:64100,u:3.3,r:29.8},TX:{p:13.1,i:73300,u:4.1,r:30.9},UT:{p:7.6,i:90900,u:2.9,r:29.0},VT:{p:9.8,i:78900,u:2.9,r:30.1},VA:{p:9.4,i:90300,u:3.1,r:30.4},WA:{p:9.2,i:93200,u:4.6,r:32.3},WV:{p:16.8,i:56100,u:4.5,r:28.1},WI:{p:9.7,i:73200,u:3.1,r:29.1},WY:{p:9.7,i:75600,u:3.9,r:25.3}}
+};
+function nearACS(yr){return[2015,2019,2023,2024].reduce((p,c)=>Math.abs(c-yr)<Math.abs(p-yr)?c:p);}
+
+// Quintile income shares by state (ACS B19082)
+// [bottom 20%, 20-40%, 40-60%, 60-80%, top 20%]
+const QSHARES={
+  AL:[.034,.089,.153,.238,.486],AK:[.040,.099,.163,.244,.454],AZ:[.036,.090,.153,.237,.484],
+  AR:[.032,.086,.149,.232,.501],CA:[.028,.079,.145,.234,.514],CO:[.037,.095,.160,.243,.465],
+  CT:[.030,.082,.143,.225,.520],DC:[.023,.067,.131,.218,.561],DE:[.035,.092,.156,.241,.476],
+  FL:[.030,.082,.148,.234,.506],GA:[.032,.086,.151,.235,.496],HI:[.033,.089,.156,.243,.479],
+  ID:[.037,.094,.159,.242,.468],IL:[.031,.084,.150,.234,.501],IN:[.036,.093,.157,.241,.473],
+  IA:[.039,.097,.160,.243,.461],KS:[.037,.093,.157,.241,.472],KY:[.033,.087,.152,.236,.492],
+  LA:[.030,.082,.148,.231,.509],ME:[.037,.095,.160,.244,.464],MD:[.034,.091,.157,.243,.475],
+  MA:[.031,.085,.149,.234,.501],MI:[.034,.089,.154,.237,.486],MN:[.040,.100,.164,.246,.450],
+  MS:[.029,.080,.146,.229,.516],MO:[.034,.089,.153,.236,.488],MT:[.036,.092,.157,.241,.474],
+  NE:[.039,.097,.161,.244,.459],NV:[.033,.087,.152,.236,.492],NH:[.039,.098,.163,.247,.453],
+  NJ:[.031,.083,.148,.233,.505],NM:[.030,.082,.147,.231,.510],NY:[.027,.076,.140,.225,.532],
+  NC:[.033,.087,.152,.235,.493],ND:[.041,.099,.162,.244,.454],OH:[.034,.089,.153,.237,.487],
+  OK:[.033,.087,.151,.234,.495],OR:[.034,.089,.154,.239,.484],PA:[.034,.090,.154,.238,.484],
+  RI:[.034,.090,.155,.240,.481],SC:[.032,.086,.151,.234,.497],SD:[.039,.096,.160,.243,.462],
+  TN:[.032,.086,.150,.233,.499],TX:[.031,.083,.147,.232,.507],UT:[.039,.098,.163,.247,.453],
+  VT:[.037,.095,.159,.243,.466],VA:[.033,.088,.153,.237,.489],WA:[.038,.097,.161,.244,.460],
+  WV:[.033,.087,.151,.233,.496],WI:[.039,.098,.161,.244,.458],WY:[.040,.097,.161,.243,.459]
+};
+function giniFromQ(sh){
+  const c=[0];let s=0;sh.forEach(v=>{s+=v;c.push(s);});
+  let a=0;for(let i=1;i<c.length;i++)a+=(c[i]+c[i-1])*.2/2;
+  return+(1-2*a).toFixed(3);
+}
+function lorenzPoints(sh){
+  const pts=[{x:0,y:0}];let cx=0,cy=0;
+  sh.forEach((v,i)=>{cx+=20;cy+=v*100;pts.push({x:+cx.toFixed(1),y:+cy.toFixed(2)});});
+  return pts;
+}
+// Estimate where full-time min wage worker falls in income distribution
+// median individual wage ~ medHH * 0.55 / 2080
+function mwPercentile(mwHr, medHHInc){
+  const medIndiv = medHHInc * 0.55 / 2080;
+  const annualMW = mwHr * 2080;
+  // Rough mapping: bottom quintile earns ~0-50% of median; 2nd ~50-80%; 3rd ~80-120%; etc.
+  const ratioToMedian = (mwHr / medIndiv) * 100;
+  // Approximate percentile placement from ratio to median individual wage
+  if(ratioToMedian < 35) return {pct: 8, quintile: 1};
+  if(ratioToMedian < 55) return {pct: 18, quintile: 1};
+  if(ratioToMedian < 70) return {pct: 28, quintile: 2};
+  if(ratioToMedian < 85) return {pct: 38, quintile: 2};
+  if(ratioToMedian < 100) return {pct: 48, quintile: 3};
+  if(ratioToMedian < 115) return {pct: 58, quintile: 3};
+  return {pct: 65, quintile: 4};
+}
+
+const AVARS={poverty:{l:'Poverty Rate (%)',k:'p',f:v=>v.toFixed(1)+'%'},median_income:{l:'Median HH Income ($)',k:'i',f:v=>'$'+Math.round(v/1000)+'k'},unemployment:{l:'Unemployment (%)',k:'u',f:v=>v.toFixed(1)+'%'},rent_burden:{l:'Rent Burden (%)',k:'r',f:v=>v.toFixed(1)+'%'}};
+const TIER_C={'≤$7.25':'#9a9278','>$7.25–$9.99':'#c07030','>$10–$12.99':'#2a6a9a','>$13–$15.99':'#2a6040','>$16':'#b84a2a'};
+function getMWTier(w){if(w<=7.25)return'≤$7.25';if(w<10)return'>$7.25–$9.99';if(w<13)return'>$10–$12.99';if(w<16)return'>$13–$15.99';return'>$16';}
+
+/* ══ STATE ══ */
+let curYr=2024, curLv='all', curYVar='poverty', curHL='', sortCol='wage', sortDir=-1;
+let C={sc:null,rank:null,trend:null,acs:null,kaitz:null,lorenz:null};
+const TREND_STS=['CA','NY','WA','TX','FL','IL','MA','DC'];
+let activeTrend=new Set(['CA','NY','WA','TX']);
+const T_COLS=['#1a5c5c','#b84a2a','#2a3a7a','#8a6800','#6a2a6a','#2a6040','#555','#3a6a9a'];
+
+Chart.defaults.font.family="'Mulish',system-ui,sans-serif";
+Chart.defaults.color='#7a7760';
+Chart.defaults.borderColor='#d4d0c4';
+
+/* ══ INFO TOOLTIP ══ */
+function showInfo(id){document.getElementById('ip-'+id).classList.add('show');}
+function hideInfo(id){document.getElementById('ip-'+id).classList.remove('show');}
+
+/* ══ CONTROLS ══ */
+function onYear(v){
+  curYr=+v;document.getElementById('yrVal').textContent=v;
+  document.getElementById('kpi-yr').textContent=v+' estimates';
+  document.getElementById('kaitz-yr').textContent=v;
+  document.getElementById('corr-yr').textContent=v;
+  renderAll();
+}
+function setLv(btn){document.querySelectorAll('[data-lv]').forEach(b=>b.classList.toggle('on',b===btn));curLv=btn.dataset.lv;renderAll();}
+function onVarChange(){
+  curYVar=document.getElementById('yVar').value;
+  document.getElementById('sc-var-lbl').textContent=AVARS[curYVar].l;
+  document.getElementById('acs-trend-sub').textContent=AVARS[curYVar].l.toLowerCase()+' · same states';
+  renderAll();
+}
+
+/* ══ HELPERS ══ */
+function getACS(st,yr){const ay=nearACS(yr);return ACS[ay]?.[st]||null;}
+function pearsonR(xs,ys){const n=xs.length;if(n<3)return 0;const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let n2=0,dx2=0,dy2=0;for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;n2+=dx*dy;dx2+=dx**2;dy2+=dy**2;}return dx2*dy2>0?n2/Math.sqrt(dx2*dy2):0;}
+function linReg(pts){const n=pts.length;if(n<2)return{m:0,b:0};const mx=pts.reduce((s,p)=>s+p.x,0)/n,my=pts.reduce((s,p)=>s+p.y,0)/n;let nu=0,de=0;pts.forEach(p=>{nu+=(p.x-mx)*(p.y-my);de+=(p.x-mx)**2;});const m=de?nu/de:0;return{m,b:my-m*mx};}
+function sp(wages,yr){const ys=Object.keys(wages).map(Number).filter(y=>y>=2010&&y<=yr).sort((a,b)=>a-b);if(!ys.length)return'';const vs=ys.map(y=>wages[y]);const mx=Math.max(...vs);return'<span class="sp">'+vs.map((v,i)=>`<span style="height:${Math.round((v/mx)*12)+2}px;background:${ys[i]===yr?'var(--rust)':'var(--rule)'}"></span>`).join('')+'</span>';}
+
+/* ══ KPIs ══ */
+function renderKPIs(){
+  const stWages=Object.keys(MW).map(st=>getMW(st,curYr)).sort((a,b)=>a-b);
+  const med=stWages[Math.floor(stWages.length/2)];
+  const above=stWages.filter(w=>w>7.25).length;
+  const topCity=Object.entries(CITY_MW).map(([n,c])=>({n,w:getCityMW(n,curYr)||0})).sort((a,b)=>b.w-a.w)[0];
+  const activeLoc=Object.values(CITY_MW).filter(c=>getCityMW(Object.keys(CITY_MW).find(k=>CITY_MW[k]===c),curYr)!==null).length;
+  document.getElementById('kf').textContent='$'+getMW('US',curYr).toFixed(2);
+  document.getElementById('ksm').textContent='$'+med.toFixed(2);
+  document.getElementById('kab').textContent=above;
+  document.getElementById('khl').textContent=topCity?'$'+topCity.w.toFixed(2):'—';
+  document.getElementById('khln').textContent=topCity?topCity.n:'—';
+  document.getElementById('kloc').textContent=activeLoc||Object.keys(CITY_MW).length;
+  document.getElementById('hdr-fed').textContent='$'+(7.25).toFixed(2);
+  const topSt=Object.keys(MW).map(st=>({st,w:getMW(st,curYr)})).sort((a,b)=>b.w-a.w)[0];
+  document.getElementById('hdr-top-st').textContent='$'+topSt.w.toFixed(2);
+  document.getElementById('hdr-top-loc').textContent=topCity?'$'+topCity.w.toFixed(2):'—';
+}
+
+/* ══ SCATTER ══ */
+function renderScatter(){
+  const colorBy=document.getElementById('colorBy').value;
+  const hl=document.getElementById('hlSt').value;
+  const ay=nearACS(curYr);const acsD=ACS[ay]||{};const vk=AVARS[curYVar].k;
+  const pts=Object.keys(MW).map(st=>{
+    const mw=getMW(st,curYr);const a=acsD[st];if(!a)return null;
+    const yv=a[vk];if(yv==null)return null;
+    const reg=getR(st);const tier=getMWTier(mw);
+    const col=colorBy==='region'?RCOLS[reg]:TIER_C[tier]||'#888';
+    return{x:mw,y:yv,state:st,name:SN[st]||st,region:reg,tier,
+      bg:st===hl?'#b84a2a':col,rad:st===hl?9:5.5,bw:st===hl?2:0};
+  }).filter(Boolean);
+
+  const legMap={};pts.forEach(p=>{const k=colorBy==='region'?p.region:p.tier;legMap[k]=p.bg;});
+  document.getElementById('scLeg').innerHTML=Object.entries(legMap).map(([k,c])=>`<div class="sli"><span class="sld" style="background:${c}"></span>${k}</div>`).join('');
+
+  const r2=pearsonR(pts.map(p=>p.x),pts.map(p=>p.y));
+  const reg=linReg(pts.map(p=>({x:p.x,y:p.y})));
+  const xs=pts.map(p=>p.x);const xMin=Math.min(...xs)-.3,xMax=Math.max(...xs)+.3;
+  document.getElementById('sc-sub').textContent=`${pts.length} states · ACS ${ay}`;
+  document.getElementById('sc-r').textContent=`r = ${r2.toFixed(3)}, R² = ${(r2**2).toFixed(3)}`;
+  if(C.sc){C.sc.destroy();}
+  C.sc=new Chart(document.getElementById('scChart'),{type:'scatter',data:{datasets:[
+    {label:'States',data:pts,pointBackgroundColor:pts.map(p=>p.bg),pointRadius:pts.map(p=>p.rad),pointBorderWidth:pts.map(p=>p.bw),pointBorderColor:'#b84a2a',pointHoverRadius:8},
+    {label:'OLS',type:'line',data:[{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}],borderColor:'#b84a2a',borderWidth:1.5,borderDash:[5,4],pointRadius:0,fill:false,tension:0,parsing:false},
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label(ctx){const p=ctx.raw;if(!p.name)return;return[p.name,`Min wage: $${p.x.toFixed(2)}`,`${AVARS[curYVar].l}: ${AVARS[curYVar].f(p.y)}`];}}}},
+  scales:{x:{title:{display:true,text:'Min Wage ($/hr)',font:{size:10}},ticks:{callback:v=>'$'+v.toFixed(2)}},y:{title:{display:true,text:AVARS[curYVar].l,font:{size:10}},ticks:{callback:v=>curYVar==='median_income'?'$'+(v/1000).toFixed(0)+'k':v+'%'}}}}});
+}
+
+/* ══ RANK BAR ══ */
+function renderRank(){
+  const rows=Object.keys(MW).map(st=>({st,w:getMW(st,curYr),reg:getR(st)})).sort((a,b)=>b.w-a.w);
+  if(C.rank){C.rank.destroy();}
+  C.rank=new Chart(document.getElementById('rankChart'),{type:'bar',data:{labels:rows.map(r=>r.st),datasets:[
+    {data:rows.map(r=>r.w),backgroundColor:rows.map(r=>RCOLS[r.reg]||'#888'),borderRadius:3,borderWidth:0},
+    {type:'line',data:rows.map(()=>7.25),borderColor:'#b84a2a',borderWidth:1.5,borderDash:[4,3],pointRadius:0,fill:false,tension:0,label:'Federal ($7.25)'},
+  ]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` $${ctx.parsed.x.toFixed(2)}`}}},scales:{x:{min:0,max:22,ticks:{callback:v=>'$'+v}},y:{ticks:{font:{size:9}}}}}});
+}
+
+/* ══ TREND CHARTS ══ */
+const TYRS=[1990,1995,2000,2005,2008,2010,2013,2015,2018,2019,2020,2021,2022,2023,2024,2025];
+const ACSY=[2015,2019,2023,2024];
+function buildTrendPills(){
+  document.getElementById('trendPills').innerHTML=TREND_STS.map((st,i)=>{
+    const on=activeTrend.has(st);
+    return`<button class="pb${on?' on':''}" style="${on?'background:'+T_COLS[i]+';border-color:'+T_COLS[i]+';':'color:'+T_COLS[i]+';border-color:'+T_COLS[i]+';border-right:1px solid '+T_COLS[i]+';'}" onclick="toggleTrend(this,'${st}')">${st}</button>`;
+  }).join('');
+}
+function toggleTrend(btn,st){if(activeTrend.has(st)){if(activeTrend.size>1)activeTrend.delete(st);}else activeTrend.add(st);buildTrendPills();renderTrends();}
+function renderTrends(){
+  const sts=TREND_STS.filter(s=>activeTrend.has(s));
+  if(C.trend){C.trend.destroy();}
+  C.trend=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:TYRS,datasets:sts.map((st,i)=>({label:st,data:TYRS.map(y=>getMW(st,y)),borderColor:T_COLS[i],backgroundColor:'transparent',borderWidth:2,pointRadius:2,tension:0.05,spanGaps:true}))},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:9,font:{size:10}}}},scales:{y:{ticks:{callback:v=>'$'+v.toFixed(2)}}}}});
+  const vk=AVARS[curYVar].k;
+  if(C.acs){C.acs.destroy();}
+  C.acs=new Chart(document.getElementById('acsTrendChart'),{type:'line',data:{labels:ACSY,datasets:sts.map((st,i)=>({label:st,data:ACSY.map(y=>ACS[y]?.[st]?.[vk]??null),borderColor:T_COLS[i],backgroundColor:'transparent',borderWidth:2,pointRadius:3,tension:0.1,spanGaps:true}))},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top',labels:{boxWidth:9,font:{size:10}}}},scales:{y:{ticks:{callback:v=>curYVar==='median_income'?'$'+(v/1000).toFixed(0)+'k':v+'%'}}}}});
+}
+
+/* ══ KAITZ ══ */
+function renderKaitz(){
+  const rows=Object.keys(MW).map(st=>{
+    const mw=getMW(st,curYr);const a=getACS(st,curYr);if(!a)return null;
+    const medIndivHr=a.i*0.55/2080;const kaitz=+(mw/medIndivHr*100).toFixed(1);
+    return{st,mw,kaitz};
+  }).filter(Boolean).sort((a,b)=>b.kaitz-a.kaitz).slice(0,30);
+  if(C.kaitz){C.kaitz.destroy();}
+  C.kaitz=new Chart(document.getElementById('kaitzChart'),{type:'bar',data:{labels:rows.map(r=>r.st),datasets:[{label:'Kaitz %',data:rows.map(r=>r.kaitz),backgroundColor:rows.map(r=>r.kaitz>=55?'#b84a2a':r.kaitz>=40?'#2a6040':'#a09878'),borderRadius:3,borderWidth:0}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toFixed(1)}%`}}},
+  scales:{y:{min:0,max:85,ticks:{callback:v=>v+'%'},title:{display:true,text:'% of median wage',font:{size:10}}},
+  annotations:{line55:{type:'line',yMin:55,yMax:55,borderColor:'#b84a2a',borderWidth:1.5,borderDash:[4,3]},
+    line40:{type:'line',yMin:40,yMax:40,borderColor:'#2a6040',borderWidth:1,borderDash:[4,3]}}}}});
+}
+
+/* ══ CORRELATION MATRIX ══ */
+const CVARS=['minwage','poverty','median_income','unemployment','rent_burden'];
+const CSHORT={minwage:'Min Wage',poverty:'Poverty',median_income:'Income',unemployment:'Unemp.',rent_burden:'Rent Bdn'};
+function corrColor(r){const t=Math.abs(r);const base=255-Math.round(t*80);if(r>0)return`rgb(${base},${base+Math.round(t*40)},${255})`;else return`rgb(${255},${base+Math.round(t*30)},${base})`;}
+function renderCorr(){
+  const ay=nearACS(curYr);const acsD=ACS[ay]||{};
+  const allSt=Object.keys(MW);
+  const vals={};CVARS.forEach(v=>{vals[v]=allSt.map(st=>{if(v==='minwage')return getMW(st,curYr);const a=acsD[st];if(!a)return null;return a[{poverty:'p',median_income:'i',unemployment:'u',rent_burden:'r'}[v]];}).filter(x=>x!=null);});
+  let html=`<div style="display:grid;grid-template-columns:60px repeat(5,1fr);gap:2px;font-size:11px">`;
+  html+=`<div></div>`;
+  CVARS.forEach(v=>{html+=`<div style="text-align:center;font-family:var(--font-m);font-size:9px;color:var(--ink3);padding:3px 1px">${CSHORT[v]}</div>`;});
+  CVARS.forEach(va=>{
+    html+=`<div style="display:flex;align-items:center;font-family:var(--font-m);font-size:9px;color:var(--ink3);padding-right:5px;justify-content:flex-end">${CSHORT[va]}</div>`;
+    CVARS.forEach(vb=>{
+      const paired=allSt.map(st=>{
+        const a=vals[va][allSt.indexOf(st)];const b=vals[vb][allSt.indexOf(st)];
+        return(a!=null&&b!=null)?{a,b}:null;
+      }).filter(Boolean);
+      const r=va===vb?1:pearsonR(paired.map(p=>p.a),paired.map(p=>p.b));
+      const bg=va===vb?'var(--bg3)':corrColor(r);
+      const tc=Math.abs(r)>.5?'#fff':'#333';
+      html+=`<div style="background:${bg};color:${tc};border-radius:4px;height:42px;display:flex;align-items:center;justify-content:center;font-family:var(--font-m);font-weight:600;font-size:11px;cursor:default" title="${CSHORT[va]}×${CSHORT[vb]}: r=${r.toFixed(3)}">${va===vb?'—':r.toFixed(2)}</div>`;
+    });
+  });
+  html+=`</div>`;
+  document.getElementById('corrMatrix').innerHTML=html;
+}
+
+/* ══ LORENZ CURVE ══ */
+function renderLorenz(){
+  const st1=document.getElementById('lorenzState').value;
+  const st2=document.getElementById('lorenzCompare').value;
+  const cityName=document.getElementById('lorenzCity').value;
+  const cityMWLabel={
+    'Seattle':'Seattle, WA','Emeryville':'Emeryville, CA','Mountain View':'Mountain View, CA',
+    'San Francisco':'San Francisco, CA','Denver':'Denver, CO','Chicago':'Chicago, IL',
+    'Washington DC':'Washington D.C.','Los Angeles':'Los Angeles, CA',
+    'Boulder County':'Boulder County, CO','Santa Fe':'Santa Fe, NM'
+  };
+
+  const mw1=getMW(st1,curYr);
+  const a1=getACS(st1,curYr);
+  const sh1=QSHARES[st1]||[.033,.088,.153,.237,.489];
+  const g1=giniFromQ(sh1);
+  const lp1=lorenzPoints(sh1);
+
+  // min wage position on distribution
+  const mwPos1=a1?mwPercentile(mw1,a1.i):null;
+
+  const datasets=[];
+  const diagonal={label:'Perfect equality',data:[{x:0,y:0},{x:20,y:20},{x:40,y:40},{x:60,y:60},{x:80,y:80},{x:100,y:100}],borderColor:'#9a9278',borderWidth:1.5,borderDash:[6,4],pointRadius:0,fill:false,tension:0,parsing:false,order:0};
+  datasets.push(diagonal);
+
+  // Primary state fill
+  datasets.push({label:`${SN[st1]||st1} (Gini ${g1})`,data:lp1,borderColor:'#1a5c5c',backgroundColor:'rgba(26,92,92,.08)',borderWidth:2.5,pointRadius:0,fill:'origin',tension:0.1,parsing:false,order:1});
+
+  // Compare state
+  let g2=null;
+  if(st2&&st2!==st1){
+    const sh2=QSHARES[st2]||[.033,.088,.153,.237,.489];
+    g2=giniFromQ(sh2);
+    datasets.push({label:`${SN[st2]||st2} (Gini ${g2})`,data:lorenzPoints(sh2),borderColor:'#b84a2a',backgroundColor:'transparent',borderWidth:2,pointRadius:0,fill:false,tension:0.1,parsing:false,order:2});
+  }
+
+  // Min wage annotation vertical line
+  if(mwPos1){
+    datasets.push({label:`${st1} min wage: $${mw1} ≈ ${mwPos1.pct}th pct`,data:[{x:mwPos1.pct,y:0},{x:mwPos1.pct,y:100}],borderColor:'#b84a2a',borderWidth:1.5,borderDash:[3,3],pointRadius:0,fill:false,tension:0,parsing:false,order:3});
+  }
+
+  // City min wage line
+  if(cityName){
+    const fullName=cityMWLabel[cityName];
+    const cityData=CITY_MW[fullName];
+    if(cityData){
+      const cityMW=getCityMW(fullName,curYr);
+      if(cityMW&&a1){
+        const cPos=mwPercentile(cityMW,a1.i);
+        datasets.push({label:`${cityName} local: $${cityMW} ≈ ${cPos.pct}th pct`,data:[{x:cPos.pct,y:0},{x:cPos.pct,y:100}],borderColor:'#8a6800',borderWidth:1.5,borderDash:[3,3],pointRadius:0,fill:false,tension:0,parsing:false,order:4});
+      }
+    }
+  }
+
+  if(C.lorenz){C.lorenz.destroy();}
+  C.lorenz=new Chart(document.getElementById('lorenzChart'),{type:'line',data:{datasets},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10.5}}},
+      tooltip:{callbacks:{title:()=>'',label:ctx=>`${ctx.dataset.label}: bottom ${ctx.parsed.x}% earn ${ctx.parsed.y.toFixed(1)}% of income`}}},
+    scales:{
+      x:{min:0,max:100,title:{display:true,text:'Cumulative % of population (poorest → richest)',font:{size:10}},ticks:{callback:v=>v+'%'}},
+      y:{min:0,max:100,title:{display:true,text:'Cumulative % of income',font:{size:10}},ticks:{callback:v=>v+'%'}}
+    }
+  }});
+
+  // Update Gini cards
+  renderGiniCards(st1,g1,mw1,a1,st2,g2);
+  document.getElementById('gini-yr-lbl').textContent=curYr;
+}
+
+function renderGiniCards(st1,g1,mw1,a1,st2,g2){
+  const giniLabel=g=>{if(g<0.30)return{l:'Low inequality',c:'var(--green)'};if(g<0.38)return{l:'Moderate',c:'var(--gold)'};if(g<0.45)return{l:'High inequality',c:'var(--rust)'};return{l:'Very high',c:'var(--plum)'};}
+  function card(st,g,mw,a){
+    const {l,c}=giniLabel(g);
+    const pct=Math.min(100,Math.max(0,(g-0.25)/0.35*100)).toFixed(0);
+    const kaitz=a?+(mw/(a.i*0.55/2080)*100).toFixed(1):null;
+    return`<div class="gini-card">
+      <div class="gc-label">${SN[st]||st}</div>
+      <div class="gc-val">${g}</div>
+      <div class="gc-sub" style="color:${c}">${l} · Gini coefficient</div>
+      <div class="gini-bar-wrap">
+        <div class="gini-bar-track">
+          <div class="gini-bar-marker" style="left:${pct}%"></div>
+        </div>
+        <div class="gini-bar-labels"><span>0.25</span><span>Equal ← → Unequal</span><span>0.60</span></div>
+      </div>
+      <div style="margin-top:10px;font-size:11.5px;color:var(--ink3)">
+        Min wage: <strong style="color:var(--ink)">$${mw.toFixed(2)}/hr</strong>${kaitz?` &nbsp;·&nbsp; Kaitz: <strong style="color:var(--teal)">${kaitz}%</strong>`:''}
+      </div>
+    </div>`;
+  }
+  let html=card(st1,g1,mw1,a1);
+  if(st2&&g2!==null){const a2=getACS(st2,curYr);const mw2=getMW(st2,curYr);html+=card(st2,g2,mw2,a2);}
+  document.getElementById('giniCards').innerHTML=html;
+}
+
+/* ══ CITY TABLE ══ */
+function renderCityTable(){
+  const cities=[
+    {name:'Seattle, WA',st:'WA'},{name:'Emeryville, CA',st:'CA'},{name:'Mountain View, CA',st:'CA'},
+    {name:'San Francisco, CA',st:'CA'},{name:'Denver, CO',st:'CO'},{name:'Chicago, IL',st:'IL'},
+    {name:'Los Angeles, CA',st:'CA'},{name:'Washington D.C.',st:'DC'},{name:'Minneapolis, MN',st:'MN'},
+    {name:'Santa Fe, NM',st:'NM'},{name:'Oakland, CA',st:'CA'},{name:'Boulder County, CO',st:'CO'},
+  ];
+  const tbody=document.getElementById('cityTable');
+  tbody.innerHTML=cities.map(c=>{
+    const cmw=getCityMW(c.name,curYr);if(!cmw)return'';
+    const smw=getMW(c.st,curYr);const prem=cmw-smw;
+    const a=getACS(c.st,curYr);const kaitz=a?+(cmw/(a.i*0.55/2080)*100).toFixed(1):null;
+    const pc=prem>3?'var(--teal)':prem>1?'var(--gold)':'var(--ink3)';
+    return`<tr>
+      <td style="font-weight:500;font-size:11.5px">${c.name.replace(/,\s*[A-Z]{2}$/,'')}</td>
+      <td><strong>${c.st}</strong></td>
+      <td style="font-family:var(--font-m);font-weight:600;color:var(--teal)">$${cmw.toFixed(2)}</td>
+      <td style="font-family:var(--font-m)">$${smw.toFixed(2)}</td>
+      <td style="font-family:var(--font-m);color:${pc}">+$${prem.toFixed(2)}</td>
+      <td style="font-family:var(--font-m)">${kaitz?kaitz+'%':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ TABLE ══ */
+function sortTbl(col){if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}document.querySelectorAll('.tw th').forEach(th=>th.classList.toggle('sorted',th.dataset.col===col));renderTable();}
+function renderTable(){
+  const q=(document.getElementById('tblQ').value||'').toLowerCase();
+  const stRows=Object.keys(MW).map(st=>{
+    const w=getMW(st,curYr);const a=getACS(st,curYr);
+    const kaitz=a?+(w/(a.i*0.55/2080)*100).toFixed(1):null;
+    return{jurisdiction:SN[st]||st,state:st,level:'State',wage:w,kaitz,source_s:'Zipperer',wages:MW[st]};
+  });
+  const cityRows=Object.entries(CITY_MW).map(([n,c])=>{
+    const w=getCityMW(n,curYr);if(!w)return null;
+    const a=getACS(c.state,curYr);const kaitz=a?+(w/(a.i*0.55/2080)*100).toFixed(1):null;
+    return{jurisdiction:n,state:c.state,level:'City',wage:w,kaitz,source_s:'UCB',wages:c.wages};
+  }).filter(Boolean);
+  let rows=[...stRows,...cityRows];
+  if(curLv!=='all')rows=rows.filter(r=>r.level===curLv);
+  if(q)rows=rows.filter(r=>r.jurisdiction.toLowerCase().includes(q)||r.state.toLowerCase().includes(q));
+  rows.sort((a,b)=>{const av=a[sortCol]??'',bv=b[sortCol]??'';if(av<bv)return -sortDir;if(av>bv)return sortDir;return 0;});
+  document.getElementById('tbl-n').textContent=rows.length;
+  const hl=document.getElementById('hlSt').value;
+  document.getElementById('tblBody').innerHTML=rows.map(r=>{
+    const bg=r.state===hl?'background:#fdf5f0;':'';
+    const lbl=r.level==='State'?'b-sta':r.level==='City'?'b-cit':'b-cou';
+    const src=r.source_s==='Zipperer'?'<span style="font-family:var(--font-m);font-size:9px;color:var(--indigo)">Zipperer</span>':'<span style="font-family:var(--font-m);font-size:9px;color:var(--teal)">UCB</span>';
+    return`<tr style="${bg}">
+      <td style="font-weight:500">${r.jurisdiction}</td>
+      <td><strong>${r.state}</strong></td>
+      <td><span class="badge ${lbl}">${r.level}</span></td>
+      <td style="font-family:var(--font-m);font-weight:600">$${r.wage.toFixed(2)}</td>
+      <td style="font-family:var(--font-m)">${r.kaitz?r.kaitz+'%':'—'}</td>
+      <td>${src}</td>
+      <td>${sp(r.wages,curYr)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ══ POPULATE CONTROLS ══ */
+function populateHL(){
+  const sel=document.getElementById('hlSt');
+  Object.entries(SN).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([abbr,name])=>{
+    const o=document.createElement('option');o.value=abbr;o.textContent=`${abbr} — ${name}`;sel.appendChild(o);
+  });
+}
+
+/* ══ RENDER ALL ══ */
+function renderAll(){
+  renderKPIs();renderScatter();renderRank();renderTrends();renderKaitz();renderCorr();renderLorenz();renderCityTable();renderTable();
+}
+
+/* ══ INIT ══ */
+window.addEventListener('DOMContentLoaded',()=>{
+  populateHL();buildTrendPills();
+  Chart.defaults.font.family="'Mulish',system-ui,sans-serif";
+  renderAll();
+});
+</script>
+</body>
+</html>

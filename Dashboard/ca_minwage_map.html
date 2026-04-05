@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>California Minimum Wage Map</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0d0f14;--sf:#161922;--s2:#1e2230;--bd:#2a2f3e;--ac:#f4c430;--a2:#e07b39;--a3:#5db8e8;--tx:#e8eaf0;--mu:#7a82a0;--gn:#4ecb8d;--fh:'DM Serif Display',Georgia,serif;--fb:'DM Sans',system-ui,sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--tx);font-family:var(--fb);font-size:14px;line-height:1.5;min-height:100vh}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:24px;margin:24px 48px}
+@media(max-width:900px){.card{margin:12px;padding:16px}}
+.ct{font-family:var(--fh);font-size:22px;color:#fff;margin-bottom:4px}
+.cs{font-size:12px;color:var(--mu);margin-bottom:18px}
+.lay{display:grid;grid-template-columns:1fr 260px;gap:24px;align-items:start}
+@media(max-width:900px){.lay{grid-template-columns:1fr}}
+#caMap{width:100%;height:auto;display:block}
+.co{stroke:#0d0f14;stroke-width:0.7;cursor:pointer;transition:fill .3s}
+.co:hover{stroke:#fff;stroke-width:1.8}
+.co.hi{stroke:var(--ac);stroke-width:2.2}
+#tip{position:fixed;z-index:9999;background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:10px 14px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .1s;box-shadow:0 4px 20px rgba(0,0,0,.55);max-width:210px;line-height:1.6}
+#tip.show{opacity:1}
+#tip .tn{font-weight:600;color:#fff;font-size:13px;display:block;margin-bottom:2px}
+#tip .tw{font-family:var(--fh);font-size:22px;color:var(--ac);line-height:1}
+#tip .tp{font-size:11px;color:var(--a3);margin-top:3px}
+#tip .tm{font-size:10px;color:var(--mu);margin-top:2px}
+.yr-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.yr-big{font-family:var(--fh);font-size:40px;color:var(--ac);line-height:1}
+.pb{background:var(--s2);border:1px solid var(--bd);color:var(--tx);padding:7px 16px;border-radius:20px;font-size:12px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.pb:hover,.pb.on{background:var(--ac);border-color:var(--ac);color:#000;font-weight:600}
+input[type=range]{width:100%;accent-color:var(--ac);cursor:pointer;margin-bottom:2px}
+.ye{display:flex;justify-content:space-between;font-size:10px;color:var(--mu);margin-bottom:14px}
+.wb{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;margin-bottom:12px}
+.wbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:3px}
+.wbv{font-family:var(--fh);font-size:30px;color:var(--ac);line-height:1}
+.wbs{font-size:11px;color:var(--mu);margin-top:3px}
+.leg{margin-bottom:14px}
+.lgl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:5px}
+.lgb{height:11px;border-radius:3px;margin-bottom:3px;background:linear-gradient(90deg,#162a1e,#1a4e3e 20%,#1e5268 40%,#4a6200 60%,#884000 80%,#b02000)}
+.lgl2{display:flex;justify-content:space-between;font-size:10px;color:var(--mu)}
+.clh{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--mu);margin-bottom:6px}
+.cl{max-height:340px;overflow-y:auto}
+.ci{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;cursor:pointer;transition:background .1s;border:1px solid transparent;margin-bottom:2px}
+.ci:hover{background:var(--s2)}
+.ci.on{background:rgba(93,184,232,.1);border-color:rgba(93,184,232,.3)}
+.ci-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.ci-sq{width:9px;height:9px;border-radius:1px;flex-shrink:0}
+.ci-nm{font-size:12px;font-weight:500;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-w{font-family:var(--fh);font-size:14px;color:var(--ac);white-space:nowrap}
+.bci{font-size:9px;padding:1px 5px;border-radius:3px;margin-left:3px}
+.bc{background:rgba(93,184,232,.15);color:var(--a3)}
+.bco{background:rgba(244,196,48,.15);color:var(--ac)}
+.note{font-size:10.5px;color:var(--mu);margin-top:8px;line-height:1.7}
+.dl{display:flex;gap:12px;flex-wrap:wrap;margin-top:5px}
+.dli{display:flex;align-items:center;gap:4px;font-size:10.5px;color:var(--mu)}
+</style>
+</head>
+<body>
+<div id="tip"></div>
+<div class="card">
+<div class="ct">California — Minimum Wage by County &amp; City</div>
+<div class="cs">Choropleth = effective wage · ● city ordinances · ■ county ordinances · scrub or animate years 2000–2025</div>
+<div class="lay">
+<div>
+<svg id="caMap" viewBox="0 0 520 760" xmlns="http://www.w3.org/2000/svg">
+<g id="gC"></g><g id="gM"></g><g id="gL"></g>
+</svg>
+<div class="note">
+County geometry derived from Census TIGER/Line · 58 counties · fully self-contained (no CDN)
+<div class="dl">
+<div class="dli"><svg width="10" height="10" style="flex-shrink:0"><circle cx="5" cy="5" r="4" fill="#5db8e8"/></svg>City ordinance</div>
+<div class="dli"><svg width="10" height="10" style="flex-shrink:0"><rect x="1" y="1" width="8" height="8" rx="1" fill="#f4c430"/></svg>County ordinance</div>
+<div class="dli"><svg width="10" height="10" style="flex-shrink:0"><circle cx="5" cy="5" r="4" fill="#7a82a0" opacity=".5"/></svg>At state floor</div>
+</div>
+</div>
+</div>
+<div>
+<div class="yr-row">
+<div><div class="yr-big" id="yrD">2000</div><div style="font-size:11px;color:var(--mu)">Selected year</div></div>
+<button class="pb" id="playBtn" onclick="togglePlay()">&#9654; Animate</button>
+</div>
+<input type="range" id="yrSl" min="2000" max="2025" value="2000" step="1" oninput="setYear(+this.value)"/>
+<div class="ye"><span>2000</span><span>2025</span></div>
+<div class="wb"><div class="wbl">CA State Floor</div><div class="wbv" id="swD">$6.75</div><div class="wbs" id="swS">California minimum wage</div></div>
+<div class="leg"><div class="lgl">Wage tier ($/hr)</div><div class="lgb"></div><div class="lgl2"><span>$6</span><span>$9</span><span>$12</span><span>$15</span><span>$18+</span></div></div>
+<div class="clh">Local ordinances — <span id="ordN">0</span> active</div>
+<div class="cl" id="cityList"></div>
+</div>
+</div>
+</div>
+<script>
+const CA_HIST=[[2000,6.75],[2007,7.5],[2008,8],[2014,9],[2016,10],[2017,10.5],[2018,11],[2019,12],[2020,13],[2021,14],[2022,15],[2023,15.5],[2024,16],[2025,16.5]];
+function sw(y){let v=CA_HIST[0][1];for(const[yr,w]of CA_HIST)if(yr<=y)v=w;return v;}
+const CITIES={
+"Alameda":{cx:182,cy:368,fips:"06001",county:false,steps:[[2018,12.0],[2019,13.5],[2020,15.0],[2022,15.75],[2023,16.52],[2024,17.02],[2025,17.46]]},
+"Belmont":{cx:155,cy:386,fips:"06081",county:false,steps:[[2017,12.0],[2018,13.5],[2019,15.0],[2020,15.75],[2021,16.75],[2022,17.35],[2026,18.95]]},
+"Berkeley":{cx:174,cy:355,fips:"06001",county:false,steps:[[2016,11.0],[2017,12.53],[2018,13.75],[2019,15.0],[2021,16.32],[2024,18.67],[2025,19.18]]},
+"Burlingame":{cx:152,cy:378,fips:"06081",county:false,steps:[[2017,12.0],[2018,13.5],[2019,15.0],[2020,16.5],[2021,17.35],[2026,17.86]]},
+"Cupertino":{cx:157,cy:411,fips:"06085",county:false,steps:[[2017,10.0],[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.4],[2024,17.95],[2026,18.7]]},
+"Daly City":{cx:148,cy:364,fips:"06075",county:false,steps:[[2018,13.0],[2020,15.0],[2023,16.07],[2024,17.07],[2026,17.5]]},
+"East Palo Alto":{cx:162,cy:390,fips:"06081",county:false,steps:[[2018,13.0],[2020,15.0],[2023,16.07],[2024,17.07],[2026,17.9]]},
+"El Cerrito":{cx:172,cy:351,fips:"06013",county:false,steps:[[2016,10.0],[2017,11.6],[2018,12.25],[2019,13.6],[2020,15.0],[2022,16.46],[2024,18.0],[2026,18.82]]},
+"Emeryville":{cx:170,cy:349,fips:"06001",county:false,steps:[[2015,9.0],[2016,14.44],[2022,17.13],[2024,19.36],[2025,19.9]]},
+"Foster City":{cx:157,cy:380,fips:"06081",county:false,steps:[[2017,15.0],[2018,15.75],[2019,16.5],[2020,17.25],[2026,17.85]]},
+"Fremont":{cx:188,cy:388,fips:"06001",county:false,steps:[[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.0],[2024,17.02],[2025,17.75]]},
+"Half Moon Bay":{cx:138,cy:390,fips:"06081",county:false,steps:[[2018,13.0],[2020,15.0],[2023,16.07],[2024,17.07],[2026,17.91]]},
+"Hayward":{cx:186,cy:376,fips:"06001",county:false,steps:[[2018,13.0],[2019,14.0],[2020,15.0],[2021,15.5],[2022,16.34],[2026,17.79]]},
+"LA County":{cx:238,cy:648,fips:"06037",county:true,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.04],[2023,16.9],[2024,17.27],[2025,17.81]]},
+"Los Angeles":{cx:224,cy:660,fips:"06037",county:false,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.04],[2023,16.78],[2024,17.28],[2025,17.87]]},
+"Malibu":{cx:196,cy:665,fips:"06037",county:false,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.04],[2024,17.27]]},
+"Menlo Park":{cx:155,cy:392,fips:"06081",county:false,steps:[[2017,12.0],[2018,13.5],[2019,15.0],[2020,16.5],[2022,17.1],[2026,17.55]]},
+"Milpitas":{cx:182,cy:408,fips:"06085",county:false,steps:[[2017,10.5],[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.65],[2025,18.2]]},
+"Mountain View":{cx:161,cy:402,fips:"06085",county:false,steps:[[2015,10.3],[2016,11.0],[2017,13.0],[2018,15.0],[2019,16.05],[2022,18.15],[2024,19.2],[2026,19.7]]},
+"Novato":{cx:144,cy:338,fips:"06041",county:false,steps:[[2020,13.0],[2021,14.0],[2022,15.0],[2023,16.04],[2024,17.13],[2026,17.73]]},
+"Oakland":{cx:178,cy:361,fips:"06001",county:false,steps:[[2015,9.0],[2016,12.25],[2020,15.0],[2022,16.5],[2024,17.02],[2026,17.34]]},
+"Palo Alto":{cx:158,cy:395,fips:"06085",county:false,steps:[[2016,9.0],[2017,11.0],[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.45],[2024,17.95],[2026,18.7]]},
+"Pasadena":{cx:234,cy:650,fips:"06037",county:false,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.11],[2024,17.5],[2025,18.04]]},
+"Petaluma":{cx:140,cy:330,fips:"06097",county:false,steps:[[2017,12.0],[2018,13.5],[2020,15.0],[2022,17.06],[2024,17.97],[2026,18.31]]},
+"Redwood City":{cx:155,cy:388,fips:"06081",county:false,steps:[[2017,11.0],[2018,13.5],[2019,15.0],[2020,16.5],[2022,17.4],[2024,18.15],[2026,18.65]]},
+"Richmond":{cx:159,cy:348,fips:"06013",county:false,steps:[[2015,9.0],[2016,9.6],[2017,11.52],[2018,12.3],[2020,15.0],[2024,17.02],[2025,18.18],[2026,19.18]]},
+"San Carlos":{cx:154,cy:382,fips:"06081",county:false,steps:[[2018,13.0],[2020,15.0],[2021,16.5],[2022,17.1],[2026,17.75]]},
+"San Diego":{cx:330,cy:730,fips:"06073",county:false,steps:[[2015,9.0],[2016,9.75],[2017,10.5],[2018,11.5],[2023,16.85],[2024,17.25],[2026,17.75]]},
+"San Francisco":{cx:150,cy:358,fips:"06075",county:false,steps:[[2014,11.05],[2015,12.25],[2016,13.0],[2017,14.0],[2018,15.0],[2022,16.99],[2024,18.07],[2025,19.18]]},
+"San Jose":{cx:174,cy:416,fips:"06085",county:false,steps:[[2017,10.5],[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.2],[2024,17.55],[2026,18.45]]},
+"San Mateo":{cx:152,cy:374,fips:"06081",county:false,steps:[[2017,10.0],[2018,12.0],[2019,13.5],[2020,15.0],[2021,16.5],[2022,17.6],[2026,18.6]]},
+"San Mateo County":{cx:158,cy:376,fips:"06081",county:true,steps:[[2018,15.5],[2019,16.5],[2022,17.06],[2026,17.95]]},
+"Santa Clara":{cx:167,cy:412,fips:"06085",county:false,steps:[[2016,9.0],[2017,11.0],[2018,13.0],[2019,15.0],[2022,16.35],[2024,17.95],[2026,18.7]]},
+"Santa Monica":{cx:205,cy:661,fips:"06037",county:false,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.04],[2023,16.9],[2024,17.27],[2025,17.81]]},
+"Santa Rosa":{cx:138,cy:318,fips:"06097",county:false,steps:[[2017,13.0],[2020,15.0],[2022,17.06],[2024,17.97],[2026,18.21]]},
+"Sonoma":{cx:145,cy:322,fips:"06097",county:false,steps:[[2017,12.0],[2018,13.5],[2019,15.0],[2020,16.0],[2024,17.97],[2026,18.47]]},
+"South San Francisco":{cx:150,cy:370,fips:"06081",county:false,steps:[[2017,12.0],[2020,15.0],[2021,16.5],[2022,17.25],[2023,17.7],[2026,18.15]]},
+"Sunnyvale":{cx:163,cy:407,fips:"06085",county:false,steps:[[2015,9.0],[2016,10.3],[2017,11.0],[2018,13.0],[2019,15.0],[2023,18.55],[2024,19.3],[2026,19.5]]},
+"West Hollywood":{cx:214,cy:655,fips:"06037",county:false,steps:[[2022,14.0],[2023,15.5],[2024,17.5],[2025,19.08],[2025,19.36],[2026,19.65]]},
+};
+function cw(n,y){const d=CITIES[n];if(!d||y<d.steps[0][0])return null;let v=d.steps[0][1];for(const[yr,w]of d.steps)if(yr<=y)v=w;return v;}
+function wc(w){if(!w||w<7)return'#162a1e';if(w<8.5)return'#1a3e2e';if(w<10)return'#1a5042';if(w<11.5)return'#1e5268';if(w<13)return'#4a6200';if(w<15)return'#7a4400';if(w<17)return'#a43000';return'#c81800';}
+function oc(cw,sw){const p=cw-sw;if(p<=0.05)return'#7a82a0';if(p<=2)return'#5db8e8';if(p<=4)return'#4ecb8d';return'#f4c430';}
+const COUNTIES=[
+["Del Norte","06015","M52,28 L140,26 L138,62 L50,64Z"],
+["Siskiyou","06093","M140,26 L296,22 L293,72 L138,74 L138,62Z"],
+["Modoc","06049","M296,22 L420,20 L418,90 L293,90 L293,72Z"],
+["Trinity","06105","M50,64 L138,74 L134,140 L48,136Z"],
+["Shasta","06089","M138,74 L252,72 L248,140 L134,140Z"],
+["Lassen","06035","M293,90 L418,90 L414,168 L291,166Z"],
+["Tehama","06103","M134,140 L248,140 L244,185 L130,183Z"],
+["Plumas","06063","M248,140 L291,166 L414,168 L410,206 L288,204 L244,197 L244,185Z"],
+["Humboldt","06023","M28,100 L88,94 L132,130 L130,183 L76,196 L26,178Z"],
+["Mendocino","06045","M26,178 L76,196 L108,196 L130,183 L128,252 L80,268 L26,254Z"],
+["Glenn","06021","M130,183 L244,185 L240,220 L128,218Z"],
+["Butte","06007","M244,185 L288,204 L284,228 L240,230 L240,220Z"],
+["Sierra","06091","M288,204 L410,206 L406,234 L286,232Z"],
+["Colusa","06011","M128,218 L240,220 L237,252 L126,250Z"],
+["Sutter","06101","M240,220 L284,228 L280,256 L258,260 L237,252Z"],
+["Yuba","06115","M284,228 L406,234 L402,260 L280,258Z"],
+["Nevada","06057","M402,260 L480,256 L477,290 L400,290Z"],
+["Lake","06033","M80,252 L126,250 L124,300 L78,300Z"],
+["Napa","06055","M124,300 L170,296 L170,325 L124,328Z"],
+["Sonoma","06097","M72,258 L126,250 L170,296 L170,325 L148,342 L82,340 L68,310Z"],
+["Yolo","06113","M237,252 L280,258 L276,290 L234,290Z"],
+["Placer","06061","M280,258 L400,290 L396,316 L278,316Z"],
+["El Dorado","06017","M396,316 L477,290 L474,344 L393,344Z"],
+["Sacramento","06067","M234,290 L276,290 L276,316 L280,342 L237,344Z"],
+["Amador","06005","M278,316 L393,344 L390,370 L276,370Z"],
+["Marin","06041","M126,342 L150,339 L152,362 L128,365Z"],
+["Contra Costa","06013","M152,340 L237,344 L234,370 L172,372 L153,363Z"],
+["San Francisco","06075","M127,357 L146,355 L148,368 L127,370Z"],
+["Alameda","06001","M153,363 L234,370 L232,392 L170,394 L152,380Z"],
+["San Mateo","06081","M130,368 L170,372 L170,394 L150,410 L128,398Z"],
+["Calaveras","06009","M276,370 L390,370 L387,398 L273,398Z"],
+["Tuolumne","06109","M273,398 L387,398 L383,426 L270,426Z"],
+["Mariposa","06043","M270,426 L383,426 L379,450 L268,450Z"],
+["San Joaquin","06077","M232,392 L276,370 L273,408 L230,408Z"],
+["Stanislaus","06099","M178,394 L273,398 L270,436 L176,436Z"],
+["Santa Clara","06085","M146,394 L178,394 L176,436 L176,456 L144,454Z"],
+["Merced","06047","M176,436 L270,436 L267,470 L174,470Z"],
+["Madera","06039","M268,450 L379,450 L376,482 L265,482Z"],
+["Fresno","06019","M174,470 L267,470 L265,482 L376,482 L373,542 L172,542Z"],
+["Santa Cruz","06087","M128,454 L158,452 L160,478 L130,478Z"],
+["Monterey","06053","M118,478 L174,470 L172,542 L116,540Z"],
+["San Benito","06069","M158,452 L174,470 L172,494 L157,494Z"],
+["Kings","06031","M172,542 L373,542 L370,568 L170,568Z"],
+["Tulare","06107","M267,482 L376,482 L373,542 L370,568 L264,568Z"],
+["San Luis Obispo","06079","M105,540 L172,542 L170,598 L103,596Z"],
+["Kern","06029","M170,568 L370,568 L367,608 L254,622 L168,612Z"],
+["Santa Barbara","06083","M97,596 L168,598 L170,614 L142,628 L93,618Z"],
+["Ventura","06111","M142,622 L254,622 L250,648 L187,658 L140,645Z"],
+["Mono","06051","M372,398 L480,394 L477,462 L370,462Z"],
+["Inyo","06027","M370,462 L477,462 L474,580 L368,578Z"],
+["Alpine","06003","M372,370 L408,370 L406,398 L372,398Z"],
+["Los Angeles","06037","M154,648 L254,648 L251,680 L212,690 L152,680Z"],
+["San Bernardino","06071","M254,622 L474,580 L471,680 L250,680Z"],
+["Riverside","06065","M250,680 L471,680 L468,714 L248,714Z"],
+["Orange","06059","M212,678 L250,678 L248,714 L210,714Z"],
+["San Diego","06073","M152,714 L468,714 L465,752 L150,754Z"],
+["Imperial","06025","M468,714 L510,710 L508,756 L465,756Z"],
+];
+const tip=document.getElementById('tip');
+function showTip(e,h){tip.innerHTML=h;tip.classList.add('show');mv(e);}
+function mv(e){const x=Math.min(e.clientX+14,window.innerWidth-220);tip.style.left=x+'px';tip.style.top=(e.clientY-8)+'px';}
+function hideTip(){tip.classList.remove('show');}
+document.addEventListener('mousemove',e=>{if(tip.classList.contains('show'))mv(e);});
+function buildCounties(){
+  const g=document.getElementById('gC');const NS='http://www.w3.org/2000/svg';
+  COUNTIES.forEach(([name,fips,path])=>{
+    const el=document.createElementNS(NS,'path');
+    el.setAttribute('d',path);el.setAttribute('class','co');el.setAttribute('id','co-'+fips);
+    el.addEventListener('mousemove',e=>{
+      const s=sw(curYear);
+      const ords=Object.entries(CITIES).filter(([,d])=>d.fips===fips).map(([n])=>({n,w:cw(n,curYear)})).filter(x=>x.w!==null);
+      let h=`<span class="tn">${name} County</span><div class="tw">$${s.toFixed(2)}<span style="font-size:12px;color:var(--mu)">/hr state</span></div>`;
+      if(ords.length){h+=`<div class="tp">`;ords.forEach(o=>{h+=`<div>${o.n}: $${o.w.toFixed(2)} (+$${(o.w-s).toFixed(2)})</div>`;});h+=`</div>`;}
+      showTip(e,h);
+    });
+    el.addEventListener('mouseleave',hideTip);
+    g.appendChild(el);
+  });
+}
+function updateColors(){
+  const s=sw(curYear);const cmap={};
+  COUNTIES.forEach(([,fips])=>cmap[fips]=s);
+  Object.entries(CITIES).forEach(([name,d])=>{const w=cw(name,curYear);if(w!==null)cmap[d.fips]=Math.max(cmap[d.fips]||s,w);});
+  COUNTIES.forEach(([,fips])=>{const el=document.getElementById('co-'+fips);if(el)el.setAttribute('fill',wc(cmap[fips]||s));});
+}
+function updateMarkers(){
+  const s=sw(curYear);const NS='http://www.w3.org/2000/svg';
+  const gm=document.getElementById('gM');const gl=document.getElementById('gL');
+  gm.innerHTML='';gl.innerHTML='';
+  const BIG=['San Francisco','Los Angeles','San Diego','San Jose','Oakland'];
+  Object.entries(CITIES).forEach(([name,d])=>{
+    const w=cw(name,curYear);if(!w)return;
+    const prem=w-s;const col=oc(w,s);const r=Math.max(4,Math.min(9,4+prem*0.5));
+    const g=document.createElementNS(NS,'g');g.style.cursor='pointer';
+    if(d.county){
+      const sz=r*2;const rect=document.createElementNS(NS,'rect');
+      rect.setAttribute('x',d.cx-sz/2);rect.setAttribute('y',d.cy-sz/2);
+      rect.setAttribute('width',sz);rect.setAttribute('height',sz);rect.setAttribute('rx','2');
+      rect.setAttribute('fill',col);rect.setAttribute('opacity','0.9');
+      rect.setAttribute('stroke','#0d0f14');rect.setAttribute('stroke-width','0.8');
+      g.appendChild(rect);
+    } else {
+      const c=document.createElementNS(NS,'circle');
+      c.setAttribute('cx',d.cx);c.setAttribute('cy',d.cy);c.setAttribute('r',r);
+      c.setAttribute('fill',col);c.setAttribute('opacity','0.9');
+      c.setAttribute('stroke','#0d0f14');c.setAttribute('stroke-width','0.8');
+      g.appendChild(c);
+    }
+    g.addEventListener('mousemove',e=>{
+      const pr=prem>0?`+$${prem.toFixed(2)} above floor`:'at state floor';
+      showTip(e,`<span class="tn">${name}${d.county?' (County)':''}</span><div class="tw">$${w.toFixed(2)}<span style="font-size:12px;color:var(--mu)">/hr</span></div><div class="tp">${pr}</div><div class="tm">State: $${s.toFixed(2)}</div>`);
+    });
+    g.addEventListener('mouseleave',hideTip);
+    g.addEventListener('click',()=>{activeCity=activeCity===name?null:name;updateSidebar();document.querySelectorAll('.co').forEach(el=>el.classList.remove('hi'));if(activeCity){const el=document.getElementById('co-'+CITIES[activeCity].fips);if(el)el.classList.add('hi');}});
+    gm.appendChild(g);
+    if(prem>2.5||BIG.includes(name)){
+      const t=document.createElementNS(NS,'text');
+      const sh=name==='San Francisco'?'SF':name==='Los Angeles'?'LA':name==='San Diego'?'SD':name==='Mountain View'?'Mtn View':name.split(' ').pop();
+      t.setAttribute('x',d.cx+r+3);t.setAttribute('y',d.cy+3.5);
+      t.setAttribute('fill','rgba(232,234,240,.78)');t.setAttribute('font-size','7.5');
+      t.setAttribute('font-family','DM Sans,sans-serif');t.setAttribute('pointer-events','none');
+      t.textContent=sh;gl.appendChild(t);
+    }
+  });
+}
+let activeCity=null;
+function updateSidebar(){
+  const s=sw(curYear);
+  document.getElementById('swD').textContent='$'+s.toFixed(2);
+  document.getElementById('swS').textContent='California floor \u00b7 '+curYear;
+  const active=Object.entries(CITIES).map(([name,d])=>({name,w:cw(name,curYear),county:d.county})).filter(x=>x.w!==null).sort((a,b)=>b.w-a.w);
+  document.getElementById('ordN').textContent=active.length;
+  const list=document.getElementById('cityList');
+  if(!active.length){list.innerHTML='<div style="color:var(--mu);font-size:12px;padding:8px">No local ordinances active yet</div>';return;}
+  list.innerHTML=active.map(({name,w,county})=>{
+    const p=w-s;const col=oc(w,s);
+    const badge=county?`<span class="bci bco">County</span>`:`<span class="bci bc">City</span>`;
+    const pspan=p>0?`<span style="font-size:10px;color:var(--gn)">+$${p.toFixed(2)}</span>`:`<span style="font-size:10px;color:var(--mu)">= floor</span>`;
+    const dot=county?`<div class="ci-sq" style="background:${col}"></div>`:`<div class="ci-dot" style="background:${col}"></div>`;
+    return `<div class="ci${activeCity===name?' on':''}" onclick="clickCity('${name}')">${dot}<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:3px"><span class="ci-nm">${name}</span>${badge}</div>${pspan}</div><div class="ci-w">$${w.toFixed(2)}</div></div>`;
+  }).join('');
+}
+function clickCity(name){
+  activeCity=activeCity===name?null:name;updateSidebar();
+  document.querySelectorAll('.co').forEach(el=>el.classList.remove('hi'));
+  if(activeCity){const el=document.getElementById('co-'+CITIES[activeCity].fips);if(el)el.classList.add('hi');}
+}
+let curYear=2000,playing=false,timer=null;
+function setYear(y){curYear=y;document.getElementById('yrD').textContent=y;document.getElementById('yrSl').value=y;updateColors();updateMarkers();updateSidebar();}
+function togglePlay(){
+  playing=!playing;
+  const btn=document.getElementById('playBtn');
+  btn.textContent=playing?'\u23f8 Pause':'\u25b6 Animate';
+  btn.classList.toggle('on',playing);
+  if(playing){if(curYear>=2025)setYear(2000);timer=setInterval(()=>{if(curYear>=2025){togglePlay();return;}setYear(curYear+1);},650);}
+  else clearInterval(timer);
+}
+buildCounties();setYear(2000);
+</script>
+</body>
+</html>

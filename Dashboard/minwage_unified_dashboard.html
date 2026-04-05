@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>U.S. Minimum Wage Explorer — Combined Dataset</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+:root{
+  --cream:     #f8f6f0;
+  --cream2:    #f0ede4;
+  --cream3:    #e8e4d9;
+  --ink:       #1c1a16;
+  --ink2:      #3e3b34;
+  --ink3:      #7a7568;
+  --rule:      #d8d3c8;
+  --rule2:     #e4e0d8;
+  --scarlet:   #c0392b;
+  --scarlet2:  #9b2d22;
+  --scarlet-bg:#fdf0ee;
+  --navy:      #1e3a5f;
+  --navy-bg:   #edf2f8;
+  --forest:    #1e4d3a;
+  --forest-bg: #eaf2ee;
+  --ochre:     #7a5c00;
+  --ochre-bg:  #faf3e0;
+  --slate:     #2e4a6e;
+  --slate-bg:  #eef2f8;
+  --font-serif:'Playfair Display',Georgia,serif;
+  --font-sans: 'Source Sans 3',system-ui,sans-serif;
+  --font-mono: 'Source Code Pro',monospace;
+  --r:6px;
+  --sh:0 1px 4px rgba(0,0,0,.07);
+  --sh2:0 3px 16px rgba(0,0,0,.1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;scroll-behavior:smooth}
+body{background:var(--cream);color:var(--ink);font-family:var(--font-sans);line-height:1.65}
+
+/* ══ MASTHEAD ══ */
+.masthead{
+  background:var(--ink);
+  color:#fff;
+  padding:0;
+}
+.masthead-top{
+  max-width:1380px;margin:0 auto;
+  padding:44px 52px 0;
+  display:grid;grid-template-columns:1fr 340px;gap:32px;align-items:start;
+}
+.masthead-eyebrow{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:#a09880;margin-bottom:12px;
+}
+.masthead h1{
+  font-family:var(--font-serif);font-size:clamp(24px,3.8vw,42px);
+  font-weight:700;line-height:1.1;color:#fff;
+}
+.masthead h1 em{font-style:italic;font-weight:400;color:#e8c4a0;}
+.masthead-desc{
+  margin-top:12px;font-size:13.5px;color:#b0a898;
+  line-height:1.75;max-width:540px;
+}
+
+/* Dataset provenance card — right side of header */
+.provenance-card{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--r);
+  padding:20px 22px;
+  margin-top:4px;
+}
+.provenance-card .prov-title{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.15em;
+  text-transform:uppercase;color:#a09880;margin-bottom:14px;
+  display:flex;align-items:center;gap:8px;
+}
+.provenance-card .prov-title::before{
+  content:'';display:block;width:18px;height:2px;background:var(--scarlet);
+}
+.source-badge{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08);
+}
+.source-badge:last-child{border-bottom:none;}
+.badge-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px;
+}
+.badge-info .badge-name{font-size:12px;font-weight:600;color:#e8e0d4;}
+.badge-info .badge-sub{font-size:11px;color:#a09880;line-height:1.4;margin-top:1px;}
+.badge-info .badge-n{
+  display:inline-block;font-family:var(--font-mono);font-size:10px;
+  background:rgba(255,255,255,.08);border-radius:3px;
+  padding:1px 6px;margin-top:3px;color:#c0b8a8;
+}
+
+/* assembled-by bar */
+.assembled-bar{
+  max-width:1380px;margin:0 auto;
+  padding:16px 52px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  border-top:1px solid rgba(255,255,255,.08);
+  margin-top:28px;
+}
+.assembled-label{
+  font-family:var(--font-mono);font-size:11px;color:#a09880;
+  display:flex;align-items:center;gap:8px;
+}
+.assembled-label::before{content:'⬡';color:var(--scarlet);font-size:13px;}
+.assembled-pill{
+  font-family:var(--font-mono);font-size:10.5px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);
+  border-radius:3px;padding:3px 10px;color:#c8c0b0;
+}
+.assembled-pill.highlight{background:rgba(192,57,43,.25);border-color:rgba(192,57,43,.5);color:#e8a898;}
+
+/* red accent bar at bottom of masthead */
+.masthead-bar{height:3px;background:linear-gradient(90deg,var(--scarlet) 0%,#e05040 50%,#9b2d22 100%);}
+
+/* ══ STICKY CONTROLS ══ */
+.ctrl-bar{
+  background:var(--cream2);border-bottom:1px solid var(--rule);
+  position:sticky;top:0;z-index:200;
+  box-shadow:var(--sh);
+}
+.ctrl-inner{
+  max-width:1380px;margin:0 auto;
+  padding:12px 52px;
+  display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+}
+.cg{display:flex;flex-direction:column;gap:3px;}
+.cl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);}
+select,input[type=range]{
+  font-family:var(--font-sans);font-size:12.5px;
+  background:white;border:1px solid var(--rule);color:var(--ink);
+  padding:5px 9px;border-radius:var(--r);cursor:pointer;
+  transition:border-color .15s;
+}
+select:hover,select:focus{border-color:var(--ink2);outline:none;}
+input[type=range]{padding:0;min-width:110px;accent-color:var(--scarlet);}
+.yr-val{font-family:var(--font-mono);font-size:14px;font-weight:500;min-width:36px;}
+.sep{width:1px;height:32px;background:var(--rule);align-self:center;flex-shrink:0;}
+.filter-pills{display:flex;gap:0;}
+.fp{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;
+  padding:4px 12px;background:white;border:1px solid var(--rule);
+  border-right:none;cursor:pointer;color:var(--ink3);transition:all .15s;
+}
+.fp:first-child{border-radius:var(--r) 0 0 var(--r);}
+.fp:last-child{border-radius:0 var(--r) var(--r) 0;border-right:1px solid var(--rule);}
+.fp:hover{background:var(--cream2);}
+.fp.on{background:var(--ink);color:white;border-color:var(--ink);}
+.fp.on+.fp{border-left-color:var(--ink);}
+
+/* ══ LAYOUT ══ */
+.main{max-width:1380px;margin:0 auto;padding:36px 52px 72px;}
+@media(max-width:900px){.main{padding:20px 16px}.masthead-top{grid-template-columns:1fr}.ctrl-inner{padding:12px 16px}.assembled-bar{padding:16px}.masthead-top{padding:32px 16px 0}}
+
+.section{margin-bottom:52px;}
+.sh{
+  display:flex;align-items:baseline;gap:12px;
+  border-bottom:1.5px solid var(--ink);padding-bottom:8px;margin-bottom:24px;
+}
+.sh-n{font-family:var(--font-mono);font-size:10px;color:var(--ink3);flex-shrink:0;}
+.sh-t{font-family:var(--font-serif);font-size:19px;font-weight:400;}
+.sh-s{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--ink3);}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:24px;}
+.g12{display:grid;grid-template-columns:1fr 2fr;gap:24px;}
+@media(max-width:1100px){.g2,.g21,.g12{grid-template-columns:1fr}.g3{grid-template-columns:1fr 1fr}.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.g3,.g4{grid-template-columns:1fr}}
+
+/* ══ CARDS ══ */
+.card{
+  background:white;border:1px solid var(--rule);
+  border-radius:var(--r);padding:22px 24px;
+  box-shadow:var(--sh);
+}
+.card-t{font-family:var(--font-serif);font-size:15.5px;font-weight:700;margin-bottom:2px;}
+.card-s{font-family:var(--font-mono);font-size:10px;color:var(--ink3);margin-bottom:16px;}
+
+/* KPI cards */
+.kpi{
+  background:white;border:1px solid var(--rule);
+  border-radius:var(--r);padding:18px 20px;
+  border-top:3px solid var(--rule);box-shadow:var(--sh);
+}
+.kpi.red{border-top-color:var(--scarlet);}
+.kpi.navy{border-top-color:var(--navy);}
+.kpi.forest{border-top-color:var(--forest);}
+.kpi.ochre{border-top-color:var(--ochre);}
+.kpi.slate{border-top-color:var(--slate);}
+.kpi-l{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px;}
+.kpi-v{font-family:var(--font-serif);font-size:28px;font-weight:700;line-height:1;color:var(--ink);}
+.kpi-s{font-size:11px;color:var(--ink3);margin-top:4px;}
+
+/* ══ CHARTS ══ */
+.cw{position:relative;}
+
+/* ══ SOURCE TAG ══ */
+.src-tag{
+  display:inline-flex;align-items:center;gap:5px;
+  font-family:var(--font-mono);font-size:9.5px;
+  border-radius:3px;padding:2px 7px;
+  border:1px solid;flex-shrink:0;
+}
+.src-zip{background:#edf2f8;color:#1e3a5f;border-color:#c8d8ec;}
+.src-ucb{background:#eaf2ee;color:#1e4d3a;border-color:#c0d8ca;}
+.src-fed{background:#fdf0ee;color:#9b2d22;border-color:#ecc0b8;}
+
+/* ══ TABLE ══ */
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--rule);}
+.tw table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.tw table{max-height:400px;display:block;overflow-y:auto;}
+.tw thead{display:table;width:100%;table-layout:fixed;}
+.tw tbody{display:table;width:100%;table-layout:fixed;}
+.tw th{
+  background:var(--cream2);font-family:var(--font-mono);
+  font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--ink3);padding:9px 12px;border-bottom:1px solid var(--rule);
+  text-align:left;cursor:pointer;user-select:none;white-space:nowrap;
+}
+.tw th:hover{color:var(--ink);}
+.tw th.sorted{color:var(--scarlet);}
+.tw td{padding:8px 12px;border-bottom:1px solid var(--rule2);vertical-align:middle;}
+.tw tr:last-child td{border-bottom:none;}
+.tw tr:hover td{background:#faf8f4;}
+
+/* ══ LEVEL BADGE ══ */
+.lbadge{
+  display:inline-block;font-family:var(--font-mono);
+  font-size:9.5px;padding:1px 7px;border-radius:2px;
+}
+.lb-federal{background:var(--scarlet-bg);color:var(--scarlet);}
+.lb-state  {background:var(--navy-bg);color:var(--navy);}
+.lb-city   {background:var(--forest-bg);color:var(--forest);}
+.lb-county {background:var(--ochre-bg);color:var(--ochre);}
+
+/* ══ DATA PROVENANCE SECTION ══ */
+.prov-section{
+  background:var(--ink);color:white;
+  border-radius:var(--r);padding:28px 32px;
+  margin-bottom:0;
+}
+.prov-section .sh{border-bottom-color:rgba(255,255,255,.15);}
+.prov-section .sh-n{color:#a09880;}
+.prov-section .sh-t{color:white;}
+.prov-section .sh-s{color:#a09880;}
+.lineage-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+@media(max-width:800px){.lineage-grid{grid-template-columns:1fr}}
+.lineage-card{
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:var(--r);padding:18px 20px;
+}
+.lc-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.lc-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.lc-name{font-weight:600;font-size:13.5px;color:#f0ece4;}
+.lc-field{display:flex;flex-direction:column;margin-bottom:7px;}
+.lc-fl{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#806858;margin-bottom:2px;}
+.lc-fv{font-size:12px;color:#c8c0b0;line-height:1.5;}
+.lc-fv a{color:#8ab8e8;text-decoration:none;}
+.lc-fv a:hover{text-decoration:underline;}
+.pipeline{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--r);padding:16px 20px;
+}
+.pipeline-steps{
+  display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-top:10px;
+}
+.ps{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+  border-radius:4px;padding:8px 14px;font-size:12px;color:#d0c8b8;
+}
+.ps-num{
+  font-family:var(--font-mono);font-size:10px;
+  background:var(--scarlet);color:white;
+  border-radius:50%;width:18px;height:18px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.ps-arr{color:#a09880;padding:0 8px;font-size:18px;flex-shrink:0;}
+.cite-box{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:var(--r);padding:14px 18px;
+  font-family:var(--font-mono);font-size:11px;color:#c0b8a8;
+  line-height:1.8;margin-top:16px;
+}
+.cite-box strong{color:#e0d8c8;display:block;margin-bottom:4px;}
+
+/* ══ TOOLTIP ══ */
+#tip{
+  position:fixed;z-index:9999;background:white;
+  border:1px solid var(--rule);border-radius:var(--r);
+  padding:10px 14px;pointer-events:none;opacity:0;
+  transition:opacity .12s;box-shadow:var(--sh2);
+  font-size:12px;max-width:260px;line-height:1.6;
+}
+#tip.show{opacity:1;}
+#tip .tname{font-family:var(--font-serif);font-size:13.5px;font-weight:700;
+  border-bottom:1px solid var(--rule2);padding-bottom:5px;margin-bottom:6px;}
+#tip .tr{display:flex;justify-content:space-between;gap:14px;}
+#tip .tk{color:var(--ink3);}
+#tip .tv{font-family:var(--font-mono);font-weight:500;}
+#tip .tsrc{margin-top:6px;padding-top:5px;border-top:1px solid var(--rule2);}
+
+/* ══ SCATTER LEGEND ══ */
+.sleg{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+.sli{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink3);}
+.sld{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+
+/* ══ FOOTNOTE ══ */
+.fn{font-family:var(--font-mono);font-size:10.5px;color:var(--ink3);
+  margin-top:9px;padding-top:8px;border-top:1px solid var(--rule2);line-height:1.7;}
+
+/* ══ MINI SPARKLINE ══ */
+.spark{display:inline-flex;align-items:flex-end;gap:1.5px;height:16px;vertical-align:middle;}
+.spark span{display:block;width:3px;border-radius:1px;}
+
+/* animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section,.prov-section{animation:fadeUp .35s ease both;}
+.section:nth-child(2){animation-delay:.06s}
+.section:nth-child(3){animation-delay:.1s}
+.section:nth-child(4){animation-delay:.14s}
+.section:nth-child(5){animation-delay:.18s}
+</style>
+</head>
+<body>
+
+<div id="tip"></div>
+
+<!-- ══════════════ MASTHEAD ══════════════ -->
+<div class="masthead">
+  <div class="masthead-top">
+    <div>
+      <div class="masthead-eyebrow">U.S. Labor Policy · Unified Dataset · 2025</div>
+      <h1>Minimum Wage<br><em>Unified Explorer</em></h1>
+      <p class="masthead-desc">
+        Federal, state, and local minimum wages — 1938 to 2025 — drawn from a single
+        combined dataset assembled from Zipperer (2022) and the UC Berkeley Labor Center inventory.
+        All 121 jurisdictions in one place.
+      </p>
+    </div>
+    <div class="provenance-card">
+      <div class="prov-title">Data Lineage</div>
+      <div class="source-badge">
+        <div class="badge-dot" style="background:#c0392b"></div>
+        <div class="badge-info">
+          <div class="badge-name">Vaghul &amp; Zipperer (2022)</div>
+          <div class="badge-sub">Historical State &amp; Sub-state Minimum Wages v1.4.0 · CC BY 4.0</div>
+          <span class="badge-n">52 jurisdictions · 1938–2025</span>
+        </div>
+      </div>
+      <div class="source-badge">
+        <div class="badge-dot" style="background:#1e4d3a"></div>
+        <div class="badge-info">
+          <div class="badge-name">UC Berkeley Labor Center</div>
+          <div class="badge-sub">Inventory of Local Minimum Wage Ordinances · Dec 2025</div>
+          <span class="badge-n">69 cities &amp; counties</span>
+        </div>
+      </div>
+      <div class="source-badge">
+        <div class="badge-dot" style="background:#8a5c00"></div>
+        <div class="badge-info">
+          <div class="badge-name">Combined Dataset</div>
+          <div class="badge-sub">Wide format · 121 rows × 88 year columns · CC BY 4.0</div>
+          <span class="badge-n">us_minwage_combined.csv · .json · .xlsx</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="assembled-bar">
+    <span class="assembled-label">Assembled dataset</span>
+    <span class="assembled-pill highlight">us_minwage_combined.csv</span>
+    <span class="assembled-pill">121 rows</span>
+    <span class="assembled-pill">88 year columns (1938–2025)</span>
+    <span class="assembled-pill">Federal · State · City · County</span>
+    <span class="assembled-pill">build_dataset.py</span>
+  </div>
+  <div class="masthead-bar"></div>
+</div>
+
+<!-- ══════════════ CONTROLS ══════════════ -->
+<div class="ctrl-bar">
+  <div class="ctrl-inner">
+    <div class="cg">
+      <span class="cl">Year</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" id="yrSlider" min="1938" max="2025" value="2024" step="1" oninput="onYear(this.value)"/>
+        <span class="yr-val" id="yrVal">2024</span>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="cg">
+      <span class="cl">Level</span>
+      <div class="filter-pills">
+        <button class="fp on" data-lv="all" onclick="setLevel(this)">All</button>
+        <button class="fp" data-lv="Federal" onclick="setLevel(this)">Federal</button>
+        <button class="fp" data-lv="State" onclick="setLevel(this)">State</button>
+        <button class="fp" data-lv="City" onclick="setLevel(this)">City</button>
+        <button class="fp" data-lv="County" onclick="setLevel(this)">County</button>
+      </div>
+    </div>
+    <div class="sep"></div>
+    <div class="cg">
+      <span class="cl">ACS Outcome</span>
+      <select id="yVar" onchange="onVar()">
+        <option value="poverty">Poverty Rate (%)</option>
+        <option value="median_income">Median Household Income ($)</option>
+        <option value="unemployment">Unemployment Rate (%)</option>
+        <option value="rent_burden">Rent Burden (% income)</option>
+      </select>
+    </div>
+    <div class="cg">
+      <span class="cl">Highlight State</span>
+      <select id="hlState" onchange="onVar()">
+        <option value="">— none —</option>
+      </select>
+    </div>
+    <div class="sep"></div>
+    <div class="cg">
+      <span class="cl">Source filter</span>
+      <div class="filter-pills">
+        <button class="fp on" data-src="all" onclick="setSrc(this)">All</button>
+        <button class="fp" data-src="Zipperer" onclick="setSrc(this)">Zipperer</button>
+        <button class="fp" data-src="UCB" onclick="setSrc(this)">UCB</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN ══════════════ -->
+<div class="main">
+
+  <!-- §1 KPIs -->
+  <section class="section">
+    <div class="sh">
+      <span class="sh-n">01</span>
+      <span class="sh-t">Snapshot</span>
+      <span class="sh-s" id="kpi-yr-lbl">2024 · all 121 jurisdictions</span>
+    </div>
+    <div class="g4" style="grid-template-columns:repeat(5,1fr)">
+      <div class="kpi red">
+        <div class="kpi-l">Federal Floor</div>
+        <div class="kpi-v" id="kf">$7.25</div>
+        <div class="kpi-s">Since Jul 2009</div>
+      </div>
+      <div class="kpi navy">
+        <div class="kpi-l">Median State MW</div>
+        <div class="kpi-v" id="ks">—</div>
+        <div class="kpi-s">across 51 states/DC</div>
+      </div>
+      <div class="kpi forest">
+        <div class="kpi-l">States Above Federal</div>
+        <div class="kpi-v" id="ka">—</div>
+        <div class="kpi-s">set own higher floor</div>
+      </div>
+      <div class="kpi ochre">
+        <div class="kpi-l">Highest Local Wage</div>
+        <div class="kpi-v" id="khl">—</div>
+        <div class="kpi-s" id="khls">—</div>
+      </div>
+      <div class="kpi slate">
+        <div class="kpi-l">Local Jurisdictions</div>
+        <div class="kpi-v" id="kloc">—</div>
+        <div class="kpi-s">with active ordinances</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §2 Scatter + Rankings -->
+  <section class="section">
+    <div class="sh">
+      <span class="sh-n">02</span>
+      <span class="sh-t">Minimum Wage × ACS Outcomes</span>
+      <span class="sh-s">State-level cross-section · data from your combined dataset</span>
+    </div>
+    <div class="g21">
+      <div class="card">
+        <div class="card-t">Min Wage vs. <span id="sc-title">Poverty Rate</span></div>
+        <div class="card-s" id="sc-sub">State-level · hover for source attribution</div>
+        <div id="scLeg" class="sleg"></div>
+        <div class="cw" style="height:340px"><canvas id="scChart"></canvas></div>
+        <div class="fn">Each point = one state. ACS 5-yr estimates. OLS trendline where applicable. <span id="sc-r"></span></div>
+      </div>
+      <div class="card">
+        <div class="card-t">All Jurisdictions Ranked</div>
+        <div class="card-s">Filtered by level &amp; source · color = data origin</div>
+        <div class="cw" style="height:440px"><canvas id="rankChart"></canvas></div>
+        <div class="fn">Color: <span style="color:var(--scarlet)">■</span> Zipperer (Federal/State) &nbsp;<span style="color:var(--forest)">■</span> UCB (City/County)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §3 Time series -->
+  <section class="section">
+    <div class="sh">
+      <span class="sh-n">03</span>
+      <span class="sh-t">Historical Trajectories</span>
+      <span class="sh-s">Full 1938–2025 range from combined dataset</span>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-t">Federal + State Trends</div>
+        <div class="card-s">Select states to compare · data from <span class="src-tag src-zip">Zipperer</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="trendPills"></div>
+        <div class="cw" style="height:260px"><canvas id="trendChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">Local Wage Histories</div>
+        <div class="card-s">City &amp; county ordinances · data from <span class="src-tag src-ucb">UCB</span></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;" id="localPills"></div>
+        <div class="cw" style="height:260px"><canvas id="localTrendChart"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §4 Source breakdown + table -->
+  <section class="section">
+    <div class="sh">
+      <span class="sh-n">04</span>
+      <span class="sh-t">Full Dataset Table</span>
+      <span class="sh-s">All 121 jurisdictions · sortable · source-attributed</span>
+    </div>
+    <div class="g12">
+      <div>
+        <!-- mini source stats -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div class="card" style="padding:16px 18px;border-top:3px solid var(--scarlet)">
+            <div class="kpi-l">Zipperer Dataset</div>
+            <div style="font-family:var(--font-serif);font-size:22px;font-weight:700">52</div>
+            <div class="kpi-s">Federal (1) + States (51)<br>1938–2025 · CC BY 4.0</div>
+          </div>
+          <div class="card" style="padding:16px 18px;border-top:3px solid var(--forest)">
+            <div class="kpi-l">UCB Inventory</div>
+            <div style="font-family:var(--font-serif);font-size:22px;font-weight:700">69</div>
+            <div class="kpi-s">Cities (59) + Counties (10)<br>2003–2029 · Attribution req.</div>
+          </div>
+        </div>
+        <!-- ACS crosswalk for states -->
+        <div class="card">
+          <div class="card-t">State Min Wage vs. ACS</div>
+          <div class="card-s" id="bar-acs-sub">Sorted by <span id="acs-var-lbl">poverty rate</span> · 2024</div>
+          <div class="cw" style="height:280px"><canvas id="acsBarChart"></canvas></div>
+        </div>
+      </div>
+      <div class="card" style="padding:0">
+        <div style="padding:16px 20px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="card-t">Combined Dataset Viewer</div>
+            <div class="card-s" style="margin-bottom:0">Showing <span id="tbl-n">—</span> rows · click headers to sort</div>
+          </div>
+          <div>
+            <input type="text" id="tblSearch" placeholder="Search jurisdiction…"
+              style="border:1px solid var(--rule);border-radius:var(--r);padding:5px 10px;font-size:12px;width:200px"
+              oninput="renderTable()"/>
+          </div>
+        </div>
+        <div class="tw" style="max-height:400px;border:none;border-top:1px solid var(--rule);margin-top:12px">
+          <table>
+            <thead><tr>
+              <th onclick="sortTbl('jurisdiction')" data-col="jurisdiction">Jurisdiction</th>
+              <th onclick="sortTbl('state')" data-col="state">State</th>
+              <th onclick="sortTbl('level')" data-col="level">Level</th>
+              <th onclick="sortTbl('wage')" data-col="wage">MW (yr)</th>
+              <th onclick="sortTbl('source_short')" data-col="source_short">Source</th>
+              <th>Wage path</th>
+            </tr></thead>
+            <tbody id="tblBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- §5 Provenance -->
+  <section class="section prov-section" style="padding:32px 36px">
+    <div class="sh">
+      <span class="sh-n" style="color:#a09880">05</span>
+      <span class="sh-t" style="color:white">Dataset Provenance &amp; Citation</span>
+      <span class="sh-s" style="color:#a09880">How this dashboard's data was assembled</span>
+    </div>
+    <div class="lineage-grid">
+      <div class="lineage-card">
+        <div class="lc-header">
+          <div class="lc-dot" style="background:#c0392b"></div>
+          <div class="lc-name">Source 1 — Zipperer</div>
+        </div>
+        <div class="lc-field"><span class="lc-fl">Full citation</span><span class="lc-fv">Vaghul, K. &amp; Zipperer, B. (2022). "Historical State and Sub-state Minimum Wages." v1.4.0.</span></div>
+        <div class="lc-field"><span class="lc-fl">URL</span><span class="lc-fv"><a href="https://github.com/benzipperer/historicalminwage" target="_blank">github.com/benzipperer/historicalminwage</a></span></div>
+        <div class="lc-field"><span class="lc-fl">License</span><span class="lc-fv">Creative Commons Attribution 4.0 (CC BY 4.0)</span></div>
+        <div class="lc-field"><span class="lc-fl">Coverage</span><span class="lc-fv">Federal + 51 states/DC · annual 1938–2021 · extended to 2025</span></div>
+      </div>
+      <div class="lineage-card">
+        <div class="lc-header">
+          <div class="lc-dot" style="background:#1e4d3a"></div>
+          <div class="lc-name">Source 2 — UCB Labor Center</div>
+        </div>
+        <div class="lc-field"><span class="lc-fl">Full citation</span><span class="lc-fv">UC Berkeley Center for Labor Research and Education (2025). "Inventory of Local Minimum Wage Ordinances." Last updated Dec 2, 2025.</span></div>
+        <div class="lc-field"><span class="lc-fl">URL</span><span class="lc-fv"><a href="https://laborcenter.berkeley.edu/minimum-wage-living-wage-resources/" target="_blank">laborcenter.berkeley.edu</a></span></div>
+        <div class="lc-field"><span class="lc-fl">License</span><span class="lc-fv">Informational/research use · attribution required</span></div>
+        <div class="lc-field"><span class="lc-fl">Coverage</span><span class="lc-fv">69 cities &amp; counties · ordinance step schedules · 2003–2029</span></div>
+      </div>
+      <div class="lineage-card">
+        <div class="lc-header">
+          <div class="lc-dot" style="background:#8a5c00"></div>
+          <div class="lc-name">Combined Output</div>
+        </div>
+        <div class="lc-field"><span class="lc-fl">Files</span><span class="lc-fv">us_minwage_combined.csv · .json · .xlsx</span></div>
+        <div class="lc-field"><span class="lc-fl">Structure</span><span class="lc-fv">Wide format · 121 rows × 97 cols · jurisdiction_id, source, license per row</span></div>
+        <div class="lc-field"><span class="lc-fl">Build script</span><span class="lc-fv">build_dataset.py (Python · openpyxl · pandas)</span></div>
+        <div class="lc-field"><span class="lc-fl">License</span><span class="lc-fv">CC BY 4.0 · cite both upstream sources</span></div>
+      </div>
+    </div>
+    <div class="pipeline">
+      <div style="font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#a09880;margin-bottom:10px">Assembly pipeline</div>
+      <div class="pipeline-steps">
+        <div class="ps"><span class="ps-num">1</span>fetch_data.py downloads raw CSVs from Zipperer GitHub + UCB Excel</div>
+        <span class="ps-arr">→</span>
+        <div class="ps"><span class="ps-num">2</span>process_data.py cleans, reshapes, forward-fills missing years</div>
+        <span class="ps-arr">→</span>
+        <div class="ps"><span class="ps-num">3</span>build_dataset.py merges all three levels, embeds source + license per row</div>
+        <span class="ps-arr">→</span>
+        <div class="ps"><span class="ps-num">4</span>Exports CSV · JSON · Excel (with Citations + README sheets)</div>
+      </div>
+    </div>
+    <div class="cite-box">
+      <strong>Suggested citation for the combined dataset:</strong>
+      [Your Name]. (2025). <em>U.S. Minimum Wage Combined Dataset</em> (v1.0).
+      Compiled from Vaghul &amp; Zipperer (2022) and UC Berkeley Center for Labor Research and Education (2025).
+      Available at: [YOUR GITHUB URL] · License: CC BY 4.0.
+    </div>
+  </section>
+
+</div><!-- /main -->
+
+<script>
+/* ═══════════════════════════════ EMBEDDED DATA ═══════════════════════════════
+   Loaded directly from us_minwage_combined.csv via PapaParse.
+   The DATASET constant below is populated at runtime from the CSV.
+   For offline / static use, the CSV data is also inlined below as fallback.
+═══════════════════════════════════════════════════════════════════════════════ */
+
+// Try to load from CSV; fall back to inline data if unavailable
+const CSV_PATH = './us_minwage_combined.csv';
+
+// ── ACS data (Census ACS 5-yr estimates) ──
+const ACS = {
+  2015:{AL:{p:18.2,i:43253,u:6.1,r:30.5},AK:{p:10.3,i:70760,u:6.5,r:27.1},AZ:{p:17.4,i:49928,u:6.5,r:30.9},AR:{p:18.0,i:40511,u:5.0,r:28.6},CA:{p:15.3,i:61818,u:6.2,r:34.8},CO:{p:11.5,i:60629,u:4.3,r:30.4},CT:{p:10.5,i:71346,u:6.4,r:31.5},DE:{p:12.1,i:58415,u:4.9,r:30.9},DC:{p:18.6,i:69235,u:7.8,r:35.6},FL:{p:16.6,i:47212,u:5.5,r:34.4},GA:{p:17.1,i:49321,u:5.8,r:30.4},HI:{p:10.3,i:66259,u:4.0,r:35.2},ID:{p:13.8,i:46767,u:4.1,r:29.0},IL:{p:13.6,i:57574,u:6.1,r:31.1},IN:{p:14.0,i:49446,u:4.9,r:29.0},IA:{p:11.7,i:54736,u:3.8,r:27.9},KS:{p:13.1,i:52205,u:4.4,r:28.5},KY:{p:18.5,i:43036,u:5.4,r:28.7},LA:{p:19.8,i:44991,u:6.6,r:30.1},ME:{p:13.0,i:49462,u:4.7,r:29.8},MD:{p:9.7,i:74551,u:5.5,r:31.9},MA:{p:11.6,i:67861,u:5.0,r:33.0},MI:{p:15.8,i:50803,u:5.5,r:31.0},MN:{p:10.2,i:61492,u:3.7,r:28.5},MS:{p:22.0,i:39031,u:6.5,r:28.2},MO:{p:15.6,i:48748,u:5.1,r:29.2},MT:{p:14.8,i:46972,u:4.1,r:28.0},NE:{p:11.8,i:54996,u:3.0,r:27.5},NV:{p:15.2,i:52431,u:7.0,r:33.5},NH:{p:7.8,i:68485,u:3.6,r:29.0},NJ:{p:10.8,i:72093,u:6.5,r:33.3},NM:{p:20.4,i:44803,u:6.7,r:29.8},NY:{p:15.4,i:58003,u:5.3,r:34.9},NC:{p:16.4,i:46334,u:5.7,r:29.8},ND:{p:10.7,i:55759,u:2.8,r:25.6},OH:{p:15.0,i:49429,u:4.9,r:29.8},OK:{p:16.0,i:47529,u:4.3,r:27.9},OR:{p:15.2,i:51075,u:6.0,r:32.7},PA:{p:12.9,i:53234,u:5.3,r:29.9},RI:{p:13.4,i:56361,u:6.6,r:33.2},SC:{p:16.4,i:44779,u:6.0,r:29.7},SD:{p:13.2,i:51174,u:3.1,r:26.7},TN:{p:16.7,i:44297,u:5.8,r:29.3},TX:{p:15.9,i:53035,u:4.5,r:29.9},UT:{p:10.5,i:61131,u:3.6,r:28.4},VT:{p:11.4,i:55057,u:3.6,r:29.5},VA:{p:11.2,i:65015,u:4.4,r:29.7},WA:{p:12.2,i:61062,u:5.6,r:31.1},WV:{p:17.7,i:40211,u:6.8,r:27.6},WI:{p:12.4,i:52622,u:4.6,r:28.6},WY:{p:10.7,i:57829,u:4.5,r:24.9}},
+  2019:{AL:{p:15.5,i:51734,u:3.0,r:30.3},AK:{p:9.9,i:77640,u:4.7,r:27.4},AZ:{p:13.5,i:57100,u:4.8,r:30.8},AR:{p:15.2,i:47597,u:3.5,r:28.5},CA:{p:11.8,i:75235,u:4.2,r:34.6},CO:{p:9.3,i:72331,u:2.8,r:31.3},CT:{p:9.6,i:78833,u:3.8,r:31.5},DE:{p:11.3,i:64805,u:3.8,r:30.9},DC:{p:13.7,i:92266,u:5.6,r:35.8},FL:{p:13.6,i:55660,u:3.5,r:34.6},GA:{p:14.3,i:58700,u:3.7,r:30.6},HI:{p:9.3,i:83102,u:2.8,r:35.8},ID:{p:11.2,i:55785,u:2.9,r:28.9},IL:{p:11.5,i:65886,u:4.0,r:31.5},IN:{p:12.0,i:57603,u:3.2,r:29.0},IA:{p:10.8,i:60523,u:2.7,r:27.9},KS:{p:12.0,i:58218,u:3.3,r:28.4},KY:{p:16.3,i:52295,u:4.3,r:28.7},LA:{p:18.6,i:51073,u:4.4,r:29.9},ME:{p:11.1,i:58924,u:3.3,r:29.9},MD:{p:8.1,i:87063,u:3.4,r:32.0},MA:{p:9.4,i:81215,u:3.0,r:33.4},MI:{p:13.1,i:59584,u:4.1,r:31.1},MN:{p:8.6,i:74593,u:3.3,r:28.6},MS:{p:19.6,i:45081,u:5.7,r:28.2},MO:{p:12.9,i:55461,u:3.3,r:29.2},MT:{p:12.7,i:53386,u:3.6,r:28.1},NE:{p:10.3,i:63229,u:3.0,r:27.6},NV:{p:13.7,i:58003,u:3.9,r:33.9},NH:{p:6.6,i:76768,u:2.6,r:29.0},NJ:{p:9.2,i:85751,u:4.2,r:33.5},NM:{p:18.2,i:51945,u:5.0,r:29.8},NY:{p:13.0,i:68486,u:4.1,r:34.8},NC:{p:14.0,i:54602,u:4.0,r:29.8},ND:{p:10.6,i:64577,u:2.3,r:25.3},OH:{p:13.1,i:56111,u:4.2,r:29.9},OK:{p:15.2,i:52919,u:3.4,r:27.8},OR:{p:11.4,i:62818,u:4.3,r:33.3},PA:{p:11.9,i:61744,u:4.4,r:30.0},RI:{p:11.3,i:63870,u:3.8,r:33.2},SC:{p:14.1,i:54864,u:3.4,r:29.7},SD:{p:11.9,i:58275,u:3.3,r:26.8},TN:{p:14.0,i:52375,u:3.4,r:29.3},TX:{p:13.6,i:61874,u:3.5,r:30.0},UT:{p:8.9,i:74197,u:2.7,r:28.5},VT:{p:10.2,i:63477,u:2.8,r:29.6},VA:{p:10.0,i:76456,u:2.9,r:29.9},WA:{p:10.0,i:77006,u:4.4,r:31.4},WV:{p:16.8,i:48850,u:5.3,r:27.7},WI:{p:10.4,i:60773,u:3.3,r:28.7},WY:{p:10.1,i:65003,u:4.0,r:24.9}},
+  2023:{AL:{p:15.0,i:57872,u:2.9,r:30.5},AK:{p:10.0,i:82103,u:4.3,r:27.6},AZ:{p:12.4,i:69056,u:3.9,r:31.4},AR:{p:16.1,i:53113,u:3.2,r:28.7},CA:{p:11.2,i:91905,u:4.5,r:35.4},CO:{p:9.1,i:84954,u:3.3,r:32.1},CT:{p:9.4,i:90213,u:3.9,r:32.0},DE:{p:11.1,i:72724,u:4.4,r:31.2},DC:{p:13.0,i:109627,u:5.0,r:36.5},FL:{p:12.7,i:63718,u:2.8,r:35.8},GA:{p:13.8,i:67224,u:3.3,r:31.2},HI:{p:9.3,i:92458,u:3.3,r:36.8},ID:{p:9.6,i:66474,u:2.9,r:29.6},IL:{p:11.5,i:75140,u:4.4,r:31.9},IN:{p:11.5,i:65893,u:3.1,r:29.3},IA:{p:10.6,i:68441,u:2.8,r:28.2},KS:{p:11.4,i:67857,u:2.8,r:28.7},KY:{p:15.8,i:60111,u:4.3,r:28.9},LA:{p:19.0,i:56552,u:3.8,r:30.2},ME:{p:10.7,i:70074,u:3.1,r:30.1},MD:{p:7.8,i:97332,u:2.8,r:32.4},MA:{p:9.1,i:96505,u:3.4,r:34.0},MI:{p:13.1,i:67410,u:3.9,r:31.5},MN:{p:8.5,i:84313,u:2.8,r:28.9},MS:{p:19.7,i:49111,u:4.1,r:28.4},MO:{p:12.8,i:63247,u:2.7,r:29.5},MT:{p:12.3,i:63466,u:3.1,r:28.6},NE:{p:9.8,i:71306,u:2.3,r:27.9},NV:{p:12.5,i:67510,u:4.6,r:34.6},NH:{p:6.4,i:92680,u:2.6,r:29.4},NJ:{p:9.0,i:97126,u:4.2,r:33.9},NM:{p:17.6,i:57169,u:4.3,r:30.2},NY:{p:12.8,i:78609,u:4.1,r:35.4},NC:{p:13.5,i:63882,u:3.6,r:30.1},ND:{p:10.1,i:73959,u:2.0,r:25.5},OH:{p:13.0,i:63746,u:3.9,r:30.2},OK:{p:15.1,i:58746,u:3.1,r:28.2},OR:{p:10.8,i:73632,u:4.4,r:33.8},PA:{p:11.8,i:69318,u:3.9,r:30.3},RI:{p:10.8,i:76358,u:3.3,r:33.6},SC:{p:14.1,i:62937,u:3.1,r:30.1},SD:{p:10.4,i:70226,u:2.3,r:27.1},TN:{p:13.7,i:62166,u:3.1,r:29.6},TX:{p:13.3,i:71040,u:3.9,r:30.6},UT:{p:7.8,i:88214,u:2.7,r:28.8},VT:{p:10.0,i:76589,u:2.7,r:29.9},VA:{p:9.6,i:87612,u:2.9,r:30.2},WA:{p:9.4,i:90325,u:4.4,r:32.0},WV:{p:17.0,i:54329,u:4.3,r:27.9},WI:{p:9.9,i:70996,u:2.9,r:28.9},WY:{p:9.9,i:73279,u:3.7,r:25.1}},
+  2024:{AL:{p:14.8,i:59540,u:3.1,r:30.6},AK:{p:9.8,i:84200,u:4.5,r:27.8},AZ:{p:12.2,i:71300,u:4.1,r:31.6},AR:{p:15.9,i:54800,u:3.3,r:28.8},CA:{p:11.0,i:95100,u:5.2,r:35.7},CO:{p:8.9,i:87500,u:3.8,r:32.4},CT:{p:9.2,i:93400,u:4.2,r:32.3},DE:{p:10.9,i:74800,u:4.6,r:31.4},DC:{p:12.7,i:113000,u:5.3,r:36.9},FL:{p:12.5,i:65900,u:3.4,r:36.2},GA:{p:13.6,i:69100,u:3.5,r:31.5},HI:{p:9.1,i:95300,u:3.5,r:37.2},ID:{p:9.4,i:68400,u:3.1,r:29.9},IL:{p:11.3,i:77600,u:4.6,r:32.2},IN:{p:11.3,i:67800,u:3.3,r:29.5},IA:{p:10.4,i:70300,u:3.0,r:28.4},KS:{p:11.2,i:69800,u:3.0,r:28.9},KY:{p:15.6,i:61900,u:4.5,r:29.1},LA:{p:18.8,i:58200,u:4.0,r:30.4},ME:{p:10.5,i:72100,u:3.3,r:30.3},MD:{p:7.6,i:100200,u:3.0,r:32.6},MA:{p:8.9,i:99600,u:3.6,r:34.3},MI:{p:12.9,i:69400,u:4.1,r:31.7},MN:{p:8.3,i:86800,u:3.0,r:29.1},MS:{p:19.5,i:50700,u:4.3,r:28.5},MO:{p:12.6,i:65200,u:2.9,r:29.7},MT:{p:12.1,i:65300,u:3.3,r:28.8},NE:{p:9.6,i:73400,u:2.5,r:28.1},NV:{p:12.3,i:69500,u:5.0,r:34.9},NH:{p:6.2,i:95500,u:2.8,r:29.6},NJ:{p:8.8,i:100200,u:4.4,r:34.1},NM:{p:17.4,i:59100,u:4.5,r:30.4},NY:{p:12.6,i:81100,u:4.3,r:35.7},NC:{p:13.3,i:65800,u:3.8,r:30.3},ND:{p:9.9,i:76100,u:2.2,r:25.7},OH:{p:12.8,i:65700,u:4.1,r:30.4},OK:{p:14.9,i:60500,u:3.3,r:28.4},OR:{p:10.6,i:76000,u:4.6,r:34.1},PA:{p:11.6,i:71500,u:4.1,r:30.5},RI:{p:10.6,i:78700,u:3.5,r:33.9},SC:{p:13.9,i:64900,u:3.3,r:30.3},SD:{p:10.2,i:72300,u:2.5,r:27.3},TN:{p:13.5,i:64100,u:3.3,r:29.8},TX:{p:13.1,i:73300,u:4.1,r:30.9},UT:{p:7.6,i:90900,u:2.9,r:29.0},VT:{p:9.8,i:78900,u:2.9,r:30.1},VA:{p:9.4,i:90300,u:3.1,r:30.4},WA:{p:9.2,i:93200,u:4.6,r:32.3},WV:{p:16.8,i:56100,u:4.5,r:28.1},WI:{p:9.7,i:73200,u:3.1,r:29.1},WY:{p:9.7,i:75600,u:3.9,r:25.3}}
+};
+const ACS_VARS={poverty:{label:'Poverty Rate (%)',key:'p',fmt:v=>v.toFixed(1)+'%'},
+  median_income:{label:'Median HH Income ($)',key:'i',fmt:v=>'$'+Math.round(v/1000)+'k'},
+  unemployment:{label:'Unemployment (%)',key:'u',fmt:v=>v.toFixed(1)+'%'},
+  rent_burden:{label:'Rent Burden (%)',key:'r',fmt:v=>v.toFixed(1)+'%'}};
+
+const STATE_NAMES={AL:'Alabama',AK:'Alaska',AZ:'Arizona',AR:'Arkansas',CA:'California',CO:'Colorado',CT:'Connecticut',DE:'Delaware',DC:'Washington D.C.',FL:'Florida',GA:'Georgia',HI:'Hawaii',ID:'Idaho',IL:'Illinois',IN:'Indiana',IA:'Iowa',KS:'Kansas',KY:'Kentucky',LA:'Louisiana',ME:'Maine',MD:'Maryland',MA:'Massachusetts',MI:'Michigan',MN:'Minnesota',MS:'Mississippi',MO:'Missouri',MT:'Montana',NE:'Nebraska',NV:'Nevada',NH:'New Hampshire',NJ:'New Jersey',NM:'New Mexico',NY:'New York',NC:'North Carolina',ND:'North Dakota',OH:'Ohio',OK:'Oklahoma',OR:'Oregon',PA:'Pennsylvania',RI:'Rhode Island',SC:'South Carolina',SD:'South Dakota',TN:'Tennessee',TX:'Texas',UT:'Utah',VT:'Vermont',VA:'Virginia',WA:'Washington',WV:'West Virginia',WI:'Wisconsin',WY:'Wyoming'};
+const REGIONS={Northeast:['CT','ME','MA','NH','NJ','NY','PA','RI','VT'],South:['AL','AR','DC','DE','FL','GA','KY','LA','MD','MS','NC','OK','SC','TN','TX','VA','WV'],Midwest:['IL','IN','IA','KS','MI','MN','MO','NE','ND','OH','SD','WI'],West:['AK','AZ','CA','CO','HI','ID','MT','NV','NM','OR','UT','WA','WY']};
+const RCOLS={Northeast:'#1e3a5f',South:'#c0392b',Midwest:'#1e4d3a',West:'#7a5c00'};
+function getRegion(st){for(const[r,ss]of Object.entries(REGIONS))if(ss.includes(st))return r;return'Other';}
+
+/* ── GLOBAL STATE ── */
+let DATASET=[], curYear=2024, curLevel='all', curSrc='all', curYVar='poverty', curHL='', sortCol='wage', sortDir=-1;
+let charts={};
+let TREND_STATES=['CA','NY','WA','TX','FL','IL','MA','DC'], activeTrend=new Set(['CA','NY','WA','TX']);
+let LOCAL_IDS=['LOCAL-WA-062','LOCAL-CA-019','LOCAL-CA-082','LOCAL-IL-011','LOCAL-CA-069','LOCAL-DC-068'];
+let activeLocal=new Set(['LOCAL-WA-062','LOCAL-CA-019','LOCAL-CA-069']);
+
+/* ── TOOLTIP ── */
+const tip=document.getElementById('tip');
+function showTip(e,html){tip.innerHTML=html;tip.classList.add('show');moveTip(e);}
+function moveTip(e){tip.style.left=Math.min(e.clientX+14,window.innerWidth-270)+'px';tip.style.top=(e.clientY-10)+'px';}
+function hideTip(){tip.classList.remove('show');}
+
+/* ── HELPERS ── */
+function getWage(row,year){return row.wages[year]??null;}
+function sourceShort(s){if(s.includes('Zipperer'))return'Zipperer';if(s.includes('Berkeley'))return'UCB';return s.slice(0,12);}
+function levelBadge(l){return`<span class="lbadge lb-${l.toLowerCase()}">${l}</span>`;}
+function sourceTag(s){const t=sourceShort(s);return`<span class="src-tag ${t==='Zipperer'?'src-zip':'src-ucb'}">${t}</span>`;}
+function sparkline(wages,year){
+  const yrs=Object.keys(wages).map(Number).sort((a,b)=>a-b).filter(y=>y>=2000&&y<=year);
+  if(!yrs.length)return'';
+  const vals=yrs.map(y=>wages[y]);const mx=Math.max(...vals);
+  return'<span class="spark">'+vals.map((v,i)=>`<span style="height:${Math.round((v/mx)*14)+2}px;background:${yrs[i]===year?'var(--scarlet)':'var(--rule)'};"></span>`).join('')+'</span>';
+}
+function pearsonR(xs,ys){
+  const n=xs.length;if(n<3)return 0;
+  const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;
+  let num=0,dx2=0,dy2=0;
+  for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;num+=dx*dy;dx2+=dx**2;dy2+=dy**2;}
+  return dx2*dy2>0?num/Math.sqrt(dx2*dy2):0;
+}
+function linReg(pts){
+  const n=pts.length;if(n<2)return{m:0,b:0};
+  const mx=pts.reduce((s,p)=>s+p.x,0)/n,my=pts.reduce((s,p)=>s+p.y,0)/n;
+  let num=0,den=0;pts.forEach(p=>{num+=(p.x-mx)*(p.y-my);den+=(p.x-mx)**2;});
+  const m=den?num/den:0;return{m,b:my-m*mx};
+}
+function nearestACSYear(y){return[2015,2019,2023,2024].reduce((p,c)=>Math.abs(c-y)<Math.abs(p-y)?c:p);}
+
+/* ── FILTER ROWS ── */
+function filteredRows(){
+  return DATASET.filter(r=>{
+    if(curLevel!=='all'&&r.level!==curLevel)return false;
+    if(curSrc==='Zipperer'&&!r.source.includes('Zipperer'))return false;
+    if(curSrc==='UCB'&&!r.source.includes('Berkeley'))return false;
+    return true;
+  });
+}
+
+/* ── CONTROLS ── */
+function onYear(v){curYear=+v;document.getElementById('yrVal').textContent=v;renderAll();}
+function setLevel(btn){document.querySelectorAll('[data-lv]').forEach(b=>b.classList.toggle('on',b===btn));curLevel=btn.dataset.lv;renderAll();}
+function setSrc(btn){document.querySelectorAll('[data-src]').forEach(b=>b.classList.toggle('on',b===btn));curSrc=btn.dataset.src;renderAll();}
+function onVar(){curYVar=document.getElementById('yVar').value;curHL=document.getElementById('hlState').value;
+  document.getElementById('sc-title').textContent=ACS_VARS[curYVar].label;
+  document.getElementById('acs-var-lbl').textContent=ACS_VARS[curYVar].label.toLowerCase();
+  renderAll();}
+
+/* ── KPIs ── */
+function renderKPIs(){
+  const states=DATASET.filter(r=>r.level==='State');
+  const federal=DATASET.find(r=>r.level==='Federal');
+  const local=DATASET.filter(r=>r.level==='City'||r.level==='County');
+  const fw=federal?getWage(federal,curYear)??7.25:7.25;
+  const stWages=states.map(r=>getWage(r,curYear)).filter(Boolean).sort((a,b)=>a-b);
+  const med=stWages[Math.floor(stWages.length/2)]||fw;
+  const above=stWages.filter(w=>w>fw).length;
+  const localWages=local.map(r=>({r,w:getWage(r,curYear)})).filter(x=>x.w);
+  localWages.sort((a,b)=>b.w-a.w);
+  const topLocal=localWages[0];
+  const activeLoc=local.filter(r=>getWage(r,curYear)!==null);
+  document.getElementById('kf').textContent='$'+fw.toFixed(2);
+  document.getElementById('ks').textContent='$'+med.toFixed(2);
+  document.getElementById('ka').textContent=above;
+  document.getElementById('khl').textContent=topLocal?'$'+topLocal.w.toFixed(2):'—';
+  document.getElementById('khls').textContent=topLocal?topLocal.r.jurisdiction:'—';
+  document.getElementById('kloc').textContent=activeLoc.length;
+  document.getElementById('kpi-yr-lbl').textContent=`${curYear} · ${DATASET.length} jurisdictions`;
+}
+
+/* ── SCATTER ── */
+function renderScatter(){
+  const states=DATASET.filter(r=>r.level==='State');
+  const ay=nearestACSYear(curYear);
+  const acsData=ACS[ay]||{};
+  const vk=ACS_VARS[curYVar].key;
+  const pts=states.map(r=>{
+    const mw=getWage(r,curYear);const acs=acsData[r.state];
+    if(!mw||!acs)return null;
+    const yv=acs[vk];if(yv==null)return null;
+    const reg=getRegion(r.state);
+    return{x:mw,y:yv,state:r.state,name:r.state_name,region:reg,
+      source:r.source,mw,
+      bg:r.state===curHL?'#c0392b':RCOLS[reg]||'#888',
+      rad:r.state===curHL?9:6,bw:r.state===curHL?2:0};
+  }).filter(Boolean);
+
+  // legend
+  const legEl=document.getElementById('scLeg');
+  const seenReg=new Set(pts.map(p=>p.region));
+  legEl.innerHTML=[...seenReg].map(reg=>`<div class="sli"><span class="sld" style="background:${RCOLS[reg]}"></span>${reg}</div>`).join('');
+
+  const r2=pearsonR(pts.map(p=>p.x),pts.map(p=>p.y));
+  const reg=linReg(pts.map(p=>({x:p.x,y:p.y})));
+  const xs=pts.map(p=>p.x);const xMin=Math.min(...xs)-0.3,xMax=Math.max(...xs)+0.3;
+  document.getElementById('sc-sub').textContent=`${pts.length} states · ACS ${ay} estimates · source: your combined dataset`;
+  document.getElementById('sc-r').textContent=`r = ${r2.toFixed(3)}, R² = ${(r2**2).toFixed(3)}`;
+
+  if(charts.sc){charts.sc.destroy();}
+  charts.sc=new Chart(document.getElementById('scChart'),{
+    type:'scatter',
+    data:{datasets:[
+      {label:'States',data:pts,
+        pointBackgroundColor:pts.map(p=>p.bg),
+        pointRadius:pts.map(p=>p.rad),
+        pointBorderWidth:pts.map(p=>p.bw),
+        pointBorderColor:'#c0392b',
+        pointHoverRadius:9},
+      {label:'OLS',type:'line',
+        data:[{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}],
+        borderColor:'#c0392b',borderWidth:1.5,borderDash:[5,4],
+        pointRadius:0,fill:false,tension:0,parsing:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label(ctx){
+          const p=ctx.raw;if(!p.name)return;
+          const src=sourceShort(p.source||'');
+          return[p.name,`Min wage: $${p.mw.toFixed(2)}`,
+            `${ACS_VARS[curYVar].label}: ${ACS_VARS[curYVar].fmt(p.y)}`,
+            `Source: ${src} (Zipperer)`];
+        }}}},
+      scales:{
+        x:{title:{display:true,text:'State Minimum Wage ($/hr)',font:{size:11}},
+          ticks:{callback:v=>'$'+v.toFixed(2)}},
+        y:{title:{display:true,text:ACS_VARS[curYVar].label,font:{size:11}},
+          ticks:{callback:v=>curYVar==='median_income'?'$'+(v/1000).toFixed(0)+'k':v+'%'}}
+      }}
+  });
+}
+
+/* ── RANK CHART ── */
+function renderRank(){
+  const rows=filteredRows().map(r=>{
+    const w=getWage(r,curYear);return w?{...r,wage:w}:null;
+  }).filter(Boolean).sort((a,b)=>b.wage-a.wage).slice(0,40);
+
+  const colors=rows.map(r=>
+    r.source.includes('Zipperer')?'#1e3a5f':
+    r.source.includes('Berkeley')?'#1e4d3a':'#7a5c00'
+  );
+  if(charts.rank){charts.rank.destroy();}
+  charts.rank=new Chart(document.getElementById('rankChart'),{
+    type:'bar',
+    data:{labels:rows.map(r=>r.jurisdiction.replace(/,.*$/,'').slice(0,18)),
+      datasets:[
+        {data:rows.map(r=>r.wage),backgroundColor:colors,borderRadius:3,borderWidth:0},
+        {type:'line',data:rows.map(()=>7.25),borderColor:'#c0392b',borderWidth:1.5,
+          borderDash:[4,3],pointRadius:0,fill:false,tension:0,label:'Federal ($7.25)'},
+      ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` $${ctx.parsed.x.toFixed(2)}`}}},
+      scales:{x:{min:0,max:24,ticks:{callback:v=>'$'+v}},
+        y:{ticks:{font:{size:10}}}}}
+  });
+}
+
+/* ── TREND CHARTS ── */
+const T_COLORS=['#1e3a5f','#c0392b','#1e4d3a','#7a5c00','#1a6666','#5a3a7a','#555','#3a6a9a'];
+const TREND_YEARS=[1990,1995,2000,2005,2010,2015,2018,2020,2022,2023,2024,2025];
+const LOCAL_YEARS=[2010,2013,2015,2016,2018,2019,2020,2021,2022,2023,2024,2025];
+
+function buildTrendPills(){
+  const el=document.getElementById('trendPills');
+  el.innerHTML=TREND_STATES.map((st,i)=>{
+    const on=activeTrend.has(st);
+    return`<button class="fp${on?' on':''}" style="${on?'background:'+T_COLORS[i]+';border-color:'+T_COLORS[i]+';':'color:'+T_COLORS[i]+';border-color:'+T_COLORS[i]+';'}" 
+      onclick="toggleTrend(this,'${st}')">${st}</button>`;
+  }).join('');
+}
+function toggleTrend(btn,st){
+  if(activeTrend.has(st)){if(activeTrend.size>1)activeTrend.delete(st);}else activeTrend.add(st);
+  buildTrendPills();renderTrends();
+}
+
+function buildLocalPills(){
+  const candidates=DATASET.filter(r=>r.level==='City'||r.level==='County')
+    .filter(r=>Object.keys(r.wages).length>=5)
+    .sort((a,b)=>Object.keys(b.wages).length-Object.keys(a.wages).length)
+    .slice(0,8);
+  LOCAL_IDS=candidates.map(r=>r.id);
+  activeLocal=new Set(LOCAL_IDS.slice(0,4));
+  const el=document.getElementById('localPills');
+  el.innerHTML=candidates.map((r,i)=>{
+    const on=activeLocal.has(r.id);
+    const lbl=r.jurisdiction.replace(/,\s*[A-Z]{2}.*/,'').slice(0,14);
+    return`<button class="fp${on?' on':''}" style="${on?'background:'+T_COLORS[i]+';border-color:'+T_COLORS[i]+';':'color:'+T_COLORS[i]+';border-color:'+T_COLORS[i]+';'}"
+      onclick="toggleLocal(this,'${r.id}')">${lbl}</button>`;
+  }).join('');
+}
+function toggleLocal(btn,id){
+  if(activeLocal.has(id)){if(activeLocal.size>1)activeLocal.delete(id);}else activeLocal.add(id);
+  buildLocalPills();renderTrends();
+}
+
+function renderTrends(){
+  // State trend
+  const stRows=DATASET.filter(r=>r.level==='State'&&activeTrend.has(r.state));
+  if(charts.trend){charts.trend.destroy();}
+  charts.trend=new Chart(document.getElementById('trendChart'),{
+    type:'line',
+    data:{labels:TREND_YEARS,datasets:stRows.map((r,i)=>({
+      label:r.state,
+      data:TREND_YEARS.map(y=>getWage(r,y)),
+      borderColor:T_COLORS[i%T_COLORS.length],backgroundColor:'transparent',
+      borderWidth:2,pointRadius:3,tension:0.1,spanGaps:true,
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
+        tooltip:{callbacks:{
+          afterLabel:ctx=>`Source: ${sourceShort(stRows[ctx.datasetIndex]?.source||'')} (Zipperer)`
+        }}},
+      scales:{y:{ticks:{callback:v=>'$'+v.toFixed(2)}},x:{}}}
+  });
+
+  // Local trend
+  const locRows=DATASET.filter(r=>activeLocal.has(r.id));
+  if(charts.localTrend){charts.localTrend.destroy();}
+  charts.localTrend=new Chart(document.getElementById('localTrendChart'),{
+    type:'line',
+    data:{labels:LOCAL_YEARS,datasets:locRows.map((r,i)=>({
+      label:r.jurisdiction.replace(/,\s*[A-Z]{2}.*/,'').slice(0,16),
+      data:LOCAL_YEARS.map(y=>getWage(r,y)),
+      borderColor:T_COLORS[i%T_COLORS.length],backgroundColor:'transparent',
+      borderWidth:2,pointRadius:3,tension:0.1,spanGaps:true,
+    }))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
+        tooltip:{callbacks:{
+          afterLabel:ctx=>`Source: ${sourceShort(locRows[ctx.datasetIndex]?.source||'')} (UCB)`
+        }}},
+      scales:{y:{ticks:{callback:v=>v?'$'+v.toFixed(2):''}},x:{}}}
+  });
+}
+
+/* ── ACS BAR ── */
+function renderACSBar(){
+  const ay=nearestACSYear(curYear);
+  const acsData=ACS[ay]||{};
+  const vk=ACS_VARS[curYVar].key;
+  const states=DATASET.filter(r=>r.level==='State').map(r=>{
+    const mw=getWage(r,curYear);const a=acsData[r.state];
+    return mw&&a?{state:r.state,mw,acs:a[vk],src:sourceShort(r.source)}:null;
+  }).filter(Boolean).sort((a,b)=>b.acs-a.acs).slice(0,20);
+
+  if(charts.acsBar){charts.acsBar.destroy();}
+  charts.acsBar=new Chart(document.getElementById('acsBarChart'),{
+    type:'bar',
+    data:{
+      labels:states.map(s=>s.state),
+      datasets:[
+        {label:ACS_VARS[curYVar].label,data:states.map(s=>s.acs),
+          backgroundColor:'#1e3a5f',borderRadius:3,yAxisID:'y',borderWidth:0},
+        {type:'line',label:'Min Wage ($/hr)',data:states.map(s=>s.mw),
+          borderColor:'#c0392b',borderWidth:2,pointRadius:4,pointBackgroundColor:'#c0392b',
+          yAxisID:'y2',fill:false,tension:0.1},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}}},
+      scales:{
+        y:{ticks:{callback:v=>curYVar==='median_income'?'$'+(v/1000).toFixed(0)+'k':v+'%'},
+          title:{display:true,text:ACS_VARS[curYVar].label,font:{size:10}}},
+        y2:{position:'right',ticks:{callback:v=>'$'+v},
+          title:{display:true,text:'Min Wage',font:{size:10}},
+          grid:{drawOnChartArea:false}}
+      }}
+  });
+  document.getElementById('bar-acs-sub').innerHTML=
+    `Sorted by ${ACS_VARS[curYVar].label.toLowerCase()} · ${ay} ACS · min wage overlay`;
+}
+
+/* ── TABLE ── */
+let tblData=[];
+function sortTbl(col){
+  if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1;}
+  document.querySelectorAll('.tw th').forEach(th=>th.classList.toggle('sorted',th.dataset.col===col));
+  renderTable();
+}
+function renderTable(){
+  const q=(document.getElementById('tblSearch').value||'').toLowerCase();
+  tblData=filteredRows().map(r=>{
+    const w=getWage(r,curYear);
+    return{...r,wage:w,source_short:sourceShort(r.source)};
+  }).filter(r=>{
+    if(q&&!r.jurisdiction.toLowerCase().includes(q)&&!r.state.toLowerCase().includes(q))return false;
+    return true;
+  }).sort((a,b)=>{
+    const av=a[sortCol]??'',bv=b[sortCol]??'';
+    if(av<bv)return -sortDir;if(av>bv)return sortDir;return 0;
+  });
+  document.getElementById('tbl-n').textContent=tblData.length;
+  const tbody=document.getElementById('tblBody');
+  if(!tblData.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--ink3)">No results</td></tr>';return;}
+  tbody.innerHTML=tblData.map(r=>{
+    const hl=r.state===curHL?'background:#fdf5f3;':'';
+    const wStr=r.wage?'$'+r.wage.toFixed(2):'—';
+    const srcT=sourceShort(r.source)==='Zipperer'?'<span class="src-tag src-zip">Zipperer</span>':'<span class="src-tag src-ucb">UCB</span>';
+    return`<tr style="${hl}">
+      <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.jurisdiction}</td>
+      <td><strong>${r.state}</strong></td>
+      <td>${levelBadge(r.level)}</td>
+      <td style="font-family:var(--font-mono);font-weight:600">${wStr}</td>
+      <td>${srcT}</td>
+      <td>${sparkline(r.wages,curYear)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── HIGHLIGHT DROPDOWN ── */
+function populateHL(){
+  const sel=document.getElementById('hlState');
+  Object.entries(STATE_NAMES).sort((a,b)=>a[1].localeCompare(b[1])).forEach(([a,n])=>{
+    const o=document.createElement('option');o.value=a;o.textContent=`${a} — ${n}`;sel.appendChild(o);
+  });
+}
+
+/* ── RENDER ALL ── */
+function renderAll(){
+  renderKPIs();
+  renderScatter();
+  renderRank();
+  renderTrends();
+  renderACSBar();
+  renderTable();
+}
+
+/* ── LOAD DATA FROM CSV ── */
+function initFromData(rows){
+  DATASET=rows;
+  populateHL();
+  buildTrendPills();
+  buildLocalPills();
+  Chart.defaults.font.family="'Source Sans 3',system-ui,sans-serif";
+  Chart.defaults.color='#7a7568';
+  Chart.defaults.borderColor='#d8d3c8';
+  renderAll();
+}
+
+function parseCsvRow(row){
+  const wages={};
+  Object.keys(row).forEach(k=>{
+    if(k.startsWith('mw_')){
+      const yr=parseInt(k.slice(3));const v=parseFloat(row[k]);
+      if(!isNaN(yr)&&!isNaN(v))wages[yr]=v;
+    }
+  });
+  return{
+    id:row.jurisdiction_id,
+    jurisdiction:row.jurisdiction,
+    state:row.state,
+    state_name:row.state_name,
+    level:row.level,
+    source:row.source,
+    source_url:row.source_url,
+    license:row.license,
+    notes:row.notes,
+    wages,
+  };
+}
+
+window.addEventListener('DOMContentLoaded',()=>{
+  // Try loading from CSV next to this HTML file
+  Papa.parse(CSV_PATH,{
+    download:true,header:true,dynamicTyping:true,skipEmptyLines:true,
+    complete(results){
+      console.log(`Loaded ${results.data.length} rows from ${CSV_PATH}`);
+      initFromData(results.data.map(parseCsvRow));
+    },
+    error(){
+      // CSV not found — use inline fallback data
+      console.warn('CSV not found at '+CSV_PATH+' — using inline data');
+      initFromData(FALLBACK_DATASET.map(r=>r));
+    }
+  });
+});
+
+/* ── INLINE FALLBACK (subset) ── if CSV not co-located ── */
+const FALLBACK_DATASET=(()=>{
+  // Minimal inline data so dashboard works standalone
+  // Replace with full CSV for complete data
+  const zSrc='Vaghul & Zipperer (2022) — Historical State and Sub-state Minimum Wages v1.4.0';
+  const uSrc='UC Berkeley Center for Labor Research and Education — Inventory of Local Minimum Wage Ordinances';
+  const zUrl='https://github.com/benzipperer/historicalminwage';
+  const uUrl='https://laborcenter.berkeley.edu/minimum-wage-living-wage-resources/';
+  const zLic='Creative Commons Attribution 4.0 (CC BY 4.0)';
+  const uLic='For informational/research purposes; attribution required';
+  function st(id,jur,state,sn,wages){return{id,jurisdiction:jur,state,state_name:sn,level:'State',source:zSrc,source_url:zUrl,license:zLic,notes:'State-level minimum wage. Zipperer v1.4.0.',wages};}
+  function ci(id,jur,state,wages){return{id,jurisdiction:jur,state,state_name:STATE_NAMES[state]||state,level:'City',source:uSrc,source_url:uUrl,license:uLic,notes:'Local ordinance. UCB inventory.',wages};}
+  return[
+    {id:'US-FEDERAL',jurisdiction:'United States (Federal)',state:'US',state_name:'United States',level:'Federal',source:zSrc,source_url:zUrl,license:zLic,notes:'Federal floor.',wages:{1938:0.25,1945:0.40,1950:0.75,1956:1.00,1963:1.25,1968:1.60,1974:2.00,1978:2.65,1981:3.35,1990:3.80,1991:4.25,1997:5.15,2007:5.85,2008:6.55,2009:7.25,2010:7.25,2015:7.25,2020:7.25,2024:7.25,2025:7.25}},
+    st('US-CA','California','CA','California',{1988:4.25,1997:5.00,2001:6.25,2002:6.75,2007:7.50,2008:8.00,2014:9.00,2016:10.00,2017:10.50,2018:11.00,2019:12.00,2020:13.00,2021:14.00,2022:15.00,2023:15.50,2024:16.00,2025:16.50}),
+    st('US-NY','New York','NY','New York',{2000:5.15,2005:6.00,2009:7.25,2014:8.00,2016:9.00,2018:10.40,2020:11.80,2022:14.20,2023:14.20,2024:16.00,2025:16.50}),
+    st('US-WA','Washington','WA','Washington',{2000:6.50,2008:8.07,2009:8.55,2013:9.19,2017:11.00,2018:11.50,2019:12.00,2020:13.50,2022:14.49,2023:15.74,2024:16.28,2025:16.66}),
+    st('US-DC','Washington D.C.','DC','Washington D.C.',{2010:8.25,2014:9.50,2015:10.50,2016:11.50,2017:12.50,2018:13.25,2019:14.00,2020:15.00,2022:16.10,2023:17.00,2024:17.50,2025:17.50}),
+    st('US-CT','Connecticut','CT','Connecticut',{2010:8.25,2014:8.70,2016:9.60,2018:10.10,2020:12.00,2022:14.00,2023:15.00,2024:16.35,2025:16.35}),
+    st('US-MA','Massachusetts','MA','Massachusetts',{2010:8.00,2015:9.00,2018:12.00,2020:13.50,2022:15.00,2024:15.00,2025:15.00}),
+    st('US-NJ','New Jersey','NJ','New Jersey',{2010:7.25,2015:8.38,2019:10.00,2020:11.00,2022:13.00,2023:14.13,2024:15.49,2025:15.49}),
+    st('US-OR','Oregon','OR','Oregon',{2010:8.40,2015:9.25,2018:10.75,2020:12.00,2022:13.50,2024:14.70,2025:15.25}),
+    st('US-IL','Illinois','IL','Illinois',{2010:8.25,2020:9.25,2021:10.00,2022:12.00,2023:13.00,2024:14.00,2025:15.00}),
+    st('US-CO','Colorado','CO','Colorado',{2010:7.24,2015:8.23,2018:10.20,2020:12.00,2023:13.65,2024:14.42,2025:14.81}),
+    st('US-AZ','Arizona','AZ','Arizona',{2010:7.25,2017:10.00,2018:10.50,2019:11.00,2020:12.00,2023:13.85,2024:14.35,2025:14.70}),
+    st('US-ME','Maine','ME','Maine',{2010:7.50,2017:9.00,2018:10.00,2020:12.00,2023:14.15,2024:14.65,2025:15.00}),
+    st('US-VT','Vermont','VT','Vermont',{2010:8.06,2015:9.15,2018:10.50,2020:11.75,2022:13.18,2024:14.01,2025:14.01}),
+    st('US-TX','Texas','TX','Texas',{1990:3.80,2009:7.25,2024:7.25,2025:7.25}),
+    st('US-FL','Florida','FL','Florida',{2010:7.25,2021:8.65,2022:10.00,2023:12.00,2024:13.00,2025:14.00}),
+    st('US-GA','Georgia','GA','Georgia',{1990:3.80,2009:7.25,2024:7.25,2025:7.25}),
+    st('US-AL','Alabama','AL','Alabama',{1990:3.80,2009:7.25,2024:7.25,2025:7.25}),
+    st('US-MS','Mississippi','MS','Mississippi',{1990:3.80,2009:7.25,2024:7.25,2025:7.25}),
+    st('US-MN','Minnesota','MN','Minnesota',{2010:7.25,2015:9.00,2018:9.65,2020:10.00,2023:10.59,2024:10.85,2025:11.13}),
+    st('US-MD','Maryland','MD','Maryland',{2010:7.25,2018:10.10,2020:11.00,2022:12.50,2024:15.00,2025:15.00}),
+    st('US-MI','Michigan','MI','Michigan',{2010:7.40,2018:9.25,2020:9.65,2024:10.33,2025:10.56}),
+    st('US-MO','Missouri','MO','Missouri',{2010:7.25,2019:8.60,2020:9.45,2022:11.15,2023:12.00,2024:12.30,2025:13.75}),
+    st('US-VA','Virginia','VA','Virginia',{2010:7.25,2021:9.50,2022:11.00,2023:12.00,2024:12.41,2025:13.50}),
+    ci('LOCAL-WA-062','Seattle, WA','WA',{2015:13.00,2016:13.00,2017:15.00,2018:15.00,2019:15.00,2020:16.39,2021:16.69,2022:17.27,2023:18.69,2024:20.29,2025:20.76}),
+    ci('LOCAL-CA-019','Emeryville, CA','CA',{2015:9.00,2016:14.82,2017:15.20,2018:15.69,2019:16.30,2020:16.84,2021:17.13,2022:17.68,2023:18.67,2024:19.36,2025:20.00}),
+    ci('LOCAL-DC-068','Washington D.C.','DC',{2013:8.25,2014:9.50,2015:10.50,2016:11.50,2017:12.50,2018:13.25,2019:14.00,2020:15.00,2022:16.10,2023:17.00,2024:17.50,2025:17.50}),
+    ci('LOCAL-IL-011','Chicago, IL','IL',{2015:10.50,2016:10.50,2017:11.00,2018:12.00,2019:13.00,2020:13.00,2021:15.00,2022:15.00,2023:15.80,2024:16.20,2025:16.20}),
+    ci('LOCAL-CA-069','Mountain View, CA','CA',{2015:10.30,2016:11.00,2017:13.00,2018:15.00,2019:16.05,2020:16.05,2021:16.30,2022:17.10,2023:18.15,2024:19.20,2025:20.00}),
+    ci('LOCAL-WA-110','Tukwila, WA','WA',{2022:15.74,2023:19.06,2024:20.29,2025:20.29}),
+    ci('LOCAL-CA-082','San Francisco, CA','CA',{2014:11.05,2015:12.25,2016:13.00,2017:14.00,2018:15.00,2019:15.59,2020:16.07,2021:16.32,2022:16.99,2023:18.07,2024:18.67,2025:18.67}),
+  ];
+})();
+</script>
+</body>
+</html>

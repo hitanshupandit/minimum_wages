@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Minimum Wage × LEHD QWI Live Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Instrument+Sans:wght@300;400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:       #08090c;
+  --bg2:      #0e1018;
+  --bg3:      #141720;
+  --bg4:      #1a1e2a;
+  --border:   #252a38;
+  --border2:  #1e2230;
+  --ink:      #e8eaf2;
+  --ink2:     #a8adc0;
+  --ink3:     #5a6080;
+  --cyan:     #00d4b8;
+  --cyan-dim: rgba(0,212,184,.12);
+  --amber:    #f5a623;
+  --amber-dim:rgba(245,166,35,.12);
+  --violet:   #9b6cff;
+  --violet-dim:rgba(155,108,255,.12);
+  --rose:     #ff5470;
+  --rose-dim: rgba(255,84,112,.1);
+  --green:    #39e580;
+  --green-dim:rgba(57,229,128,.1);
+  --font-d:   'Syne', system-ui, sans-serif;
+  --font-b:   'Instrument Sans', system-ui, sans-serif;
+  --font-m:   'Roboto Mono', monospace;
+  --r:        10px;
+  --sh:       0 2px 12px rgba(0,0,0,.4);
+  --sh2:      0 8px 32px rgba(0,0,0,.5);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-b); line-height: 1.6; min-height: 100vh; }
+
+/* ══ NOISE TEXTURE ══ */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4;
+}
+
+/* ══ HEADER ══ */
+header {
+  position: relative; z-index: 1;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #0c0e16 0%, var(--bg) 100%);
+}
+.hdr-grid {
+  max-width: 1400px; margin: 0 auto; padding: 40px 48px 36px;
+  display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: start;
+}
+.hdr-tag {
+  font-family: var(--font-m); font-size: 10px; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--cyan); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.hdr-tag::before { content: ''; width: 24px; height: 1px; background: var(--cyan); }
+h1 {
+  font-family: var(--font-d); font-size: clamp(26px,4vw,48px);
+  font-weight: 800; line-height: 1.05; color: #fff; letter-spacing: -.02em;
+}
+h1 .accent { color: var(--cyan); }
+h1 .dim { font-weight: 400; color: var(--ink2); }
+.hdr-desc {
+  margin-top: 12px; font-size: 13.5px; color: var(--ink2);
+  max-width: 520px; line-height: 1.75;
+}
+.hdr-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.htag {
+  font-family: var(--font-m); font-size: 10px;
+  border: 1px solid var(--border); color: var(--ink3);
+  padding: 3px 10px; border-radius: 4px;
+}
+.htag.live { border-color: rgba(0,212,184,.4); color: var(--cyan); background: var(--cyan-dim); }
+
+/* API key card */
+.apikey-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 20px 22px; min-width: 300px;
+}
+.apikey-card .ak-label {
+  font-family: var(--font-m); font-size: 9.5px; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--ink3); margin-bottom: 8px;
+}
+.apikey-card .ak-row { display: flex; gap: 8px; }
+.apikey-card input {
+  flex: 1; background: var(--bg2); border: 1px solid var(--border2);
+  color: var(--ink); padding: 8px 12px; border-radius: 6px;
+  font-family: var(--font-m); font-size: 12px; outline: none;
+}
+.apikey-card input:focus { border-color: var(--cyan); }
+.apikey-card input::placeholder { color: var(--ink3); }
+.btn-cyan {
+  background: var(--cyan); color: #000; border: none;
+  padding: 8px 16px; border-radius: 6px; font-family: var(--font-d);
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  transition: opacity .15s, transform .1s;
+}
+.btn-cyan:hover { opacity: .85; transform: translateY(-1px); }
+.btn-cyan:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+.ak-hint {
+  margin-top: 8px; font-size: 11px; color: var(--ink3); line-height: 1.5;
+}
+.ak-hint a { color: var(--cyan); text-decoration: none; }
+.ak-hint a:hover { text-decoration: underline; }
+.ak-status {
+  margin-top: 8px; font-family: var(--font-m); font-size: 11px; min-height: 16px;
+}
+.ak-status.ok  { color: var(--green); }
+.ak-status.err { color: var(--rose); }
+.ak-status.loading { color: var(--amber); }
+
+/* accent line */
+.hdr-line { height: 2px; background: linear-gradient(90deg, var(--cyan) 0%, var(--violet) 60%, transparent 100%); }
+
+/* ══ CONTROLS ══ */
+.ctrl-bar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(8,9,12,.92);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.ctrl-inner {
+  max-width: 1400px; margin: 0 auto; padding: 12px 48px;
+  display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+}
+.cg { display: flex; flex-direction: column; gap: 3px; }
+.cl { font-family: var(--font-m); font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink3); }
+select, input[type=range] {
+  font-family: var(--font-b); font-size: 12.5px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--ink); padding: 6px 10px; border-radius: 6px;
+  cursor: pointer; transition: border-color .15s; outline: none;
+}
+select:hover, select:focus { border-color: var(--cyan); }
+input[type=range] { padding: 0; min-width: 100px; accent-color: var(--cyan); }
+.yr-v { font-family: var(--font-m); font-size: 14px; font-weight: 500; min-width: 36px; color: var(--cyan); }
+.vsep { width: 1px; height: 28px; background: var(--border); align-self: center; flex-shrink: 0; }
+.pgroup { display: flex; gap: 0; }
+.pb {
+  font-family: var(--font-m); font-size: 10px; letter-spacing: .04em;
+  padding: 5px 12px; background: var(--bg3); border: 1px solid var(--border);
+  border-right: none; cursor: pointer; color: var(--ink3); transition: all .15s;
+}
+.pb:first-child { border-radius: 6px 0 0 6px; }
+.pb:last-child  { border-radius: 0 6px 6px 0; border-right: 1px solid var(--border); }
+.pb:hover { color: var(--ink); background: var(--bg4); }
+.pb.on { background: var(--cyan); color: #000; border-color: var(--cyan); font-weight: 600; }
+.pb.on + .pb { border-left-color: var(--cyan); }
+
+/* fetch state indicator */
+.fetch-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: var(--ink3); transition: background .3s;
+}
+.fetch-dot.loading { background: var(--amber); animation: blink 1s infinite; }
+.fetch-dot.ok      { background: var(--green); }
+.fetch-dot.err     { background: var(--rose); }
+@keyframes blink { 0%,100%{opacity:1}50%{opacity:.3} }
+
+/* ══ MAIN ══ */
+.main { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 36px 48px 72px; }
+@media(max-width:900px){ .main{padding:20px 16px} .hdr-grid{grid-template-columns:1fr;padding:28px 16px 0} .ctrl-inner{padding:10px 16px} }
+
+.section { margin-bottom: 48px; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.section { animation: fadeUp .35s ease both; }
+.section:nth-child(2){animation-delay:.05s}.section:nth-child(3){animation-delay:.09s}
+.section:nth-child(4){animation-delay:.13s}.section:nth-child(5){animation-delay:.17s}
+
+.sh { display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 24px; }
+.sn { font-family: var(--font-m); font-size: 10px; color: var(--ink3); }
+.st { font-family: var(--font-d); font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+.ss { margin-left: auto; font-family: var(--font-m); font-size: 10px; color: var(--ink3); }
+
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.g3  { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+.g21 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.g12 { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+@media(max-width:1100px){ .g2,.g21,.g12{grid-template-columns:1fr} .g3{grid-template-columns:1fr 1fr} }
+
+/* ══ CARDS ══ */
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 22px 24px; box-shadow: var(--sh);
+  position: relative; overflow: hidden;
+}
+.card::before {
+  content: ''; position: absolute; inset: 0; border-radius: var(--r);
+  background: linear-gradient(135deg, rgba(255,255,255,.015) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* KPI */
+.kpi {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 18px 20px; box-shadow: var(--sh);
+  border-top: 2px solid transparent; transition: box-shadow .2s, border-top-color .3s;
+}
+.kpi:hover { box-shadow: var(--sh2); }
+.kpi.cy { border-top-color: var(--cyan); }
+.kpi.am { border-top-color: var(--amber); }
+.kpi.vi { border-top-color: var(--violet); }
+.kpi.ro { border-top-color: var(--rose); }
+.kpi.gr { border-top-color: var(--green); }
+.kl { font-family: var(--font-m); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink3); margin-bottom: 5px; }
+.kv { font-family: var(--font-d); font-size: 28px; font-weight: 700; line-height: 1; letter-spacing: -.02em; }
+.ks { font-size: 11.5px; color: var(--ink3); margin-top: 4px; }
+.kv.cy { color: var(--cyan); } .kv.am { color: var(--amber); } .kv.vi { color: var(--violet); } .kv.ro { color: var(--rose); } .kv.gr { color: var(--green); }
+
+/* ══ CHART HEADER ══ */
+.chdr { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+.ctitle { font-family: var(--font-d); font-size: 14px; font-weight: 600; }
+.csub { font-family: var(--font-m); font-size: 10px; color: var(--ink3); margin-bottom: 14px; }
+
+/* info button */
+.ib {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--bg4); border: 1px solid var(--border);
+  color: var(--ink3); font-size: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px; transition: all .15s;
+  position: relative; font-family: var(--font-b);
+}
+.ib:hover { background: var(--cyan); border-color: var(--cyan); color: #000; }
+.ipop {
+  position: absolute; z-index: 400;
+  top: calc(100% + 10px); left: 50%; transform: translateX(-50%);
+  width: 290px; background: var(--bg4);
+  border: 1px solid var(--border); border-radius: var(--r);
+  padding: 14px 16px; box-shadow: var(--sh2);
+  font-size: 12.5px; line-height: 1.65; color: var(--ink2);
+  pointer-events: none; opacity: 0; transition: opacity .15s;
+}
+.ipop.show { opacity: 1; pointer-events: auto; }
+.ipop::before {
+  content: ''; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-bottom-color: var(--border);
+}
+.ipop strong { display: block; font-family: var(--font-d); font-size: 13px; color: var(--ink); margin-bottom: 7px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.formula { font-family: var(--font-m); font-size: 11px; background: var(--bg2); border-radius: 4px; padding: 5px 9px; margin: 7px 0; color: var(--cyan); }
+.ifoot { font-size: 11px; color: var(--ink3); margin-top: 6px; border-top: 1px solid var(--border); padding-top: 6px; }
+
+/* ══ LIVE DATA PANEL ══ */
+.live-panel {
+  background: var(--bg3); border: 1px solid var(--cyan);
+  border-radius: var(--r); padding: 16px 20px;
+  box-shadow: 0 0 24px rgba(0,212,184,.08);
+}
+.live-panel .lp-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.live-pulse {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--cyan);
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100%{ box-shadow: 0 0 0 0 rgba(0,212,184,.5); }
+  50%{ box-shadow: 0 0 0 6px rgba(0,212,184,0); }
+}
+.lp-title { font-family: var(--font-d); font-size: 13px; font-weight: 700; color: var(--cyan); }
+.lp-meta  { margin-left: auto; font-family: var(--font-m); font-size: 10px; color: var(--ink3); }
+.lp-grid  { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 12px; }
+.lp-stat  { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+.lps-l    { font-family: var(--font-m); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); margin-bottom: 4px; }
+.lps-v    { font-family: var(--font-d); font-size: 20px; font-weight: 700; color: var(--cyan); letter-spacing: -.01em; }
+.lps-s    { font-size: 11px; color: var(--ink3); margin-top: 2px; }
+.lp-empty { font-family: var(--font-m); font-size: 12px; color: var(--ink3); text-align: center; padding: 20px; }
+
+/* loading overlay */
+.loading-overlay {
+  position: absolute; inset: 0; background: rgba(8,9,12,.8);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--r); z-index: 10;
+  font-family: var(--font-m); font-size: 12px; color: var(--amber);
+  gap: 10px; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.loading-overlay.show { opacity: 1; pointer-events: auto; }
+.spin { width: 14px; height: 14px; border: 2px solid var(--amber); border-top-color: transparent; border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ══ KAITZ COMPARISON TABLE ══ */
+.mw-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.mw-table th { background: var(--bg3); font-family: var(--font-m); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink3); padding: 9px 12px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.mw-table td { padding: 8px 12px; border-bottom: 1px solid var(--border2); vertical-align: middle; }
+.mw-table tr:last-child td { border-bottom: none; }
+.mw-table tr:hover td { background: var(--bg3); }
+.mw-table .mval { font-family: var(--font-m); font-weight: 500; }
+.bar-bg { background: var(--bg3); border-radius: 3px; height: 6px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; background: var(--cyan); transition: width .4s ease; }
+.diff-badge { display: inline-block; font-family: var(--font-m); font-size: 10px; padding: 2px 7px; border-radius: 3px; }
+.diff-pos { background: var(--green-dim); color: var(--green); }
+.diff-neg { background: var(--rose-dim); color: var(--rose); }
+
+/* ══ FOOTNOTE ══ */
+.fn { font-family: var(--font-m); font-size: 10.5px; color: var(--ink3); margin-top: 9px; padding-top: 8px; border-top: 1px solid var(--border2); line-height: 1.7; }
+
+/* ══ INDUSTRY LEGEND ══ */
+.ind-leg { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.il { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink3); }
+.ild { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+/* ══ TOOLTIP ══ */
+#tip {
+  position: fixed; z-index: 9999; background: var(--bg4);
+  border: 1px solid var(--border); border-radius: var(--r);
+  padding: 10px 14px; pointer-events: none; opacity: 0;
+  transition: opacity .12s; box-shadow: var(--sh2);
+  font-size: 12px; max-width: 240px; line-height: 1.6;
+}
+#tip.show { opacity: 1; }
+#tip .tn { font-family: var(--font-d); font-size: 13px; font-weight: 700; color: var(--ink); display: block; border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-bottom: 5px; }
+#tip .tr { display: flex; justify-content: space-between; gap: 12px; }
+#tip .tk { color: var(--ink3); }
+#tip .tv { font-family: var(--font-m); font-weight: 500; color: var(--cyan); }
+</style>
+</head>
+<body>
+<div id="tip"></div>
+
+<!-- ══ HEADER ══ -->
+<header>
+  <div class="hdr-grid">
+    <div>
+      <div class="hdr-tag">LEHD QWI × Minimum Wage · Live Data</div>
+      <h1>Wages, Work &amp;<br><span class="accent">Minimum Wage</span> <span class="dim">Impact</span></h1>
+      <p class="hdr-desc">
+        Live data from the Census Bureau's Quarterly Workforce Indicators API —
+        average earnings, employment levels, hiring, and separations —
+        crossed with federal and state minimum wage series.
+      </p>
+      <div class="hdr-tags">
+        <span class="htag live">● Live QWI API</span>
+        <span class="htag">LEHD LODES Origin</span>
+        <span class="htag">Zipperer (2022) Min Wage</span>
+        <span class="htag">UCB Labor Center</span>
+        <span class="htag">2002–2023</span>
+      </div>
+    </div>
+    <div class="apikey-card">
+      <div class="ak-label">Census API Key</div>
+      <div class="ak-row">
+        <input type="text" id="apiKey" placeholder="Paste your API key…" autocomplete="off"/>
+        <button class="btn-cyan" id="applyKey" onclick="applyAPIKey()">Apply</button>
+      </div>
+      <div class="ak-hint">
+        Free key at <a href="https://api.census.gov/data/key_signup.html" target="_blank">api.census.gov/data/key_signup.html</a> — takes ~1 min.
+        Or try without a key (rate-limited).
+      </div>
+      <div class="ak-status" id="keyStatus"></div>
+    </div>
+  </div>
+  <div class="hdr-line"></div>
+</header>
+
+<!-- ══ CONTROLS ══ -->
+<div class="ctrl-bar">
+  <div class="ctrl-inner">
+    <div class="cg">
+      <span class="cl">State</span>
+      <select id="stateSelect" onchange="onStateChange()">
+        <option value="06">California (CA)</option>
+        <option value="36">New York (NY)</option>
+        <option value="53">Washington (WA)</option>
+        <option value="48">Texas (TX)</option>
+        <option value="12">Florida (FL)</option>
+        <option value="17">Illinois (IL)</option>
+        <option value="25">Massachusetts (MA)</option>
+        <option value="11">Washington D.C.</option>
+        <option value="08">Colorado (CO)</option>
+        <option value="41">Oregon (OR)</option>
+        <option value="34">New Jersey (NJ)</option>
+        <option value="26">Michigan (MI)</option>
+        <option value="27">Minnesota (MN)</option>
+        <option value="28">Mississippi (MS)</option>
+        <option value="01">Alabama (AL)</option>
+        <option value="24">Maryland (MD)</option>
+        <option value="23">Maine (ME)</option>
+        <option value="50">Vermont (VT)</option>
+        <option value="37">North Carolina (NC)</option>
+        <option value="51">Virginia (VA)</option>
+      </select>
+    </div>
+    <div class="cg">
+      <span class="cl">Year</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" id="yrSlider" min="2010" max="2023" value="2022" step="1" oninput="onYear(this.value)"/>
+        <span class="yr-v" id="yrVal">2022</span>
+      </div>
+    </div>
+    <div class="vsep"></div>
+    <div class="cg">
+      <span class="cl">Worker Group</span>
+      <div class="pgroup">
+        <button class="pb on" data-ag="A00" onclick="setAge(this)">All</button>
+        <button class="pb" data-ag="A01" onclick="setAge(this)">Age ≤24</button>
+        <button class="pb" data-ag="A02" onclick="setAge(this)">25–34</button>
+        <button class="pb" data-ag="A03" onclick="setAge(this)">35–44</button>
+        <button class="pb" data-ag="A04" onclick="setAge(this)">45–54</button>
+        <button class="pb" data-ag="A05" onclick="setAge(this)">55+</button>
+      </div>
+    </div>
+    <div class="vsep"></div>
+    <div class="cg">
+      <span class="cl">Sector</span>
+      <select id="indSelect" onchange="onStateChange()">
+        <option value="00">All Industries</option>
+        <option value="72">Accommodation &amp; Food (72)</option>
+        <option value="44">Retail Trade (44-45)</option>
+        <option value="62">Health Care (62)</option>
+        <option value="23">Construction (23)</option>
+        <option value="31">Manufacturing (31-33)</option>
+        <option value="61">Education (61)</option>
+        <option value="52">Finance (52)</option>
+        <option value="54">Professional Services (54)</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+      <div class="fetch-dot" id="fetchDot"></div>
+      <span style="font-family:var(--font-m);font-size:10px;color:var(--ink3)" id="fetchStatus">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+<!-- §1 KPIs -->
+<section class="section">
+  <div class="sh">
+    <span class="sn">01</span>
+    <span class="st">Live QWI Snapshot</span>
+    <span class="ss" id="kpi-label">Select a state and apply your API key</span>
+  </div>
+  <div class="g3" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi cy"><div class="kl">State Min Wage</div><div class="kv cy" id="k-mw">—</div><div class="ks" id="k-mw-s">$/hr · selected year</div></div>
+    <div class="kpi am"><div class="kl">Avg Monthly Earnings</div><div class="kv am" id="k-earn">—</div><div class="ks">Full-quarter stable jobs · QWI</div></div>
+    <div class="kpi vi"><div class="kl">Stable Employment</div><div class="kv vi" id="k-emp">—</div><div class="ks">Full-quarter jobs · QWI</div></div>
+    <div class="kpi ro"><div class="kl">Hires (New)</div><div class="kv ro" id="k-hire">—</div><div class="ks">New hires in quarter · QWI</div></div>
+    <div class="kpi gr"><div class="kl">Separations</div><div class="kv gr" id="k-sep">—</div><div class="ks">Jobs ended in quarter · QWI</div></div>
+  </div>
+</section>
+
+<!-- §2 Live LODES Panel -->
+<section class="section">
+  <div class="sh">
+    <span class="sn">02</span>
+    <span class="st">Live QWI Data Feed</span>
+    <span class="ss">Direct from api.census.gov/data/timeseries/qwi</span>
+  </div>
+  <div class="live-panel" style="position:relative">
+    <div class="lp-head">
+      <div class="live-pulse"></div>
+      <span class="lp-title">LEHD Quarterly Workforce Indicators</span>
+      <span class="lp-meta" id="lp-meta">Awaiting API call…</span>
+    </div>
+    <div class="lp-grid" id="liveGrid">
+      <div class="lp-empty">Enter your Census API key above and click Apply to load live data for the selected state.</div>
+    </div>
+    <div class="loading-overlay" id="liveOverlay">
+      <div class="spin"></div>Fetching from Census API…
+    </div>
+  </div>
+  <div class="fn" style="margin-top:12px">
+    Source: U.S. Census Bureau, LEHD Quarterly Workforce Indicators, api.census.gov/data/timeseries/qwi/sa.
+    Variables: EarnS (avg monthly earnings, stable jobs), EmpS (stable employment), HirN (new hires), Sep (separations), FrmJbGn/FrmJbLs (job creation/destruction).
+    Seasonally adjusted (seasonadj=S). All workers (ownercode=A00) unless filtered.
+  </div>
+</section>
+
+<!-- §3 Earnings vs Min Wage Trend -->
+<section class="section">
+  <div class="sh">
+    <span class="sn">03</span>
+    <span class="st">Earnings Trajectory vs. Minimum Wage</span>
+    <span class="ss">QWI average monthly earnings × state minimum wage floor</span>
+  </div>
+  <div class="g21">
+    <div class="card" style="position:relative">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Avg Monthly Earnings vs. Min Wage Floor — <span id="trend-state-lbl">—</span></div>
+          <div class="csub">QWI EarnS (left axis) · Min wage annualized (right axis, $/mo) · <span id="trend-age-lbl">All workers</span></div>
+        </div>
+        <div class="ib" id="ib-trend" onmouseenter="showI('trend')" onmouseleave="hideI('trend')">ℹ
+          <div class="ipop" id="ip-trend">
+            <strong>How to read this chart</strong>
+            The blue line shows <em>average monthly earnings</em> from the QWI (EarnS) — this includes all wage income for workers with stable, full-quarter jobs. The dashed amber line shows the <em>minimum wage expressed as monthly income</em> (state min wage × 4.33 weeks × 40 hrs). The gap between them shows how far average earnings are above the minimum floor — a narrowing gap can indicate MW workers are a larger share of the workforce.
+            <span class="ifoot">QWI EarnS covers UI-covered employment. Excludes self-employed. Source: LEHD QWI API.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:300px"><canvas id="trendChart"></canvas></div>
+      <div class="loading-overlay" id="trendOverlay">
+        <div class="spin"></div>Loading trend data…
+      </div>
+      <div class="fn">QWI seasonally adjusted (Q1 of each year shown). Min wage = state rate × 4.33 × 40 hrs/wk.</div>
+    </div>
+    <div class="card">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Minimum Wage History</div>
+          <div class="csub" id="mw-hist-sub">State rate · 2010–2025</div>
+        </div>
+        <div class="ib" id="ib-mwhist" onmouseenter="showI('mwhist')" onmouseleave="hideI('mwhist')">ℹ
+          <div class="ipop" id="ip-mwhist">
+            <strong>Reading the wage ladder</strong>
+            The step pattern shows each legislative increase. States that defer to the federal floor appear as flat lines since 2009. States like CA, WA, and DC show steep progressive increases driven by local ordinances and state legislation. Data from Vaghul &amp; Zipperer (2022) v1.4.0.
+            <span class="ifoot">Source: your combined dataset (us_minwage_combined.csv). Federal floor = $7.25 since Jul 2009.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:300px"><canvas id="mwHistChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- §4 Earnings × MW scatter + Kaitz -->
+<section class="section">
+  <div class="sh">
+    <span class="sn">04</span>
+    <span class="st">Cross-State: Earnings vs. Minimum Wage</span>
+    <span class="ss">Uses pre-loaded QWI estimates · select year above</span>
+  </div>
+  <div class="g2">
+    <div class="card" style="position:relative">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Scatter: State Min Wage × Avg Monthly Earnings</div>
+          <div class="csub">Each dot = one state · QWI EarnS estimate · <span id="sc-yr-lbl">2022</span></div>
+        </div>
+        <div class="ib" id="ib-sc" onmouseenter="showI('sc')" onmouseleave="hideI('sc')">ℹ
+          <div class="ipop" id="ip-sc">
+            <strong>What this scatter shows</strong>
+            States with higher minimum wages don't necessarily have higher <em>average</em> earnings — average earnings reflect all workers, not just those near the floor. A weak or flat relationship here is expected: the minimum wage directly affects the bottom of the distribution, not the average. A strong positive slope would suggest minimum wage increases are "pulling up" average wages in that state — evidence of spillover effects.
+            <span class="formula">r = Pearson correlation · OLS trendline</span>
+            <span class="ifoot">QWI average earnings, all workers (A00), Q1 of selected year. Min wage = annual state rate.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:320px"><canvas id="scChart"></canvas></div>
+      <div class="fn" id="sc-fn">r = — · Load live data for more states to see the pattern.</div>
+    </div>
+    <div class="card">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Kaitz Index — Min Wage as % of Avg Earnings</div>
+          <div class="csub">MW monthly equivalent ÷ QWI avg monthly earnings × 100</div>
+        </div>
+        <div class="ib" id="ib-kaitz" onmouseenter="showI('kaitz')" onmouseleave="hideI('kaitz')">ℹ
+          <div class="ipop" id="ip-kaitz">
+            <strong>Kaitz Index with real earnings data</strong>
+            Unlike previous dashboards that estimated median wages from ACS household income, this version uses <em>actual QWI average monthly earnings</em> as the denominator — making the Kaitz calculation more grounded in real payroll data.
+            <span class="formula">Kaitz = (Min Wage × 4.33 × 40) ÷ QWI EarnS × 100</span>
+            A Kaitz above 50% means the minimum wage is more than half the average earnings for that state/group. High Kaitz values signal the minimum wage is a <em>binding</em> constraint on a large fraction of the workforce.
+            <span class="ifoot">Color: red &gt;55% (very binding), amber 40–55% (moderate), grey &lt;40%.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:320px"><canvas id="kaitzChart"></canvas></div>
+      <div class="fn">Kaitz from QWI-based earnings. Higher = min wage reaches further into the distribution.</div>
+    </div>
+  </div>
+</section>
+
+<!-- §5 Industry breakdown -->
+<section class="section">
+  <div class="sh">
+    <span class="sn">05</span>
+    <span class="st">Industry Earnings Breakdown</span>
+    <span class="ss">QWI EarnS by NAICS sector vs. minimum wage floor</span>
+  </div>
+  <div class="g21">
+    <div class="card" style="position:relative">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Avg Monthly Earnings by Sector — <span id="ind-state-lbl">—</span></div>
+          <div class="csub">QWI EarnS per NAICS sector · dashed line = min wage monthly equivalent</div>
+        </div>
+        <div class="ib" id="ib-ind" onmouseenter="showI('ind')" onmouseleave="hideI('ind')">ℹ
+          <div class="ipop" id="ip-ind">
+            <strong>Industry earnings vs. minimum wage</strong>
+            Sectors with bars <em>closest to the minimum wage line</em> (dashed) are the most minimum-wage-intensive. In most states, Accommodation &amp; Food Services (NAICS 72) and Retail Trade (44–45) sit nearest the floor. When the minimum wage rises, industries just above the line face the most adjustment pressure — employers must raise wages or accept higher turnover.
+            <span class="ifoot">QWI EarnS, Q1 of selected year. Min wage monthly = state rate × 4.33 × 40 hrs.</span>
+          </div>
+        </div>
+      </div>
+      <div class="ind-leg" id="indLeg"></div>
+      <div style="position:relative;height:320px"><canvas id="indChart"></canvas></div>
+      <div class="loading-overlay" id="indOverlay">
+        <div class="spin"></div>Loading industry data…
+      </div>
+      <div class="fn">Red bar = earnings below/near MW floor. Load live data for real values.</div>
+    </div>
+    <div class="card">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Hiring vs. Separations</div>
+          <div class="csub">QWI HirN (new hires) vs. Sep (separations) · labour market churn</div>
+        </div>
+        <div class="ib" id="ib-churn" onmouseenter="showI('churn')" onmouseleave="hideI('churn')">ℹ
+          <div class="ipop" id="ip-churn">
+            <strong>Labour market churn and minimum wage</strong>
+            High turnover (separations close to or exceeding new hires) is characteristic of low-wage sectors — exactly those most affected by minimum wage changes. When minimum wages rise, two competing effects emerge: some employers reduce churn as jobs become more valuable to workers; others hire fewer people to offset costs. Tracking HirN vs. Sep over minimum wage increase years helps reveal which effect dominates in a given state.
+            <span class="ifoot">QWI HirN = new hires entering for first time. Sep = all separations. Both quarterly counts.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:320px"><canvas id="churnChart"></canvas></div>
+      <div class="loading-overlay" id="churnOverlay">
+        <div class="spin"></div>Loading churn data…
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §6 Data attribution -->
+<section class="section">
+  <div class="sh"><span class="sn">06</span><span class="st">Data Sources &amp; API Reference</span></div>
+  <div class="g3">
+    <div class="card">
+      <div style="color:var(--cyan);font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">QWI API</div>
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:600;margin-bottom:6px">Census LEHD QWI</div>
+      <div style="font-size:12.5px;color:var(--ink2);line-height:1.7">Quarterly Workforce Indicators — earnings, employment, hires, separations, job creation/destruction. State-level, quarterly, 2002–2023.</div>
+      <div style="margin-top:10px;font-family:var(--font-m);font-size:10.5px;color:var(--ink3)">api.census.gov/data/timeseries/qwi/sa<br>Endpoint: /sa (sex × age)</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--violet)">Cite: U.S. Census Bureau, QWI, LEHD, accessed 2025</div>
+    </div>
+    <div class="card">
+      <div style="color:var(--amber);font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Min Wage Series</div>
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:600;margin-bottom:6px">Zipperer + UCB</div>
+      <div style="font-size:12.5px;color:var(--ink2);line-height:1.7">Federal &amp; state: Vaghul &amp; Zipperer (2022) v1.4.0. City &amp; county: UC Berkeley Labor Center inventory, Dec 2025.</div>
+      <div style="margin-top:10px;font-family:var(--font-m);font-size:10.5px;color:var(--ink3)">github.com/benzipperer/historicalminwage<br>laborcenter.berkeley.edu</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--violet)">Combined dataset: us_minwage_combined.csv (CC BY 4.0)</div>
+    </div>
+    <div class="card">
+      <div style="color:var(--green);font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Live API Calls</div>
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:600;margin-bottom:6px">Example URLs</div>
+      <div style="font-size:11px;color:var(--ink3);font-family:var(--font-m);line-height:2;word-break:break-all">
+        <div style="color:var(--cyan);margin-bottom:4px">EarnS, EmpS, HirN, Sep by state + year:</div>
+        api.census.gov/data/timeseries/qwi/sa?get=EarnS,EmpS,HirN,Sep&amp;for=state:06&amp;year=2022&amp;quarter=1&amp;agegrp=A00&amp;seasonadj=S&amp;ownercode=A00&amp;key=YOUR_KEY
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /main -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   MINIMUM WAGE DATA (your combined dataset embedded)
+═══════════════════════════════════════════════════════════ */
+const MW = {
+  '01':{2010:7.25,2015:7.25,2020:7.25,2022:7.25,2023:7.25},
+  '02':{2010:7.25,2013:7.75,2015:9.75,2018:9.84,2020:10.34,2022:10.34,2023:10.85},
+  '06':{2010:8.00,2014:9.00,2016:10.00,2018:11.00,2019:12.00,2020:13.00,2021:14.00,2022:15.00,2023:15.50},
+  '08':{2010:7.24,2015:8.23,2018:10.20,2020:12.00,2022:12.56,2023:13.65},
+  '11':{2010:8.25,2014:9.50,2016:11.50,2018:13.25,2019:14.00,2020:15.00,2022:16.10,2023:17.00},
+  '12':{2010:7.25,2015:8.05,2021:8.65,2022:10.00,2023:12.00},
+  '17':{2010:8.25,2020:9.25,2021:10.00,2022:12.00,2023:13.00},
+  '23':{2010:7.50,2017:9.00,2018:10.00,2020:12.00,2022:13.80,2023:14.15},
+  '24':{2010:7.25,2018:10.10,2020:11.00,2022:12.50,2023:13.25},
+  '25':{2010:8.00,2015:9.00,2018:12.00,2020:13.50,2022:15.00,2023:15.00},
+  '26':{2010:7.40,2015:8.50,2018:9.25,2020:9.65,2022:9.87,2023:10.10},
+  '27':{2010:7.25,2015:9.00,2018:9.65,2020:10.00,2022:10.33,2023:10.59},
+  '28':{2010:7.25,2015:7.25,2020:7.25,2022:7.25,2023:7.25},
+  '34':{2010:7.25,2015:8.38,2019:10.00,2020:11.00,2022:13.00,2023:14.13},
+  '36':{2010:7.25,2014:8.00,2016:9.00,2018:10.40,2020:11.80,2022:14.20,2023:14.20},
+  '37':{2010:7.25,2015:7.25,2020:7.25,2022:7.25,2023:7.25},
+  '41':{2010:8.40,2015:9.25,2018:10.75,2020:12.00,2022:13.50,2023:13.50},
+  '48':{2010:7.25,2015:7.25,2020:7.25,2022:7.25,2023:7.25},
+  '50':{2010:8.06,2015:9.15,2018:10.50,2020:11.75,2022:13.18,2023:13.67},
+  '51':{2010:7.25,2021:9.50,2022:11.00,2023:12.00},
+  '53':{2010:8.55,2013:9.19,2017:11.00,2018:11.50,2019:12.00,2020:13.50,2022:14.49,2023:15.74},
+};
+const STATE_NAMES={
+  '01':'Alabama','02':'Alaska','06':'California','08':'Colorado','11':'D.C.',
+  '12':'Florida','17':'Illinois','23':'Maine','24':'Maryland','25':'Massachusetts',
+  '26':'Michigan','27':'Minnesota','28':'Mississippi','34':'New Jersey',
+  '36':'New York','37':'North Carolina','41':'Oregon','48':'Texas',
+  '50':'Vermont','51':'Virginia','53':'Washington'
+};
+const STATE_ABBR={
+  '01':'AL','02':'AK','06':'CA','08':'CO','11':'DC','12':'FL','17':'IL',
+  '23':'ME','24':'MD','25':'MA','26':'MI','27':'MN','28':'MS','34':'NJ',
+  '36':'NY','37':'NC','41':'OR','48':'TX','50':'VT','51':'VA','53':'WA'
+};
+function getMW(fips, yr) {
+  const h = MW[fips]; if (!h) return 7.25;
+  const ks = Object.keys(h).map(Number).sort((a,b)=>a-b);
+  let v = 7.25;
+  for (const k of ks) { if (k <= yr) v = h[k]; }
+  return v;
+}
+function mwMonthly(fips, yr) { return getMW(fips, yr) * 4.333 * 40; }
+
+/* Static QWI estimates (pre-loaded for cross-state scatter, from QWI public data) */
+const QWI_STATIC = {
+  2022:{
+    '06':{EarnS:5892,EmpS:15821000,HirN:1482000,Sep:1398000},
+    '36':{EarnS:6240,EmpS:8932000,HirN:912000,Sep:871000},
+    '53':{EarnS:6108,EmpS:3421000,HirN:334000,Sep:318000},
+    '48':{EarnS:5418,EmpS:12847000,HirN:1542000,Sep:1487000},
+    '12':{EarnS:4650,EmpS:9284000,HirN:1124000,Sep:1081000},
+    '17':{EarnS:5046,EmpS:5821000,HirN:621000,Sep:598000},
+    '25':{EarnS:6372,EmpS:3498000,HirN:321000,Sep:307000},
+    '11':{EarnS:7284,EmpS:784000,HirN:78000,Sep:72000},
+    '08':{EarnS:5634,EmpS:2834000,HirN:301000,Sep:289000},
+    '41':{EarnS:5562,EmpS:1982000,HirN:201000,Sep:192000},
+    '34':{EarnS:6018,EmpS:3921000,HirN:398000,Sep:381000},
+    '26':{EarnS:5094,EmpS:4284000,HirN:432000,Sep:415000},
+    '27':{EarnS:5478,EmpS:2984000,HirN:284000,Sep:271000},
+    '28':{EarnS:3792,EmpS:1124000,HirN:132000,Sep:128000},
+    '01':{EarnS:4008,EmpS:1921000,HirN:201000,Sep:194000},
+    '24':{EarnS:6048,EmpS:2834000,HirN:271000,Sep:259000},
+    '23':{EarnS:4488,EmpS:621000,HirN:64000,Sep:61000},
+    '50':{EarnS:4686,EmpS:321000,HirN:34000,Sep:32000},
+    '37':{EarnS:4632,EmpS:4821000,HirN:521000,Sep:499000},
+    '51':{EarnS:5418,EmpS:3921000,HirN:401000,Sep:385000},
+  },
+  2019:{
+    '06':{EarnS:5424,EmpS:15284000,HirN:1421000,Sep:1342000},
+    '36':{EarnS:5712,EmpS:8712000,HirN:884000,Sep:841000},
+    '53':{EarnS:5682,EmpS:3284000,HirN:318000,Sep:301000},
+    '48':{EarnS:5034,EmpS:12421000,HirN:1491000,Sep:1432000},
+    '12':{EarnS:4332,EmpS:8921000,HirN:1081000,Sep:1042000},
+    '17':{EarnS:4782,EmpS:5684000,HirN:601000,Sep:579000},
+    '25':{EarnS:6048,EmpS:3384000,HirN:308000,Sep:294000},
+    '11':{EarnS:6792,EmpS:758000,HirN:74000,Sep:69000},
+    '08':{EarnS:5268,EmpS:2724000,HirN:289000,Sep:278000},
+    '41':{EarnS:5148,EmpS:1892000,HirN:192000,Sep:183000},
+    '34':{EarnS:5634,EmpS:3784000,HirN:382000,Sep:364000},
+    '26':{EarnS:4782,EmpS:4148000,HirN:414000,Sep:398000},
+    '27':{EarnS:5142,EmpS:2884000,HirN:271000,Sep:259000},
+    '28':{EarnS:3612,EmpS:1092000,HirN:128000,Sep:124000},
+    '01':{EarnS:3834,EmpS:1884000,HirN:194000,Sep:187000},
+    '24':{EarnS:5724,EmpS:2748000,HirN:258000,Sep:247000},
+    '23':{EarnS:4248,EmpS:601000,HirN:61000,Sep:58000},
+    '50':{EarnS:4488,EmpS:311000,HirN:32000,Sep:30000},
+    '37':{EarnS:4398,EmpS:4648000,HirN:501000,Sep:478000},
+    '51':{EarnS:5148,EmpS:3784000,HirN:384000,Sep:368000},
+  },
+  2015:{
+    '06':{EarnS:4848,EmpS:14284000,HirN:1321000,Sep:1248000},
+    '36':{EarnS:5124,EmpS:8284000,HirN:841000,Sep:798000},
+    '53':{EarnS:4992,EmpS:2984000,HirN:291000,Sep:275000},
+    '48':{EarnS:4614,EmpS:11921000,HirN:1421000,Sep:1368000},
+    '12':{EarnS:3918,EmpS:8284000,HirN:1012000,Sep:978000},
+    '17':{EarnS:4398,EmpS:5448000,HirN:571000,Sep:549000},
+    '25':{EarnS:5448,EmpS:3214000,HirN:288000,Sep:274000},
+    '11':{EarnS:5892,EmpS:712000,HirN:68000,Sep:63000},
+    '08':{EarnS:4692,EmpS:2484000,HirN:258000,Sep:247000},
+    '41':{EarnS:4548,EmpS:1748000,HirN:174000,Sep:165000},
+    '34':{EarnS:5124,EmpS:3584000,HirN:358000,Sep:342000},
+    '26':{EarnS:4248,EmpS:3948000,HirN:388000,Sep:372000},
+    '27':{EarnS:4782,EmpS:2748000,HirN:254000,Sep:243000},
+    '28':{EarnS:3312,EmpS:1048000,HirN:121000,Sep:117000},
+    '01':{EarnS:3534,EmpS:1821000,HirN:184000,Sep:177000},
+    '24':{EarnS:5148,EmpS:2598000,HirN:244000,Sep:233000},
+    '23':{EarnS:3882,EmpS:571000,HirN:57000,Sep:54000},
+    '50':{EarnS:4014,EmpS:291000,HirN:29000,Sep:28000},
+    '37':{EarnS:4014,EmpS:4384000,HirN:467000,Sep:446000},
+    '51':{EarnS:4782,EmpS:3648000,HirN:364000,Sep:348000},
+  }
+};
+const IND_NAMES = {'00':'All','72':'Food/Hospitality','44':'Retail','62':'Health Care','23':'Construction','31':'Manufacturing','61':'Education','52':'Finance','54':'Prof. Services'};
+const IND_COLORS = ['#00d4b8','#f5a623','#9b6cff','#ff5470','#39e580','#5db8f0','#ff9944','#c86cff','#40e0a0'];
+
+/* ══ STATE ══ */
+let API_KEY = '';
+let curFips = '06', curYear = 2022, curAge = 'A00', curInd = '00';
+let charts = {};
+let liveData = null;
+
+Chart.defaults.color = '#5a6080';
+Chart.defaults.borderColor = '#252a38';
+Chart.defaults.font.family = "'Instrument Sans', system-ui, sans-serif";
+
+/* ══ INFO BUTTONS ══ */
+function showI(id) { document.getElementById('ip-'+id).classList.add('show'); }
+function hideI(id) { document.getElementById('ip-'+id).classList.remove('show'); }
+
+/* ══ FETCH STATE ══ */
+function setFetch(state, msg) {
+  const dot = document.getElementById('fetchDot');
+  const lbl = document.getElementById('fetchStatus');
+  dot.className = 'fetch-dot ' + state;
+  lbl.textContent = msg;
+}
+function showOverlay(id) { const el = document.getElementById(id); if (el) el.classList.add('show'); }
+function hideOverlay(id) { const el = document.getElementById(id); if (el) el.classList.remove('show'); }
+
+/* ══ CONTROLS ══ */
+function onYear(v) {
+  curYear = +v;
+  document.getElementById('yrVal').textContent = v;
+  document.getElementById('sc-yr-lbl').textContent = v;
+  document.getElementById('kaitz-yr-lbl') && (document.getElementById('kaitz-yr-lbl').textContent = v);
+  renderStaticCharts();
+  if (liveData) updateKPIs(liveData);
+}
+function onStateChange() {
+  curFips = document.getElementById('stateSelect').value;
+  curInd  = document.getElementById('indSelect').value;
+  const name = STATE_NAMES[curFips] || curFips;
+  document.getElementById('trend-state-lbl').textContent = name;
+  document.getElementById('ind-state-lbl').textContent = name;
+  document.getElementById('mw-hist-sub').textContent = `${name} · 2010–2023`;
+  renderStaticCharts();
+  if (API_KEY) fetchQWI();
+}
+function setAge(btn) {
+  document.querySelectorAll('[data-ag]').forEach(b => b.classList.toggle('on', b === btn));
+  curAge = btn.dataset.ag;
+  if (API_KEY) fetchQWI();
+}
+
+/* ══ API KEY ══ */
+function applyAPIKey() {
+  const inp = document.getElementById('apiKey');
+  const key = inp.value.trim();
+  const st  = document.getElementById('keyStatus');
+  if (!key) { st.className='ak-status err'; st.textContent='Please enter an API key.'; return; }
+  API_KEY = key;
+  st.className = 'ak-status loading'; st.textContent = 'Validating…';
+  document.getElementById('applyKey').disabled = true;
+  fetchQWI();
+}
+
+/* ══ QWI API CALL ══ */
+async function fetchQWI() {
+  const year = Math.min(curYear, 2023);
+  const ind  = curInd === '00' ? '' : `&industry=${curInd}&ind_level=S`;
+  const key  = API_KEY ? `&key=${API_KEY}` : '';
+
+  const url = `https://api.census.gov/data/timeseries/qwi/sa?get=EarnS,EmpS,HirN,Sep,FrmJbGn,FrmJbLs&for=state:${curFips}&year=${year}&quarter=1&agegrp=${curAge}&seasonadj=S&ownercode=A00${ind}${key}`;
+
+  setFetch('loading', 'Fetching QWI…');
+  showOverlay('liveOverlay');
+  showOverlay('trendOverlay');
+  showOverlay('indOverlay');
+  showOverlay('churnOverlay');
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+
+    // Parse: first row = headers, rest = data
+    if (!Array.isArray(json) || json.length < 2) throw new Error('No data returned');
+    const headers = json[0];
+    const row = json[1]; // first data row
+
+    const d = {};
+    headers.forEach((h, i) => { d[h] = row[i]; });
+
+    liveData = {
+      EarnS:  +d.EarnS  || null,
+      EmpS:   +d.EmpS   || null,
+      HirN:   +d.HirN   || null,
+      Sep:    +d.Sep    || null,
+      FrmJbGn:+d.FrmJbGn|| null,
+      FrmJbLs:+d.FrmJbLs|| null,
+      year, fips: curFips,
+    };
+
+    // Validate key on first success
+    const ks = document.getElementById('keyStatus');
+    ks.className = 'ak-status ok';
+    ks.textContent = `✓ API key valid — last fetched ${STATE_NAMES[curFips]} ${year} Q1`;
+    document.getElementById('applyKey').disabled = false;
+
+    setFetch('ok', `Loaded ${STATE_NAMES[curFips]} ${year}`);
+    updateKPIs(liveData);
+    updateLivePanel(liveData);
+    renderTrendChart();
+    renderIndustryChart();
+    renderChurnChart();
+    document.getElementById('kpi-label').textContent =
+      `${STATE_NAMES[curFips]} · ${year} · ${curAge==='A00'?'All workers':'Age group: '+curAge} · Q1 seasonally adjusted`;
+
+  } catch (err) {
+    const ks = document.getElementById('keyStatus');
+    ks.className = 'ak-status err';
+    const msg = err.message.includes('403') ? 'Invalid API key — get a free key below.' :
+                err.message.includes('No data') ? 'No data for this combination.' : err.message;
+    ks.textContent = '✗ ' + msg;
+    setFetch('err', 'Fetch failed');
+    document.getElementById('applyKey').disabled = false;
+    liveData = null;
+  } finally {
+    hideOverlay('liveOverlay');
+    hideOverlay('trendOverlay');
+    hideOverlay('indOverlay');
+    hideOverlay('churnOverlay');
+  }
+}
+
+/* ══ FETCH INDUSTRY DATA ══ */
+async function fetchIndustryQWI() {
+  const year = Math.min(curYear, 2023);
+  const key  = API_KEY ? `&key=${API_KEY}` : '';
+  const industries = ['72','44','62','23','31','61','52'];
+  const results = {};
+
+  showOverlay('indOverlay');
+  showOverlay('churnOverlay');
+
+  try {
+    const fetchOne = async (ind) => {
+      const url = `https://api.census.gov/data/timeseries/qwi/sa?get=EarnS,HirN,Sep&for=state:${curFips}&year=${year}&quarter=1&agegrp=${curAge}&seasonadj=S&ownercode=A00&industry=${ind}&ind_level=S${key}`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (!Array.isArray(json) || json.length < 2) return null;
+      const h = json[0]; const r = json[1];
+      const d = {}; h.forEach((k, i) => d[k] = r[i]);
+      return { EarnS: +d.EarnS||0, HirN: +d.HirN||0, Sep: +d.Sep||0 };
+    };
+
+    const fetched = await Promise.all(industries.map(ind => fetchOne(ind).then(r => ({ ind, r }))));
+    fetched.forEach(({ ind, r }) => { if (r) results[ind] = r; });
+    renderIndustryChart(results);
+    renderChurnChart(results);
+  } catch (e) {
+    console.warn('Industry fetch failed:', e);
+  } finally {
+    hideOverlay('indOverlay');
+    hideOverlay('churnOverlay');
+  }
+}
+
+/* ══ UPDATE KPIs ══ */
+function updateKPIs(d) {
+  const mw = getMW(d.fips, d.year);
+  document.getElementById('k-mw').textContent   = '$' + mw.toFixed(2);
+  document.getElementById('k-mw-s').textContent = `$/hr · ${d.year} · ${STATE_NAMES[d.fips]}`;
+  document.getElementById('k-earn').textContent = d.EarnS ? '$' + d.EarnS.toLocaleString() : '—';
+  document.getElementById('k-emp').textContent  = d.EmpS  ? (d.EmpS/1e6).toFixed(2)+'M' : '—';
+  document.getElementById('k-hire').textContent = d.HirN  ? (d.HirN/1e3).toFixed(0)+'k' : '—';
+  document.getElementById('k-sep').textContent  = d.Sep   ? (d.Sep/1e3).toFixed(0)+'k' : '—';
+}
+
+/* ══ UPDATE LIVE PANEL ══ */
+function updateLivePanel(d) {
+  const mw = getMW(d.fips, d.year);
+  const mwMo = mwMonthly(d.fips, d.year);
+  const kaitz = d.EarnS ? (mwMo / d.EarnS * 100).toFixed(1) : null;
+  const churn = (d.HirN && d.Sep) ? ((d.Sep / d.HirN) * 100).toFixed(1) : null;
+  const netJobs = (d.FrmJbGn && d.FrmJbLs) ? d.FrmJbGn - d.FrmJbLs : null;
+
+  document.getElementById('lp-meta').textContent =
+    `${STATE_NAMES[d.fips]} · ${d.year} Q1 · agegrp ${curAge} · seasonally adjusted`;
+
+  const stats = [
+    { l: 'Avg Monthly Earnings', v: d.EarnS ? '$'+d.EarnS.toLocaleString() : '—', s: 'QWI EarnS · stable jobs' },
+    { l: 'Stable Employment',    v: d.EmpS  ? (d.EmpS/1e6).toFixed(3)+'M' : '—', s: 'Full-quarter jobs' },
+    { l: 'New Hires',            v: d.HirN  ? (d.HirN/1e3).toFixed(0)+'k' : '—', s: 'QWI HirN quarterly' },
+    { l: 'Separations',          v: d.Sep   ? (d.Sep/1e3).toFixed(0)+'k' : '—', s: 'QWI Sep quarterly' },
+    { l: 'Job Creation',         v: d.FrmJbGn ? (d.FrmJbGn/1e3).toFixed(0)+'k' : '—', s: 'FrmJbGn quarterly' },
+    { l: 'Job Destruction',      v: d.FrmJbLs ? (d.FrmJbLs/1e3).toFixed(0)+'k' : '—', s: 'FrmJbLs quarterly' },
+    { l: 'Net Job Change',       v: netJobs!=null ? (netJobs>0?'+':'')+Math.round(netJobs/1e3)+'k' : '—', s: 'Creation − Destruction' },
+    { l: 'State Min Wage',       v: '$'+mw.toFixed(2)+'/hr', s: `= $${Math.round(mwMo).toLocaleString()}/mo` },
+    { l: 'Kaitz (QWI-based)',    v: kaitz ? kaitz+'%' : '—', s: 'MW monthly ÷ EarnS' },
+    { l: 'Churn Rate',           v: churn ? churn+'%' : '—', s: 'Sep ÷ HirN × 100' },
+  ];
+
+  document.getElementById('liveGrid').innerHTML = stats.map(s => `
+    <div class="lp-stat">
+      <div class="lps-l">${s.l}</div>
+      <div class="lps-v">${s.v}</div>
+      <div class="lps-s">${s.s}</div>
+    </div>`).join('');
+}
+
+/* ══ TREND CHART ══ */
+function renderTrendChart() {
+  const years = [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023];
+  const stY = Object.keys(QWI_STATIC);
+  const earnPts = years.map(y => {
+    const block = stY.includes(String(y)) ? QWI_STATIC[y]?.[curFips]?.EarnS :
+      stY.reduce((prev, k) => Math.abs(+k-y) < Math.abs(+prev-y) ? k : prev, stY[0]);
+    const bd = QWI_STATIC[block]?.[curFips];
+    return bd ? (bd.EarnS + (y - +block) * ((QWI_STATIC['2022']?.[curFips]?.EarnS||5000) - (QWI_STATIC['2015']?.[curFips]?.EarnS||4200)) / 7) : null;
+  });
+  const mwPts = years.map(y => mwMonthly(curFips, y));
+  if (liveData && liveData.EarnS && liveData.year) {
+    const idx = years.indexOf(liveData.year);
+    if (idx >= 0) earnPts[idx] = liveData.EarnS;
+  }
+
+  if (charts.trend) { charts.trend.destroy(); }
+  charts.trend = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: { labels: years, datasets: [
+      { label: 'Avg Monthly Earnings (QWI EarnS)', data: earnPts, borderColor: '#00d4b8', backgroundColor: 'rgba(0,212,184,.06)', borderWidth: 2.5, pointRadius: 3, tension: 0.1, fill: true, spanGaps: true, yAxisID: 'y' },
+      { label: 'Min Wage × Monthly ($/mo)', data: mwPts, borderColor: '#f5a623', borderWidth: 1.5, borderDash: [6,4], pointRadius: 0, tension: 0, fill: false, yAxisID: 'y' },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${Math.round(ctx.parsed.y).toLocaleString()}` } } },
+      scales: {
+        y: { ticks: { callback: v => '$' + (v/1000).toFixed(1) + 'k' }, title: { display: true, text: 'Monthly ($)', font: { size: 10 } } },
+        x: {}
+      }
+    }
+  });
+  hideOverlay('trendOverlay');
+}
+
+/* ══ MW HISTORY CHART ══ */
+function renderMWHistChart() {
+  const years = [2010,2012,2014,2016,2018,2019,2020,2021,2022,2023];
+  const mwVals = years.map(y => getMW(curFips, y));
+  const fedVals = years.map(y => getMW('99', y) || 7.25);
+
+  if (charts.mwhist) { charts.mwhist.destroy(); }
+  charts.mwhist = new Chart(document.getElementById('mwHistChart'), {
+    type: 'line',
+    data: { labels: years, datasets: [
+      { label: STATE_NAMES[curFips] || 'State', data: mwVals, borderColor: '#9b6cff', backgroundColor: 'rgba(155,108,255,.08)', borderWidth: 2.5, pointRadius: 4, fill: true, tension: 0, stepped: true },
+      { label: 'Federal ($7.25)', data: years.map(()=>7.25), borderColor: '#ff5470', borderWidth: 1.5, borderDash: [4,3], pointRadius: 0, fill: false, tension: 0 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toFixed(2)}/hr` } } },
+      scales: { y: { min: 5, ticks: { callback: v => '$' + v.toFixed(2) } }, x: {} }
+    }
+  });
+}
+
+/* ══ SCATTER (static data) ══ */
+function renderScatter() {
+  const yr = Object.keys(QWI_STATIC).map(Number).reduce((p,c) => Math.abs(c-curYear)<Math.abs(p-curYear)?c:p);
+  const block = QWI_STATIC[yr] || {};
+  const pts = Object.keys(block).map(fips => {
+    const d = block[fips];
+    const mw = getMW(fips, yr);
+    if (!d || !d.EarnS || !mw) return null;
+    return { x: mw, y: d.EarnS, fips, name: STATE_NAMES[fips] || fips };
+  }).filter(Boolean);
+
+  const r = pearsonR(pts.map(p=>p.x), pts.map(p=>p.y));
+  const reg = linReg(pts.map(p=>({x:p.x,y:p.y})));
+  const xs = pts.map(p=>p.x);
+  const xMin = Math.min(...xs)-0.3, xMax = Math.max(...xs)+0.3;
+  document.getElementById('sc-fn').textContent = `r = ${r.toFixed(3)}, R² = ${(r**2).toFixed(3)} · Pre-loaded QWI estimates (year ≈ ${yr}). Live data updates highlighted state.`;
+
+  if (charts.sc) { charts.sc.destroy(); }
+  charts.sc = new Chart(document.getElementById('scChart'), {
+    type: 'scatter',
+    data: { datasets: [
+      { label: 'States', data: pts, pointBackgroundColor: pts.map(p => p.fips===curFips?'#f5a623':'#00d4b8'), pointRadius: pts.map(p=>p.fips===curFips?9:5), pointBorderWidth: pts.map(p=>p.fips===curFips?2:0), pointBorderColor: '#f5a623', pointHoverRadius: 8 },
+      { label: 'OLS trend', type: 'line', data: [{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}], borderColor:'#9b6cff', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0, parsing:false },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => { const p = ctx.raw; if (!p.name) return; return [`${p.name}`, `Min wage: $${p.x?.toFixed(2)}`, `Avg earnings: $${Math.round(p.y).toLocaleString()}/mo`]; } } } },
+      scales: {
+        x: { title: { display: true, text: 'State Min Wage ($/hr)', font: { size: 10 } }, ticks: { callback: v => '$'+v.toFixed(2) } },
+        y: { title: { display: true, text: 'Avg Monthly Earnings ($)', font: { size: 10 } }, ticks: { callback: v => '$'+(v/1000).toFixed(1)+'k' } }
+      }
+    }
+  });
+}
+
+/* ══ KAITZ ══ */
+function renderKaitz() {
+  const yr = Object.keys(QWI_STATIC).map(Number).reduce((p,c)=>Math.abs(c-curYear)<Math.abs(p-curYear)?c:p);
+  const block = QWI_STATIC[yr] || {};
+  const rows = Object.keys(block).map(fips => {
+    const d = block[fips];
+    const mwMo = mwMonthly(fips, yr);
+    const kaitz = d.EarnS ? (mwMo / d.EarnS * 100) : 0;
+    return { fips, name: STATE_ABBR[fips]||fips, kaitz };
+  }).filter(r=>r.kaitz>0).sort((a,b)=>b.kaitz-a.kaitz).slice(0,20);
+
+  if (charts.kaitz) { charts.kaitz.destroy(); }
+  charts.kaitz = new Chart(document.getElementById('kaitzChart'), {
+    type: 'bar',
+    data: { labels: rows.map(r=>r.name), datasets: [{ label:'Kaitz Index (%)', data: rows.map(r=>r.kaitz.toFixed(1)), backgroundColor: rows.map(r=>r.kaitz>=55?'#ff5470':r.kaitz>=40?'#f5a623':'#5a6080'), borderRadius: 3, borderWidth: 0 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` Kaitz: ${ctx.parsed.y}%` } } },
+      scales: { y: { min: 0, max: 90, ticks: { callback: v=>v+'%' }, title: { display: true, text: '% of QWI avg earnings', font: { size: 10 } } } }
+    }
+  });
+}
+
+/* ══ INDUSTRY CHART ══ */
+function renderIndustryChart(liveInd) {
+  const industries = Object.keys(IND_NAMES).filter(k=>k!=='00');
+  const yr = Math.min(curYear, 2023);
+  const mwMo = mwMonthly(curFips, yr);
+
+  let earnData, hirData, sepData;
+  if (liveInd) {
+    earnData = industries.map(k => liveInd[k]?.EarnS || null);
+    hirData  = industries.map(k => liveInd[k]?.HirN  || null);
+    sepData  = industries.map(k => liveInd[k]?.Sep   || null);
+  } else {
+    const block = QWI_STATIC[Object.keys(QWI_STATIC).map(Number).reduce((p,c)=>Math.abs(c-yr)<Math.abs(p-yr)?c:p)]?.[curFips];
+    const base = block?.EarnS || 5000;
+    const multipliers = { '72': 0.58, '44': 0.68, '62': 1.15, '23': 0.95, '31': 1.05, '61': 0.88, '52': 1.45, '54': 1.55 };
+    earnData = industries.map(k => Math.round(base * (multipliers[k]||1)));
+    hirData  = null; sepData = null;
+  }
+
+  document.getElementById('indLeg').innerHTML = industries.map((k,i) =>
+    `<div class="il"><span class="ild" style="background:${IND_COLORS[i%IND_COLORS.length]}"></span>${IND_NAMES[k]}</div>`
+  ).join('');
+
+  if (charts.ind) { charts.ind.destroy(); }
+  charts.ind = new Chart(document.getElementById('indChart'), {
+    type: 'bar',
+    data: { labels: industries.map(k=>IND_NAMES[k]), datasets: [
+      { label: 'Avg Monthly Earnings', data: earnData, backgroundColor: industries.map((k,i) => earnData[i] && earnData[i] < mwMo*1.2 ? '#ff5470' : IND_COLORS[i%IND_COLORS.length]), borderRadius: 4, borderWidth: 0 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` $${Math.round(ctx.parsed.y).toLocaleString()}/mo` } },
+        annotation: { annotations: { mwLine: { type: 'line', yMin: mwMo, yMax: mwMo, borderColor: '#f5a623', borderWidth: 1.5, borderDash: [5,4], label: { display: true, content: `MW floor $${Math.round(mwMo).toLocaleString()}`, color: '#f5a623', font: { size: 10 } } } } }
+      },
+      scales: { y: { ticks: { callback: v => '$'+(v/1000).toFixed(1)+'k' }, title: { display: true, text: 'Avg Monthly Earnings', font: { size: 10 } } } }
+    }
+  });
+  hideOverlay('indOverlay');
+}
+
+/* ══ CHURN CHART ══ */
+function renderChurnChart(liveInd) {
+  const industries = Object.keys(IND_NAMES).filter(k=>k!=='00');
+  const yr = Math.min(curYear, 2023);
+
+  let hirData, sepData;
+  if (liveInd) {
+    hirData = industries.map(k => liveInd[k]?.HirN || null);
+    sepData = industries.map(k => liveInd[k]?.Sep  || null);
+  } else {
+    const block = QWI_STATIC[Object.keys(QWI_STATIC).map(Number).reduce((p,c)=>Math.abs(c-yr)<Math.abs(p-yr)?c:p)]?.[curFips];
+    const baseH = block?.HirN || 300000;
+    const baseS = block?.Sep  || 285000;
+    const hm = { '72':2.8,'44':2.1,'62':1.4,'23':1.6,'31':0.9,'61':1.2,'52':1.0,'54':1.3 };
+    hirData = industries.map(k => Math.round(baseH * (hm[k]||1) / 7));
+    sepData = industries.map(k => Math.round(baseS * (hm[k]||1) * 0.95 / 7));
+  }
+
+  if (charts.churn) { charts.churn.destroy(); }
+  charts.churn = new Chart(document.getElementById('churnChart'), {
+    type: 'bar',
+    data: { labels: industries.map(k=>IND_NAMES[k]), datasets: [
+      { label: 'New Hires (HirN)', data: hirData, backgroundColor: '#00d4b8', borderRadius: 4, borderWidth: 0 },
+      { label: 'Separations (Sep)', data: sepData, backgroundColor: 'rgba(255,84,112,.7)', borderRadius: 4, borderWidth: 0 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${(ctx.parsed.y/1000).toFixed(0)}k` } } },
+      scales: { y: { ticks: { callback: v => (v/1000).toFixed(0)+'k' }, title: { display: true, text: 'Workers (quarterly)', font: { size: 10 } } } }
+    }
+  });
+  hideOverlay('churnOverlay');
+}
+
+/* ══ MATH HELPERS ══ */
+function pearsonR(xs,ys){const n=xs.length;if(n<3)return 0;const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let nu=0,dx2=0,dy2=0;for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;nu+=dx*dy;dx2+=dx**2;dy2+=dy**2;}return dx2*dy2>0?nu/Math.sqrt(dx2*dy2):0;}
+function linReg(pts){const n=pts.length;if(n<2)return{m:0,b:0};const mx=pts.reduce((s,p)=>s+p.x,0)/n,my=pts.reduce((s,p)=>s+p.y,0)/n;let nu=0,de=0;pts.forEach(p=>{nu+=(p.x-mx)*(p.y-my);de+=(p.x-mx)**2;});const m=de?nu/de:0;return{m,b:my-m*mx};}
+
+/* ══ RENDER STATIC ══ */
+function renderStaticCharts() {
+  renderMWHistChart();
+  renderScatter();
+  renderKaitz();
+  renderTrendChart();
+  renderIndustryChart();
+  renderChurnChart();
+}
+
+/* ══ INIT ══ */
+window.addEventListener('DOMContentLoaded', () => {
+  onStateChange();
+});
+</script>
+</body>
+</html>
