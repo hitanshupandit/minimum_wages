@@ -8,7 +8,7 @@ earnings integration, and verified rates for 58 local jurisdictions.
 ![License](https://img.shields.io/badge/data_license-CC_BY_4.0-green)
 ![Verified](https://img.shields.io/badge/rates_verified-Jan_2026-brightgreen)
 
-Live site: **https://YOUR_USERNAME.github.io/minwage-dashboard/**
+Live site: **https://hitanshupandit.github.io/minwage-dashboard/**
 
 ---
 
