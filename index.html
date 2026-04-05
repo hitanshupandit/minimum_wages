@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>U.S. Minimum Wage Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:      #0d0f14;
+  --surf:    #161922;
+  --surf2:   #1e2230;
+  --border:  #2a2f3e;
+  --gold:    #f4c430;
+  --blue:    #5db8e8;
+  --green:   #4ecb8d;
+  --amber:   #e07b39;
+  --muted:   #7a82a0;
+  --dim:     #3a4060;
+  --text:    #e8eaf0;
+  --font-h:  'DM Serif Display', Georgia, serif;
+  --font-b:  'DM Sans', system-ui, sans-serif;
+  --font-m:  'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-b);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── HERO ── */
+.hero {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 80px 40px 64px;
+  position: relative;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -80px;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(244,196,48,.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+.eyebrow {
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--gold);
+}
+h1 {
+  font-family: var(--font-h);
+  font-size: clamp(36px, 6vw, 68px);
+  font-weight: 400;
+  line-height: 1.05;
+  color: #fff;
+  letter-spacing: -.01em;
+  margin-bottom: 20px;
+}
+h1 em { font-style: italic; color: var(--gold); }
+.hero-desc {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 540px;
+  line-height: 1.75;
+  margin-bottom: 32px;
+}
+.hero-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 48px;
+}
+.hstat { display: flex; flex-direction: column; gap: 2px; }
+.hstat-val {
+  font-family: var(--font-h);
+  font-size: 28px;
+  color: var(--gold);
+  line-height: 1;
+}
+.hstat-lbl {
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+/* ── DASHBOARD CARDS ── */
+.cards-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+}
+.cards-section h2 {
+  font-family: var(--font-h);
+  font-size: 22px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.cards-section .section-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 28px;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 60px;
+}
+.dash-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 28px 24px;
+  text-decoration: none;
+  display: block;
+  position: relative;
+  overflow: hidden;
+  transition: border-color .2s, transform .15s;
+}
+.dash-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-accent, var(--gold));
+  transition: height .2s;
+}
+.dash-card:hover {
+  border-color: var(--card-accent, var(--gold));
+  transform: translateY(-2px);
+}
+.dash-card:hover::before { height: 3px; }
+
+.card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-m);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--card-accent, var(--gold));
+  background: rgba(244,196,48,.08);
+  border: 1px solid rgba(244,196,48,.2);
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 14px;
+}
+.card-tag.blue   { color: var(--blue);  background: rgba(93,184,232,.08);  border-color: rgba(93,184,232,.2); }
+.card-tag.green  { color: var(--green); background: rgba(78,203,141,.08);  border-color: rgba(78,203,141,.2); }
+.card-tag.amber  { color: var(--amber); background: rgba(224,123,57,.08);  border-color: rgba(224,123,57,.2); }
+.card-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100%{ opacity: 1; }
+  50%{ opacity: .4; }
+}
+.dash-card h3 {
+  font-family: var(--font-h);
+  font-size: 20px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.dash-card p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 20px;
+}
+.feature-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 22px;
+}
+.feature-list li {
+  font-size: 12px;
+  color: var(--dim);
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+.feature-list li::before {
+  content: '→';
+  color: var(--card-accent, var(--gold));
+  flex-shrink: 0;
+  font-family: var(--font-m);
+  font-size: 11px;
+  margin-top: 1px;
+}
+.card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--card-accent, var(--gold));
+  padding: 8px 18px;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  transition: background .15s;
+}
+.dash-card:hover .card-cta {
+  background: rgba(244,196,48,.1);
+}
+.dash-card[style*="--card-accent: var(--blue)"]:hover .card-cta { background: rgba(93,184,232,.1); }
+.dash-card[style*="--card-accent: var(--green)"]:hover .card-cta { background: rgba(78,203,141,.1); }
+.dash-card[style*="--card-accent: var(--amber)"]:hover .card-cta { background: rgba(224,123,57,.1); }
+
+/* ── DATA SOURCES ── */
+.sources-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+}
+.sources-section h2 {
+  font-family: var(--font-h);
+  font-size: 22px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.sources-section .section-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.source-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+.source-card {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+}
+.source-label {
+  font-family: var(--font-m);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 6px;
+}
+.source-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.source-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+.source-link {
+  font-family: var(--font-m);
+  font-size: 10px;
+  color: var(--blue);
+  text-decoration: none;
+  word-break: break-all;
+}
+.source-link:hover { text-decoration: underline; }
+
+/* ── QUICKSTART ── */
+.qs-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 40px 80px;
+}
+.qs-section h2 {
+  font-family: var(--font-h);
+  font-size: 22px;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 6px;
+}
+.qs-section .section-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.code-block {
+  background: var(--surf);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  font-family: var(--font-m);
+  font-size: 13px;
+  line-height: 2;
+  color: var(--muted);
+  overflow-x: auto;
+  margin-bottom: 14px;
+}
+.code-block .cm { color: var(--dim); }
+.code-block .ck { color: var(--gold); }
+.code-block .cv { color: var(--green); }
+.code-block .cc { color: var(--blue); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.footer-brand {
+  font-family: var(--font-h);
+  font-size: 18px;
+  color: #fff;
+}
+.footer-brand em { font-style: italic; color: var(--gold); }
+.footer-meta {
+  font-size: 11px;
+  color: var(--dim);
+  line-height: 1.9;
+}
+.footer-meta a { color: var(--blue); text-decoration: none; }
+.footer-meta a:hover { text-decoration: underline; }
+
+@media (max-width: 700px) {
+  .hero, .cards-section, .sources-section, .qs-section { padding-left: 20px; padding-right: 20px; }
+  .hero { padding-top: 48px; }
+  .hero-stats { gap: 20px; }
+  footer { padding: 24px 20px; flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="eyebrow">U.S. Labor Policy · Data Platform</div>
+  <h1>The <em>Minimum Wage</em><br>Landscape</h1>
+  <p class="hero-desc">
+    Federal, state, city, and county minimum wages across the United States —
+    with live Census QWI earnings data, a California choropleth map, and
+    verified rates for 58 local jurisdictions.
+  </p>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-val">$7.25</span><span class="hstat-lbl">Federal floor since 2009</span></div>
+    <div class="hstat"><span class="hstat-val">31</span><span class="hstat-lbl">States above federal</span></div>
+    <div class="hstat"><span class="hstat-val">58</span><span class="hstat-lbl">Local jurisdictions</span></div>
+    <div class="hstat"><span class="hstat-val">$19.90</span><span class="hstat-lbl">Highest local (Emeryville CA)</span></div>
+    <div class="hstat"><span class="hstat-val">1938</span><span class="hstat-lbl">Historical data from</span></div>
+  </div>
+</section>
+
+<!-- ── DASHBOARDS ── -->
+<section class="cards-section">
+  <h2>Dashboards</h2>
+  <p class="section-sub">All dashboards are self-contained HTML — open directly in any browser, no server needed.</p>
+  <div class="card-grid">
+
+    <!-- Main dashboard -->
+    <a href="dashboards/dashboard_with_map.html" class="dash-card" style="--card-accent: var(--gold)">
+      <span class="card-tag">Main dashboard</span>
+      <h3>U.S. Minimum Wage Explorer</h3>
+      <p>Interactive US map, state-by-state comparison panel, all-raisers historical trend, California deep-dive, and local ordinances table.</p>
+      <ul class="feature-list">
+        <li>Clickable SVG US map colored by wage tier</li>
+        <li>Side-by-side state comparison with local ordinance bars</li>
+        <li>All 31 wage-raising states on one trend chart</li>
+        <li>California step-function chart with 4 views</li>
+        <li>39 CA cities + 19 other localities with sparklines</li>
+      </ul>
+      <span class="card-cta">Open dashboard →</span>
+    </a>
+
+    <!-- CA map -->
+    <a href="dashboards/ca_minwage_map.html" class="dash-card" style="--card-accent: var(--green)">
+      <span class="card-tag green">California map</span>
+      <h3>California Choropleth Map</h3>
+      <p>All 58 California counties colored by effective minimum wage, with animated city and county ordinance markers.</p>
+      <ul class="feature-list">
+        <li>Year slider 2000–2025 with animate button</li>
+        <li>39 city/county markers — circles for cities, squares for counties</li>
+        <li>Marker size and color encode premium above state floor</li>
+        <li>Sidebar shows active ordinances sorted by wage</li>
+        <li>100% self-contained — no CDN or network required</li>
+      </ul>
+      <span class="card-cta" style="color:var(--green)">Open CA map →</span>
+    </a>
+
+    <!-- QWI dashboard -->
+    <a href="dashboards/minwage_qwi_dashboard.html" class="dash-card" style="--card-accent: var(--blue)">
+      <span class="card-tag blue"><span class="card-dot"></span>Live QWI data</span>
+      <h3>QWI Earnings Explorer</h3>
+      <p>Live Census Bureau QWI API integration — real payroll earnings crossed with minimum wage series in real time.</p>
+      <ul class="feature-list">
+        <li>Requires free Census API key (api.census.gov)</li>
+        <li>EarnS · EmpS · HirN · Sep · FrmJbGn / FrmJbLs</li>
+        <li>QWI-based Kaitz Index (min wage ÷ actual earnings)</li>
+        <li>Filter by state, year, age group, NAICS sector</li>
+        <li>Industry breakdown + hiring vs separations chart</li>
+      </ul>
+      <span class="card-cta" style="color:var(--blue)">Open QWI dashboard →</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- ── DATA SOURCES ── -->
+<section class="sources-section">
+  <h2>Data sources</h2>
+  <p class="section-sub">All data is public and freely available. City/county rates verified January 2026.</p>
+  <div class="source-grid">
+    <div class="source-card">
+      <div class="source-label">Federal + State · 1938–2023</div>
+      <div class="source-name">Vaghul &amp; Zipperer (2022)</div>
+      <div class="source-desc">Historical state and sub-state minimum wages, v1.4.0. Annual data for all 51 jurisdictions. CC BY 4.0.</div>
+      <a href="https://github.com/benzipperer/historicalminwage" target="_blank" class="source-link">github.com/benzipperer/historicalminwage</a>
+    </div>
+    <div class="source-card">
+      <div class="source-label">Cities &amp; Counties · Dec 2025</div>
+      <div class="source-name">UC Berkeley Labor Center</div>
+      <div class="source-desc">Inventory of US city and county minimum wage ordinances. 39 California localities + 19 other jurisdictions verified Jan 2026.</div>
+      <a href="https://laborcenter.berkeley.edu/minimum-wage-living-wage-resources/" target="_blank" class="source-link">laborcenter.berkeley.edu</a>
+    </div>
+    <div class="source-card">
+      <div class="source-label">Live earnings data</div>
+      <div class="source-name">Census LEHD QWI API</div>
+      <div class="source-desc">Quarterly Workforce Indicators — earnings, employment, hires, separations by state, age, industry. Free API key required.</div>
+      <a href="https://api.census.gov/data/timeseries/qwi/sa" target="_blank" class="source-link">api.census.gov/data/timeseries/qwi/sa</a>
+    </div>
+    <div class="source-card">
+      <div class="source-label">Verification · Jan 2026</div>
+      <div class="source-name">California DIR + californiapayroll.com</div>
+      <div class="source-desc">All 39 California city/county ordinance rates cross-checked against the California Department of Industrial Relations and independent sources.</div>
+      <a href="https://www.dir.ca.gov/dlse/minimum_wage.htm" target="_blank" class="source-link">dir.ca.gov/dlse/minimum_wage.htm</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── QUICK START ── -->
+<section class="qs-section">
+  <h2>Quick start</h2>
+  <p class="section-sub">Run the data pipeline locally to fetch and process the latest wage data.</p>
+  <div class="code-block">
+    <span class="cm"># 1. Install dependencies</span><br>
+    <span class="ck">pip install</span> <span class="cv">-r requirements.txt</span><br><br>
+    <span class="cm"># 2. Fetch + process in one command</span><br>
+    <span class="ck">python</span> <span class="cv">run_pipeline.py</span><br><br>
+    <span class="cm"># 3. Serve locally (needed for CSV loading)</span><br>
+    <span class="ck">python</span> <span class="cv">-m http.server 8000</span><br>
+    <span class="cm"># then open  http://localhost:8000</span>
+  </div>
+  <div class="code-block">
+    <span class="cm"># Deploy to GitHub Pages</span><br>
+    <span class="ck">git add</span> <span class="cv">.</span><br>
+    <span class="ck">git commit</span> <span class="cv">-m "Update minimum wage data"</span><br>
+    <span class="ck">git push</span><br><br>
+    <span class="cm"># Enable Pages: Settings → Pages → Deploy from branch → main</span><br>
+    <span class="cm"># Dashboard live at: https://YOUR_USERNAME.github.io/minwage-dashboard/</span>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div>
+    <div class="footer-brand">The <em>Minimum Wage</em> Landscape</div>
+  </div>
+  <div class="footer-meta">
+    Data: <a href="https://github.com/benzipperer/historicalminwage" target="_blank">Vaghul &amp; Zipperer (2022)</a> (CC BY 4.0) ·
+    <a href="https://laborcenter.berkeley.edu/minimum-wage-living-wage-resources/" target="_blank">UC Berkeley Labor Center</a> ·
+    <a href="https://api.census.gov/data/timeseries/qwi" target="_blank">Census LEHD QWI</a><br>
+    Rates verified January 2026 · Built with Chart.js · Hosted on GitHub Pages
+  </div>
+</footer>
+
+</body>
+</html>
