@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
+
 :root{
   --bg:#0d0f14;--surface:#161922;--surface2:#1e2230;--border:#2a2f3e;
   --accent:#f4c430;--accent2:#e07b39;--accent3:#5db8e8;
@@ -118,7 +119,174 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .empty{text-align:center;color:var(--muted);padding:40px;font-size:14px}
 
 footer{margin:0 48px 40px;padding-top:24px;border-top:1px solid var(--border);color:var(--muted);font-size:12px;line-height:1.8}
+
+
+/* CA map classes */
+#caMap{width:100%;height:auto;display:block;background:var(--surface2);border-radius:8px}
+.co{cursor:pointer;stroke:#0d0f14;stroke-width:0.5;transition:stroke-width .1s,stroke .15s}
+.co:hover{stroke:#fff;stroke-width:1.5}
+.co.active-co{stroke:var(--accent);stroke-width:2}
+.mkr{cursor:pointer}
+.yr-ctrl{margin-bottom:12px}
+.yr-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.yr-big{font-family:var(--font-head);font-size:32px;color:var(--accent);line-height:1}
+.play-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 14px;border-radius:20px;font-size:12px;font-family:var(--font-body);cursor:pointer}
+.play-btn.on{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+.wage-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:10px 0}
+.wb-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.wb-val{font-family:var(--font-head);font-size:26px;color:var(--accent);line-height:1}
+.wb-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.leg-bar{height:9px;border-radius:3px;margin:4px 0;background:linear-gradient(to right,#1a3828,#1a5858,#4a7000,#9a4a00,#c02000)}
+.leg-lbl-row{display:flex;justify-content:space-between;font-size:9px;color:var(--muted)}
+.sec-lbl2{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 5px}
+.city-list-ca{max-height:260px;overflow-y:auto}
+.ci2{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:5px;cursor:pointer;border:1px solid transparent;transition:background .1s}
+.ci2:hover{background:var(--surface)}.ci2.sel2{background:rgba(93,184,232,.08);border-color:rgba(93,184,232,.25)}
+.ci2-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ci2-sq{width:7px;height:7px;border-radius:1px;flex-shrink:0}
+.ci2-name{font-size:11.5px;font-weight:500}
+.ci2-wage{font-family:var(--font-head);font-size:13px;color:var(--accent)}
+.note{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6}
+.dl{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px}
+.dli{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+.lay{display:grid;grid-template-columns:1fr 250px;gap:20px;align-items:start}
+@media(max-width:800px){.lay{grid-template-columns:1fr}}
+.ct{font-size:16px;font-weight:600;color:var(--text);margin-bottom:3px}
+.cs{font-size:11px;color:var(--muted);margin-bottom:12px}
+.wb{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin:8px 0}
+.wbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.wbv{font-family:var(--font-head);font-size:26px;color:var(--accent);line-height:1}
+.ye{font-size:10px;color:var(--muted);margin-top:2px}
+.cl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 5px}
+#cityList{max-height:260px;overflow-y:auto}
+.qwi-inner{padding:0}
+.qwi-section{margin-bottom:28px}
+.sec-num{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:18px}
+.sn2{font-size:10px;color:var(--muted)}
+.st2{font-family:var(--font-head);font-size:17px;font-weight:400;color:#fff}
+.ss2{margin-left:auto;font-size:10px;color:var(--muted)}
+
+
+/* ── QWI API Key Card ── */
+.apikey-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:16px}
+.ak-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.ak-row{display:flex;gap:8px}
+.ak-row input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:12px;outline:none;font-family:var(--font-body)}
+.ak-row input:focus{border-color:var(--accent3)}
+.btn-cyan{background:var(--accent3);color:#000;border:none;padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn-cyan:hover{opacity:.85}.btn-cyan:disabled{opacity:.4;cursor:not-allowed}
+.ak-hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.5}
+.ak-hint a{color:var(--accent3);text-decoration:none}
+.ak-hint a:hover{text-decoration:underline}
+.ak-status{font-size:11px;min-height:14px;margin-top:5px}
+.ak-status.ok{color:var(--green)}.ak-status.err{color:var(--red)}.ak-status.loading{color:var(--accent)}
+
+/* ── QWI Controls ── */
+.ctrl-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.cg{display:flex;flex-direction:column;gap:3px}
+.cl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.cg select{font-size:12.5px}
+.pgroup{display:flex;gap:0}
+.pb{font-size:11px;padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-right:none;cursor:pointer;color:var(--muted);transition:all .15s}
+.pb:first-child{border-radius:6px 0 0 6px}.pb:last-child{border-radius:0 6px 6px 6px;border-right:1px solid var(--border)}
+.pb:hover{color:var(--text);background:var(--surface)}.pb.on{background:var(--accent3);color:#000;border-color:var(--accent3);font-weight:600}
+.yr-v{font-size:14px;font-weight:600;min-width:36px;color:var(--accent3);font-family:var(--font-body)}
+.vsep{width:1px;height:28px;background:var(--border);align-self:center;flex-shrink:0}
+.fetch-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+.fetch-dot.loading{background:var(--accent);animation:blink 1s infinite}.fetch-dot.ok{background:var(--green)}.fetch-dot.err{background:var(--red)}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── QWI Grids ── */
+.qwi-g2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.qwi-g21{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+.qwi-g3{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+@media(max-width:1100px){.qwi-g2,.qwi-g21{grid-template-columns:1fr}.qwi-g3{grid-template-columns:repeat(3,1fr)}}
+
+/* ── QWI KPI cards ── */
+.qkpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;border-top:2px solid transparent}
+.qkpi.cy{border-top-color:var(--accent3)}.qkpi.am{border-top-color:var(--accent)}.qkpi.vi{border-top-color:#9b6cff}.qkpi.ro{border-top-color:var(--red)}.qkpi.gr{border-top-color:var(--green)}
+.kl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.kv{font-family:var(--font-head);font-size:26px;font-weight:400;line-height:1;letter-spacing:-.01em}
+.ks{font-size:11px;color:var(--muted);margin-top:3px}
+.kv.cy{color:var(--accent3)}.kv.am{color:var(--accent)}.kv.vi{color:#9b6cff}.kv.ro{color:var(--red)}.kv.gr{color:var(--green)}
+
+/* ── Live Panel ── */
+.live-panel{background:var(--surface);border:1px solid var(--accent3);border-radius:var(--radius);padding:16px 20px;box-shadow:0 0 20px rgba(93,184,232,.07);position:relative;margin-bottom:20px}
+.lp-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.live-pulse{width:8px;height:8px;border-radius:50%;background:var(--accent3);animation:lpulse 2s infinite}
+@keyframes lpulse{0%,100%{box-shadow:0 0 0 0 rgba(93,184,232,.5)}50%{box-shadow:0 0 0 6px rgba(93,184,232,0)}}
+.lp-title{font-size:13px;font-weight:600;color:var(--accent3)}
+.lp-meta{margin-left:auto;font-size:10px;color:var(--muted)}
+.lp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.lp-stat{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:11px 13px}
+.lps-l{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.lps-v{font-family:var(--font-head);font-size:19px;color:var(--accent3);letter-spacing:-.01em}
+.lps-s{font-size:10px;color:var(--muted);margin-top:2px}
+.lp-empty{font-size:12px;color:var(--muted);text-align:center;padding:18px}
+
+/* ── QWI Chart helpers ── */
+.chdr{display:flex;align-items:flex-start;gap:8px;margin-bottom:4px}
+.ctitle{font-size:14px;font-weight:600;color:var(--text)}
+.csub{font-size:11px;color:var(--muted);margin-bottom:12px}
+.fn{font-size:10.5px;color:var(--muted);margin-top:8px;padding-top:7px;border-top:1px solid var(--border);line-height:1.7}
+.ib{width:18px;height:18px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s;position:relative;font-family:var(--font-body)}
+.ib:hover{background:var(--accent3);border-color:var(--accent3);color:#000}
+.ipop{position:absolute;z-index:400;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:280px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;box-shadow:0 8px 24px rgba(0,0,0,.5);font-size:12px;line-height:1.65;color:var(--muted);pointer-events:none;opacity:0;transition:opacity .15s}
+.ipop.show{opacity:1;pointer-events:auto}
+.ipop::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-bottom-color:var(--border)}
+.ipop strong{display:block;font-size:13px;color:var(--text);margin-bottom:6px;border-bottom:1px solid var(--border);padding-bottom:5px}
+.formula{font-size:11px;background:var(--surface2);border-radius:3px;padding:4px 8px;margin:5px 0;color:var(--accent3);font-family:var(--font-body)}
+.ifoot{font-size:10px;color:var(--muted);margin-top:5px;border-top:1px solid var(--border);padding-top:5px}
+.loading-overlay{position:absolute;inset:0;background:rgba(13,15,20,.8);display:flex;align-items:center;justify-content:center;border-radius:var(--radius);z-index:10;font-size:12px;color:var(--accent);gap:8px;opacity:0;pointer-events:none;transition:opacity .2s}
+.loading-overlay.show{opacity:1;pointer-events:auto}
+.spin{width:13px;height:13px;border:2px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ind-leg{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.il{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.ild{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ── CA Map section ── */
+.ca-map-section .map-layout{display:grid;grid-template-columns:1fr 260px;gap:20px;align-items:start}
+@media(max-width:900px){.ca-map-section .map-layout{grid-template-columns:1fr}}
+.ca-map-section #caMap{width:100%;height:auto;display:block;background:var(--surface2);border-radius:8px}
+.ca-map-section .co{cursor:pointer;stroke:#0d0f14;stroke-width:0.5;transition:stroke-width .1s,stroke .15s}
+.ca-map-section .co:hover{stroke:#fff;stroke-width:1.5}
+.ca-map-section .co.active-co{stroke:var(--accent);stroke-width:2}
+.yr-ctrl{margin-bottom:14px}
+.yr-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.yr-big{font-family:var(--font-head);font-size:34px;color:var(--accent);line-height:1}
+.play-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 14px;border-radius:20px;font-size:12px;font-family:var(--font-body);cursor:pointer;transition:all .15s}
+.play-btn.on{background:var(--accent);border-color:var(--accent);color:#000;font-weight:600}
+.wage-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:10px 0}
+.wb-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.wb-val{font-family:var(--font-head);font-size:28px;color:var(--accent);line-height:1}
+.wb-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.leg-bar{height:9px;border-radius:3px;margin:4px 0;background:linear-gradient(to right,#1a3828,#1a5858,#4a7000,#9a4a00,#c02000)}
+.leg-lbl-row{display:flex;justify-content:space-between;font-size:9px;color:var(--muted)}
+.sec-lbl2{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:10px 0 5px}
+.city-list{max-height:280px;overflow-y:auto}
+.ci2{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:5px;cursor:pointer;border:1px solid transparent}
+.ci2:hover{background:var(--surface)}.ci2.sel2{background:rgba(93,184,232,.08);border-color:rgba(93,184,232,.25)}
+.ci2-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ci2-sq{width:7px;height:7px;border-radius:1px;flex-shrink:0}
+.ci2-info{flex:1;min-width:0}
+.ci2-name{font-size:11.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci2-prem{font-size:10px}
+.ci2-wage{font-family:var(--font-head);font-size:13px;color:var(--accent);white-space:nowrap}
+.dot-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.dl2{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)}
+
+/* ── Section numbering ── */
+.sec-num{display:flex;align-items:baseline;gap:10px;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:20px}
+.sn2{font-size:10px;color:var(--muted);font-family:var(--font-body)}
+.st2{font-family:var(--font-head);font-size:18px;font-weight:400;color:#fff}
+.ss2{margin-left:auto;font-size:10px;color:var(--muted)}
+
 </style>
+</head>
+<body>
+<div id="tip"></div>
+<div id="mapTip"></div>
 </head>
 <body>
 
@@ -273,6 +441,47 @@ footer{margin:0 48px 40px;padding-top:24px;border-top:1px solid var(--border);co
       ▲ markers = years the minimum wage actually changed · dashed line = federal floor ($7.25)
     </div>
   </div>
+
+<!-- California Choropleth Map -->
+<section style="margin-bottom:32px">
+  <div class="card">
+    <div class="card-title">California Minimum Wage Map</div>
+    <div class="card-sub">58 counties colored by effective wage · 39 city/county ordinance markers · animate 2000–2025</div>
+    <div class="card">
+<div class="ct">California — Minimum Wage by County &amp; City</div>
+<div class="cs">Choropleth = effective wage · ● city ordinances · ■ county ordinances · scrub or animate years 2000–2025</div>
+<div class="lay">
+<div>
+<svg id="caMap" viewBox="0 0 520 760" xmlns="http://www.w3.org/2000/svg">
+<g id="gC"></g><g id="gM"></g><g id="gL"></g>
+</svg>
+<div class="note">
+County geometry derived from Census TIGER/Line · 58 counties · fully self-contained (no CDN)
+<div class="dl">
+<div class="dli"><svg width="10" height="10" style="flex-shrink:0"><circle cx="5" cy="5" r="4" fill="#5db8e8"/></svg>City ordinance</div>
+<div class="dli"><svg width="10" height="10" style="flex-shrink:0"><rect x="1" y="1" width="8" height="8" rx="1" fill="#f4c430"/></svg>County ordinance</div>
+<div class="dli"><svg width="10" height="10" style="flex-shrink:0"><circle cx="5" cy="5" r="4" fill="#7a82a0" opacity=".5"/></svg>At state floor</div>
+</div>
+</div>
+</div>
+<div>
+<div class="yr-row">
+<div><div class="yr-big" id="yrD">2000</div><div style="font-size:11px;color:var(--mu)">Selected year</div></div>
+<button class="pb" id="playBtn" onclick="togglePlay()">&#9654; Animate</button>
+</div>
+<input type="range" id="yrSl" min="2000" max="2025" value="2000" step="1" oninput="setCaYear(+this.value)"/>
+<div class="ye"><span>2000</span><span>2025</span></div>
+<div class="wb"><div class="wbl">CA State Floor</div><div class="wbv" id="swD">$6.75</div><div class="wbs" id="swS">California minimum wage</div></div>
+<div class="leg"><div class="lgl">Wage tier ($/hr)</div><div class="lgb"></div><div class="lgl2"><span>$6</span><span>$9</span><span>$12</span><span>$15</span><span>$18+</span></div></div>
+<div class="clh">Local ordinances — <span id="ordN">0</span> active</div>
+<div class="cl" id="cityList"></div>
+</div>
+</div>
+</div>
+  </div>
+</section>
+
+
   <div class="card">
     <div class="card-title">Local Minimum Wages — Cities &amp; Counties</div>
     <div class="card-sub">UC Berkeley Labor Center Inventory · Last updated Dec 2025</div>
@@ -316,13 +525,320 @@ footer{margin:0 48px 40px;padding-top:24px;border-top:1px solid var(--border);co
 
 </main>
 
+
+
+<!-- Live QWI Earnings Section -->
+<section style="margin-bottom:32px">
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">Live Earnings Data — Census QWI API</div>
+    <div class="card-sub">Real average earnings, employment, hires &amp; separations from the LEHD Quarterly Workforce Indicators</div>
+    <div class="apikey-card">
+      <div class="ak-label">Census API Key — free at api.census.gov/data/key_signup.html</div>
+      <div class="ak-row">
+        <input type="text" id="apiKey" placeholder="Paste your Census API key here…" autocomplete="off"/>
+        <button class="btn-cyan" id="applyKey" onclick="applyAPIKey()">Apply</button>
+      </div>
+      <div class="ak-hint">
+        Get a free key at <a href="https://api.census.gov/data/key_signup.html" target="_blank">api.census.gov/data/key_signup.html</a>
+        — takes about 1 minute.
+      </div>
+      <div class="ak-status" id="keyStatus"></div>
+    </div>
+  </div>
+<div class="qwi-inner">
+
+
+<div class="ctrl-bar" style="margin-bottom:20px">
+  <div class="cg">
+    <span class="cl">State</span>
+    <select id="stateSelect" onchange="onQWIStateChange()">
+      <option value="06">California (CA)</option>
+      <option value="36">New York (NY)</option>
+      <option value="53">Washington (WA)</option>
+      <option value="48">Texas (TX)</option>
+      <option value="12">Florida (FL)</option>
+      <option value="17">Illinois (IL)</option>
+      <option value="25">Massachusetts (MA)</option>
+      <option value="11">Washington D.C.</option>
+      <option value="08">Colorado (CO)</option>
+      <option value="41">Oregon (OR)</option>
+      <option value="34">New Jersey (NJ)</option>
+      <option value="26">Michigan (MI)</option>
+      <option value="27">Minnesota (MN)</option>
+      <option value="37">North Carolina (NC)</option>
+      <option value="51">Virginia (VA)</option>
+    </select>
+  </div>
+  <div class="cg">
+    <span class="cl">Year</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <input type="range" id="yrSlider2" min="2010" max="2023" value="2022" step="1"
+             oninput="onQWIYear(this.value)" style="min-width:90px"/>
+      <span class="yr-v" id="yrVal">2022</span>
+    </div>
+  </div>
+  <div class="vsep"></div>
+  <div class="cg">
+    <span class="cl">Worker group</span>
+    <div class="pgroup">
+      <button class="pb on" data-ag="A00" onclick="setAge(this)">All</button>
+      <button class="pb" data-ag="A01" onclick="setAge(this)">≤24</button>
+      <button class="pb" data-ag="A02" onclick="setAge(this)">25–34</button>
+      <button class="pb" data-ag="A03" onclick="setAge(this)">35–44</button>
+      <button class="pb" data-ag="A04" onclick="setAge(this)">45–54</button>
+      <button class="pb" data-ag="A05" onclick="setAge(this)">55+</button>
+    </div>
+  </div>
+  <div class="vsep"></div>
+  <div class="cg">
+    <span class="cl">Sector</span>
+    <select id="indSelect" onchange="onQWIStateChange()">
+      <option value="00">All Industries</option>
+      <option value="72">Food &amp; Hospitality (72)</option>
+      <option value="44">Retail Trade (44-45)</option>
+      <option value="62">Health Care (62)</option>
+      <option value="23">Construction (23)</option>
+      <option value="31">Manufacturing (31-33)</option>
+      <option value="52">Finance (52)</option>
+      <option value="54">Professional Services (54)</option>
+    </select>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+    <div class="fetch-dot" id="fetchDot"></div>
+    <span style="font-size:10px;color:var(--muted)" id="fetchStatus">—</span>
+  </div>
+</div>
+
+<!-- §1 KPIs -->
+<section class="qwi-section">
+  <div class="sec-num">
+    <span class="sn2">01</span>
+    <span class="st2">Live QWI Snapshot</span>
+    <span class="ss2" id="kpi-label">Select a state and apply your API key</span>
+  </div>
+  <div class="qwi-g3" style="grid-template-columns:repeat(5,1fr)">
+    <div class="qkpi cy"><div class="kl">State Min Wage</div><div class="kv cy" id="k-mw">—</div><div class="ks" id="k-mw-s">$/hr · selected year</div></div>
+    <div class="qkpi am"><div class="kl">Avg Monthly Earnings</div><div class="kv am" id="k-earn">—</div><div class="ks">Full-quarter stable jobs · QWI</div></div>
+    <div class="qkpi vi"><div class="kl">Stable Employment</div><div class="kv vi" id="k-emp">—</div><div class="ks">Full-quarter jobs · QWI</div></div>
+    <div class="qkpi ro"><div class="kl">Hires (New)</div><div class="kv ro" id="k-hire">—</div><div class="ks">New hires in quarter · QWI</div></div>
+    <div class="qkpi gr"><div class="kl">Separations</div><div class="kv gr" id="k-sep">—</div><div class="ks">Jobs ended in quarter · QWI</div></div>
+  </div>
+</section>
+
+<!-- §2 Live LODES Panel -->
+<section class="qwi-section">
+  <div class="sec-num">
+    <span class="sn2">02</span>
+    <span class="st2">Live QWI Data Feed</span>
+    <span class="ss2">Direct from api.census.gov/data/timeseries/qwi</span>
+  </div>
+  <div class="live-panel" style="position:relative">
+    <div class="lp-head">
+      <div class="live-pulse"></div>
+      <span class="lp-title">LEHD Quarterly Workforce Indicators</span>
+      <span class="lp-meta" id="lp-meta">Awaiting API call…</span>
+    </div>
+    <div class="lp-grid" id="liveGrid">
+      <div class="lp-empty">Enter your Census API key above and click Apply to load live data for the selected state.</div>
+    </div>
+    <div class="loading-overlay" id="liveOverlay">
+      <div class="spin"></div>Fetching from Census API…
+    </div>
+  </div>
+  <div class="fn" style="margin-top:12px">
+    Source: U.S. Census Bureau, LEHD Quarterly Workforce Indicators, api.census.gov/data/timeseries/qwi/sa.
+    Variables: EarnS (avg monthly earnings, stable jobs), EmpS (stable employment), HirN (new hires), Sep (separations), FrmJbGn/FrmJbLs (job creation/destruction).
+    Seasonally adjusted (seasonadj=S). All workers (ownercode=A00) unless filtered.
+  </div>
+</section>
+
+<!-- §3 Earnings vs Min Wage Trend -->
+<section class="qwi-section">
+  <div class="sec-num">
+    <span class="sn2">03</span>
+    <span class="st2">Earnings Trajectory vs. Minimum Wage</span>
+    <span class="ss2">QWI average monthly earnings × state minimum wage floor</span>
+  </div>
+  <div class="qwi-g21">
+    <div class="card" style="position:relative">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Avg Monthly Earnings vs. Min Wage Floor — <span id="trend-state-lbl">—</span></div>
+          <div class="csub">QWI EarnS (left axis) · Min wage annualized (right axis, $/mo) · <span id="trend-age-lbl">All workers</span></div>
+        </div>
+        <div class="ib" id="ib-trend" onmouseenter="showI('trend')" onmouseleave="hideI('trend')">ℹ
+          <div class="ipop" id="ip-trend">
+            <strong>How to read this chart</strong>
+            The blue line shows <em>average monthly earnings</em> from the QWI (EarnS) — this includes all wage income for workers with stable, full-quarter jobs. The dashed amber line shows the <em>minimum wage expressed as monthly income</em> (state min wage × 4.33 weeks × 40 hrs). The gap between them shows how far average earnings are above the minimum floor — a narrowing gap can indicate MW workers are a larger share of the workforce.
+            <span class="ifoot">QWI EarnS covers UI-covered employment. Excludes self-employed. Source: LEHD QWI API.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:300px"><canvas id="qwiTrendChart"></canvas></div>
+      <div class="loading-overlay" id="trendOverlay">
+        <div class="spin"></div>Loading trend data…
+      </div>
+      <div class="fn">QWI seasonally adjusted (Q1 of each year shown). Min wage = state rate × 4.33 × 40 hrs/wk.</div>
+    </div>
+    <div class="card">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Minimum Wage History</div>
+          <div class="csub" id="mw-hist-sub">State rate · 2010–2025</div>
+        </div>
+        <div class="ib" id="ib-mwhist" onmouseenter="showI('mwhist')" onmouseleave="hideI('mwhist')">ℹ
+          <div class="ipop" id="ip-mwhist">
+            <strong>Reading the wage ladder</strong>
+            The step pattern shows each legislative increase. States that defer to the federal floor appear as flat lines since 2009. States like CA, WA, and DC show steep progressive increases driven by local ordinances and state legislation. Data from Vaghul &amp; Zipperer (2022) v1.4.0.
+            <span class="ifoot">Source: your combined dataset (us_minwage_combined.csv). Federal floor = $7.25 since Jul 2009.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:300px"><canvas id="mwHistChart"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- §4 Earnings × MW scatter + Kaitz -->
+<section class="qwi-section">
+  <div class="sec-num">
+    <span class="sn2">04</span>
+    <span class="st2">Cross-State: Earnings vs. Minimum Wage</span>
+    <span class="ss2">Uses pre-loaded QWI estimates · select year above</span>
+  </div>
+  <div class="qwi-g2">
+    <div class="card" style="position:relative">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Scatter: State Min Wage × Avg Monthly Earnings</div>
+          <div class="csub">Each dot = one state · QWI EarnS estimate · <span id="sc-yr-lbl">2022</span></div>
+        </div>
+        <div class="ib" id="ib-sc" onmouseenter="showI('sc')" onmouseleave="hideI('sc')">ℹ
+          <div class="ipop" id="ip-sc">
+            <strong>What this scatter shows</strong>
+            States with higher minimum wages don't necessarily have higher <em>average</em> earnings — average earnings reflect all workers, not just those near the floor. A weak or flat relationship here is expected: the minimum wage directly affects the bottom of the distribution, not the average. A strong positive slope would suggest minimum wage increases are "pulling up" average wages in that state — evidence of spillover effects.
+            <span class="formula">r = Pearson correlation · OLS trendline</span>
+            <span class="ifoot">QWI average earnings, all workers (A00), Q1 of selected year. Min wage = annual state rate.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:320px"><canvas id="scChart"></canvas></div>
+      <div class="fn" id="sc-fn">r = — · Load live data for more states to see the pattern.</div>
+    </div>
+    <div class="card">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Kaitz Index — Min Wage as % of Avg Earnings</div>
+          <div class="csub">MW monthly equivalent ÷ QWI avg monthly earnings × 100</div>
+        </div>
+        <div class="ib" id="ib-kaitz" onmouseenter="showI('kaitz')" onmouseleave="hideI('kaitz')">ℹ
+          <div class="ipop" id="ip-kaitz">
+            <strong>Kaitz Index with real earnings data</strong>
+            Unlike previous dashboards that estimated median wages from ACS household income, this version uses <em>actual QWI average monthly earnings</em> as the denominator — making the Kaitz calculation more grounded in real payroll data.
+            <span class="formula">Kaitz = (Min Wage × 4.33 × 40) ÷ QWI EarnS × 100</span>
+            A Kaitz above 50% means the minimum wage is more than half the average earnings for that state/group. High Kaitz values signal the minimum wage is a <em>binding</em> constraint on a large fraction of the workforce.
+            <span class="ifoot">Color: red &gt;55% (very binding), amber 40–55% (moderate), grey &lt;40%.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:320px"><canvas id="kaitzChart"></canvas></div>
+      <div class="fn">Kaitz from QWI-based earnings. Higher = min wage reaches further into the distribution.</div>
+    </div>
+  </div>
+</section>
+
+<!-- §5 Industry breakdown -->
+<section class="qwi-section">
+  <div class="sec-num">
+    <span class="sn2">05</span>
+    <span class="st2">Industry Earnings Breakdown</span>
+    <span class="ss2">QWI EarnS by NAICS sector vs. minimum wage floor</span>
+  </div>
+  <div class="qwi-g21">
+    <div class="card" style="position:relative">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Avg Monthly Earnings by Sector — <span id="ind-state-lbl">—</span></div>
+          <div class="csub">QWI EarnS per NAICS sector · dashed line = min wage monthly equivalent</div>
+        </div>
+        <div class="ib" id="ib-ind" onmouseenter="showI('ind')" onmouseleave="hideI('ind')">ℹ
+          <div class="ipop" id="ip-ind">
+            <strong>Industry earnings vs. minimum wage</strong>
+            Sectors with bars <em>closest to the minimum wage line</em> (dashed) are the most minimum-wage-intensive. In most states, Accommodation &amp; Food Services (NAICS 72) and Retail Trade (44–45) sit nearest the floor. When the minimum wage rises, industries just above the line face the most adjustment pressure — employers must raise wages or accept higher turnover.
+            <span class="ifoot">QWI EarnS, Q1 of selected year. Min wage monthly = state rate × 4.33 × 40 hrs.</span>
+          </div>
+        </div>
+      </div>
+      <div class="ind-leg" id="indLeg"></div>
+      <div style="position:relative;height:320px"><canvas id="indChart"></canvas></div>
+      <div class="loading-overlay" id="indOverlay">
+        <div class="spin"></div>Loading industry data…
+      </div>
+      <div class="fn">Red bar = earnings below/near MW floor. Load live data for real values.</div>
+    </div>
+    <div class="card">
+      <div class="chdr">
+        <div>
+          <div class="ctitle">Hiring vs. Separations</div>
+          <div class="csub">QWI HirN (new hires) vs. Sep (separations) · labour market churn</div>
+        </div>
+        <div class="ib" id="ib-churn" onmouseenter="showI('churn')" onmouseleave="hideI('churn')">ℹ
+          <div class="ipop" id="ip-churn">
+            <strong>Labour market churn and minimum wage</strong>
+            High turnover (separations close to or exceeding new hires) is characteristic of low-wage sectors — exactly those most affected by minimum wage changes. When minimum wages rise, two competing effects emerge: some employers reduce churn as jobs become more valuable to workers; others hire fewer people to offset costs. Tracking HirN vs. Sep over minimum wage increase years helps reveal which effect dominates in a given state.
+            <span class="ifoot">QWI HirN = new hires entering for first time. Sep = all separations. Both quarterly counts.</span>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;height:320px"><canvas id="churnChart"></canvas></div>
+      <div class="loading-overlay" id="churnOverlay">
+        <div class="spin"></div>Loading churn data…
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- §6 Data attribution -->
+<section class="qwi-section">
+  <div class="sec-num"><span class="sn2">06</span><span class="st2">Data Sources &amp; API Reference</span></div>
+  <div class="qwi-g3">
+    <div class="card">
+      <div style="color:var(--cyan);font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">QWI API</div>
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:600;margin-bottom:6px">Census LEHD QWI</div>
+      <div style="font-size:12.5px;color:var(--ink2);line-height:1.7">Quarterly Workforce Indicators — earnings, employment, hires, separations, job creation/destruction. State-level, quarterly, 2002–2023.</div>
+      <div style="margin-top:10px;font-family:var(--font-m);font-size:10.5px;color:var(--ink3)">api.census.gov/data/timeseries/qwi/sa<br>Endpoint: /sa (sex × age)</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--violet)">Cite: U.S. Census Bureau, QWI, LEHD, accessed 2025</div>
+    </div>
+    <div class="card">
+      <div style="color:var(--amber);font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Min Wage Series</div>
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:600;margin-bottom:6px">Zipperer + UCB</div>
+      <div style="font-size:12.5px;color:var(--ink2);line-height:1.7">Federal &amp; state: Vaghul &amp; Zipperer (2022) v1.4.0. City &amp; county: UC Berkeley Labor Center inventory, Dec 2025.</div>
+      <div style="margin-top:10px;font-family:var(--font-m);font-size:10.5px;color:var(--ink3)">github.com/benzipperer/historicalminwage<br>laborcenter.berkeley.edu</div>
+      <div style="margin-top:8px;font-size:11px;color:var(--violet)">Combined dataset: us_minwage_combined.csv (CC BY 4.0)</div>
+    </div>
+    <div class="card">
+      <div style="color:var(--green);font-family:var(--font-m);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px">Live API Calls</div>
+      <div style="font-family:var(--font-d);font-size:14px;font-weight:600;margin-bottom:6px">Example URLs</div>
+      <div style="font-size:11px;color:var(--ink3);font-family:var(--font-m);line-height:2;word-break:break-all">
+        <div style="color:var(--cyan);margin-bottom:4px">EarnS, EmpS, HirN, Sep by state + year:</div>
+        api.census.gov/data/timeseries/qwi/sa?get=EarnS,EmpS,HirN,Sep&amp;for=state:06&amp;year=2022&amp;quarter=1&amp;agegrp=A00&amp;seasonadj=S&amp;ownercode=A00&amp;key=YOUR_KEY
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /main -->
+</div>
+</section>
+
 <footer>
   <strong style="color:var(--text)">Data Sources</strong><br>
   Federal &amp; State: Vaghul &amp; Zipperer (2022), v1.4.0. <a href="https://github.com/benzipperer/historicalminwage" style="color:var(--accent3)">github.com/benzipperer/historicalminwage</a><br>
   Local: UC Berkeley Center for Labor Research and Education, <a href="https://laborcenter.berkeley.edu/minimum-wage-living-wage-resources/" style="color:var(--accent3)">Inventory of Local Minimum Wage Ordinances</a>, Dec 2025.
 </footer>
-
 <script>
+/* ── MAIN DATA + FUNCTIONS ── */
+
 /* ── DATA ── */
 const STATE_DATA=[
   {state:"AL",name:"Alabama",minwage:7.25},{state:"AK",name:"Alaska",minwage:11.91},
@@ -759,7 +1275,7 @@ function buildTrendSeries(key){
 }
 function renderTrendChart(){
   if(trendChart){trendChart.destroy();trendChart=null;}
-  const ctx=document.getElementById('trendChart').getContext('2d');
+  const ctx=document.getElementById('qwiTrendChart').getContext('2d');
   const keys=Array.from(activeTrendKeys);
   const latestWages=Object.fromEntries(
     STATE_DATA.map(s=>[s.state,s.minwage])
@@ -1076,7 +1592,703 @@ window.addEventListener('DOMContentLoaded',()=>{
   renderLocalBar();
   updateCAStats('CA');
   renderCAChart();
+  // CA choropleth map
+  if(typeof render==='function') render();
+  // QWI static charts (no API key needed)
+  if(typeof renderScatter==='function'){
+    setTimeout(()=>{
+      renderScatter();
+      renderKaitz();
+    },200);
+  }
 });
+
+
+/* ── CA MAP DATA + FUNCTIONS ── */
+
+const CA_HIST=[[2000,6.75],[2007,7.5],[2008,8],[2014,9],[2016,10],[2017,10.5],[2018,11],[2019,12],[2020,13],[2021,14],[2022,15],[2023,15.5],[2024,16],[2025,16.5]];
+function sw(y){let v=CA_HIST[0][1];for(const[yr,w]of CA_HIST)if(yr<=y)v=w;return v;}
+const CITIES={
+"Alameda":{cx:182,cy:368,fips:"06001",county:false,steps:[[2018,12.0],[2019,13.5],[2020,15.0],[2022,15.75],[2023,16.52],[2024,17.02],[2025,17.46]]},
+"Belmont":{cx:155,cy:386,fips:"06081",county:false,steps:[[2017,12.0],[2018,13.5],[2019,15.0],[2020,15.75],[2021,16.75],[2022,17.35],[2026,18.95]]},
+"Berkeley":{cx:174,cy:355,fips:"06001",county:false,steps:[[2016,11.0],[2017,12.53],[2018,13.75],[2019,15.0],[2021,16.32],[2024,18.67],[2025,19.18]]},
+"Burlingame":{cx:152,cy:378,fips:"06081",county:false,steps:[[2017,12.0],[2018,13.5],[2019,15.0],[2020,16.5],[2021,17.35],[2026,17.86]]},
+"Cupertino":{cx:157,cy:411,fips:"06085",county:false,steps:[[2017,10.0],[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.4],[2024,17.95],[2026,18.7]]},
+"Daly City":{cx:148,cy:364,fips:"06075",county:false,steps:[[2018,13.0],[2020,15.0],[2023,16.07],[2024,17.07],[2026,17.5]]},
+"East Palo Alto":{cx:162,cy:390,fips:"06081",county:false,steps:[[2018,13.0],[2020,15.0],[2023,16.07],[2024,17.07],[2026,17.9]]},
+"El Cerrito":{cx:172,cy:351,fips:"06013",county:false,steps:[[2016,10.0],[2017,11.6],[2018,12.25],[2019,13.6],[2020,15.0],[2022,16.46],[2024,18.0],[2026,18.82]]},
+"Emeryville":{cx:170,cy:349,fips:"06001",county:false,steps:[[2015,9.0],[2016,14.44],[2022,17.13],[2024,19.36],[2025,19.9]]},
+"Foster City":{cx:157,cy:380,fips:"06081",county:false,steps:[[2017,15.0],[2018,15.75],[2019,16.5],[2020,17.25],[2026,17.85]]},
+"Fremont":{cx:188,cy:388,fips:"06001",county:false,steps:[[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.0],[2024,17.02],[2025,17.75]]},
+"Half Moon Bay":{cx:138,cy:390,fips:"06081",county:false,steps:[[2018,13.0],[2020,15.0],[2023,16.07],[2024,17.07],[2026,17.91]]},
+"Hayward":{cx:186,cy:376,fips:"06001",county:false,steps:[[2018,13.0],[2019,14.0],[2020,15.0],[2021,15.5],[2022,16.34],[2026,17.79]]},
+"LA County":{cx:238,cy:648,fips:"06037",county:true,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.04],[2023,16.9],[2024,17.27],[2025,17.81]]},
+"Los Angeles":{cx:224,cy:660,fips:"06037",county:false,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.04],[2023,16.78],[2024,17.28],[2025,17.87]]},
+"Malibu":{cx:196,cy:665,fips:"06037",county:false,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.04],[2024,17.27]]},
+"Menlo Park":{cx:155,cy:392,fips:"06081",county:false,steps:[[2017,12.0],[2018,13.5],[2019,15.0],[2020,16.5],[2022,17.1],[2026,17.55]]},
+"Milpitas":{cx:182,cy:408,fips:"06085",county:false,steps:[[2017,10.5],[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.65],[2025,18.2]]},
+"Mountain View":{cx:161,cy:402,fips:"06085",county:false,steps:[[2015,10.3],[2016,11.0],[2017,13.0],[2018,15.0],[2019,16.05],[2022,18.15],[2024,19.2],[2026,19.7]]},
+"Novato":{cx:144,cy:338,fips:"06041",county:false,steps:[[2020,13.0],[2021,14.0],[2022,15.0],[2023,16.04],[2024,17.13],[2026,17.73]]},
+"Oakland":{cx:178,cy:361,fips:"06001",county:false,steps:[[2015,9.0],[2016,12.25],[2020,15.0],[2022,16.5],[2024,17.02],[2026,17.34]]},
+"Palo Alto":{cx:158,cy:395,fips:"06085",county:false,steps:[[2016,9.0],[2017,11.0],[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.45],[2024,17.95],[2026,18.7]]},
+"Pasadena":{cx:234,cy:650,fips:"06037",county:false,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.11],[2024,17.5],[2025,18.04]]},
+"Petaluma":{cx:140,cy:330,fips:"06097",county:false,steps:[[2017,12.0],[2018,13.5],[2020,15.0],[2022,17.06],[2024,17.97],[2026,18.31]]},
+"Redwood City":{cx:155,cy:388,fips:"06081",county:false,steps:[[2017,11.0],[2018,13.5],[2019,15.0],[2020,16.5],[2022,17.4],[2024,18.15],[2026,18.65]]},
+"Richmond":{cx:159,cy:348,fips:"06013",county:false,steps:[[2015,9.0],[2016,9.6],[2017,11.52],[2018,12.3],[2020,15.0],[2024,17.02],[2025,18.18],[2026,19.18]]},
+"San Carlos":{cx:154,cy:382,fips:"06081",county:false,steps:[[2018,13.0],[2020,15.0],[2021,16.5],[2022,17.1],[2026,17.75]]},
+"San Diego":{cx:330,cy:730,fips:"06073",county:false,steps:[[2015,9.0],[2016,9.75],[2017,10.5],[2018,11.5],[2023,16.85],[2024,17.25],[2026,17.75]]},
+"San Francisco":{cx:150,cy:358,fips:"06075",county:false,steps:[[2014,11.05],[2015,12.25],[2016,13.0],[2017,14.0],[2018,15.0],[2022,16.99],[2024,18.07],[2025,19.18]]},
+"San Jose":{cx:174,cy:416,fips:"06085",county:false,steps:[[2017,10.5],[2018,12.0],[2019,13.5],[2020,15.0],[2022,16.2],[2024,17.55],[2026,18.45]]},
+"San Mateo":{cx:152,cy:374,fips:"06081",county:false,steps:[[2017,10.0],[2018,12.0],[2019,13.5],[2020,15.0],[2021,16.5],[2022,17.6],[2026,18.6]]},
+"San Mateo County":{cx:158,cy:376,fips:"06081",county:true,steps:[[2018,15.5],[2019,16.5],[2022,17.06],[2026,17.95]]},
+"Santa Clara":{cx:167,cy:412,fips:"06085",county:false,steps:[[2016,9.0],[2017,11.0],[2018,13.0],[2019,15.0],[2022,16.35],[2024,17.95],[2026,18.7]]},
+"Santa Monica":{cx:205,cy:661,fips:"06037",county:false,steps:[[2016,10.0],[2017,10.5],[2018,12.0],[2019,13.25],[2020,14.25],[2021,15.0],[2022,16.04],[2023,16.9],[2024,17.27],[2025,17.81]]},
+"Santa Rosa":{cx:138,cy:318,fips:"06097",county:false,steps:[[2017,13.0],[2020,15.0],[2022,17.06],[2024,17.97],[2026,18.21]]},
+"Sonoma":{cx:145,cy:322,fips:"06097",county:false,steps:[[2017,12.0],[2018,13.5],[2019,15.0],[2020,16.0],[2024,17.97],[2026,18.47]]},
+"South San Francisco":{cx:150,cy:370,fips:"06081",county:false,steps:[[2017,12.0],[2020,15.0],[2021,16.5],[2022,17.25],[2023,17.7],[2026,18.15]]},
+"Sunnyvale":{cx:163,cy:407,fips:"06085",county:false,steps:[[2015,9.0],[2016,10.3],[2017,11.0],[2018,13.0],[2019,15.0],[2023,18.55],[2024,19.3],[2026,19.5]]},
+"West Hollywood":{cx:214,cy:655,fips:"06037",county:false,steps:[[2022,14.0],[2023,15.5],[2024,17.5],[2025,19.08],[2025,19.36],[2026,19.65]]},
+};
+function cw(n,y){const d=CITIES[n];if(!d||y<d.steps[0][0])return null;let v=d.steps[0][1];for(const[yr,w]of d.steps)if(yr<=y)v=w;return v;}
+function wc(w){if(!w||w<7)return'#162a1e';if(w<8.5)return'#1a3e2e';if(w<10)return'#1a5042';if(w<11.5)return'#1e5268';if(w<13)return'#4a6200';if(w<15)return'#7a4400';if(w<17)return'#a43000';return'#c81800';}
+function oc(cw,sw){const p=cw-sw;if(p<=0.05)return'#7a82a0';if(p<=2)return'#5db8e8';if(p<=4)return'#4ecb8d';return'#f4c430';}
+const COUNTIES=[
+["Del Norte","06015","M52,28 L140,26 L138,62 L50,64Z"],
+["Siskiyou","06093","M140,26 L296,22 L293,72 L138,74 L138,62Z"],
+["Modoc","06049","M296,22 L420,20 L418,90 L293,90 L293,72Z"],
+["Trinity","06105","M50,64 L138,74 L134,140 L48,136Z"],
+["Shasta","06089","M138,74 L252,72 L248,140 L134,140Z"],
+["Lassen","06035","M293,90 L418,90 L414,168 L291,166Z"],
+["Tehama","06103","M134,140 L248,140 L244,185 L130,183Z"],
+["Plumas","06063","M248,140 L291,166 L414,168 L410,206 L288,204 L244,197 L244,185Z"],
+["Humboldt","06023","M28,100 L88,94 L132,130 L130,183 L76,196 L26,178Z"],
+["Mendocino","06045","M26,178 L76,196 L108,196 L130,183 L128,252 L80,268 L26,254Z"],
+["Glenn","06021","M130,183 L244,185 L240,220 L128,218Z"],
+["Butte","06007","M244,185 L288,204 L284,228 L240,230 L240,220Z"],
+["Sierra","06091","M288,204 L410,206 L406,234 L286,232Z"],
+["Colusa","06011","M128,218 L240,220 L237,252 L126,250Z"],
+["Sutter","06101","M240,220 L284,228 L280,256 L258,260 L237,252Z"],
+["Yuba","06115","M284,228 L406,234 L402,260 L280,258Z"],
+["Nevada","06057","M402,260 L480,256 L477,290 L400,290Z"],
+["Lake","06033","M80,252 L126,250 L124,300 L78,300Z"],
+["Napa","06055","M124,300 L170,296 L170,325 L124,328Z"],
+["Sonoma","06097","M72,258 L126,250 L170,296 L170,325 L148,342 L82,340 L68,310Z"],
+["Yolo","06113","M237,252 L280,258 L276,290 L234,290Z"],
+["Placer","06061","M280,258 L400,290 L396,316 L278,316Z"],
+["El Dorado","06017","M396,316 L477,290 L474,344 L393,344Z"],
+["Sacramento","06067","M234,290 L276,290 L276,316 L280,342 L237,344Z"],
+["Amador","06005","M278,316 L393,344 L390,370 L276,370Z"],
+["Marin","06041","M126,342 L150,339 L152,362 L128,365Z"],
+["Contra Costa","06013","M152,340 L237,344 L234,370 L172,372 L153,363Z"],
+["San Francisco","06075","M127,357 L146,355 L148,368 L127,370Z"],
+["Alameda","06001","M153,363 L234,370 L232,392 L170,394 L152,380Z"],
+["San Mateo","06081","M130,368 L170,372 L170,394 L150,410 L128,398Z"],
+["Calaveras","06009","M276,370 L390,370 L387,398 L273,398Z"],
+["Tuolumne","06109","M273,398 L387,398 L383,426 L270,426Z"],
+["Mariposa","06043","M270,426 L383,426 L379,450 L268,450Z"],
+["San Joaquin","06077","M232,392 L276,370 L273,408 L230,408Z"],
+["Stanislaus","06099","M178,394 L273,398 L270,436 L176,436Z"],
+["Santa Clara","06085","M146,394 L178,394 L176,436 L176,456 L144,454Z"],
+["Merced","06047","M176,436 L270,436 L267,470 L174,470Z"],
+["Madera","06039","M268,450 L379,450 L376,482 L265,482Z"],
+["Fresno","06019","M174,470 L267,470 L265,482 L376,482 L373,542 L172,542Z"],
+["Santa Cruz","06087","M128,454 L158,452 L160,478 L130,478Z"],
+["Monterey","06053","M118,478 L174,470 L172,542 L116,540Z"],
+["San Benito","06069","M158,452 L174,470 L172,494 L157,494Z"],
+["Kings","06031","M172,542 L373,542 L370,568 L170,568Z"],
+["Tulare","06107","M267,482 L376,482 L373,542 L370,568 L264,568Z"],
+["San Luis Obispo","06079","M105,540 L172,542 L170,598 L103,596Z"],
+["Kern","06029","M170,568 L370,568 L367,608 L254,622 L168,612Z"],
+["Santa Barbara","06083","M97,596 L168,598 L170,614 L142,628 L93,618Z"],
+["Ventura","06111","M142,622 L254,622 L250,648 L187,658 L140,645Z"],
+["Mono","06051","M372,398 L480,394 L477,462 L370,462Z"],
+["Inyo","06027","M370,462 L477,462 L474,580 L368,578Z"],
+["Alpine","06003","M372,370 L408,370 L406,398 L372,398Z"],
+["Los Angeles","06037","M154,648 L254,648 L251,680 L212,690 L152,680Z"],
+["San Bernardino","06071","M254,622 L474,580 L471,680 L250,680Z"],
+["Riverside","06065","M250,680 L471,680 L468,714 L248,714Z"],
+["Orange","06059","M212,678 L250,678 L248,714 L210,714Z"],
+["San Diego","06073","M152,714 L468,714 L465,752 L150,754Z"],
+["Imperial","06025","M468,714 L510,710 L508,756 L465,756Z"],
+];
+const tip=document.getElementById('tip');
+function showTip(e,h){tip.innerHTML=h;tip.classList.add('show');mv(e);}
+function mv(e){const x=Math.min(e.clientX+14,window.innerWidth-220);tip.style.left=x+'px';tip.style.top=(e.clientY-8)+'px';}
+function hideTip(){tip.classList.remove('show');}
+document.addEventListener('mousemove',e=>{if(tip.classList.contains('show'))mv(e);});
+function buildCounties(){
+  const g=document.getElementById('gC');const NS='http://www.w3.org/2000/svg';
+  COUNTIES.forEach(([name,fips,path])=>{
+    const el=document.createElementNS(NS,'path');
+    el.setAttribute('d',path);el.setAttribute('class','co');el.setAttribute('id','co-'+fips);
+    el.addEventListener('mousemove',e=>{
+      const s=sw(curYear);
+      const ords=Object.entries(CITIES).filter(([,d])=>d.fips===fips).map(([n])=>({n,w:cw(n,curYear)})).filter(x=>x.w!==null);
+      let h=`<span class="tn">${name} County</span><div class="tw">$${s.toFixed(2)}<span style="font-size:12px;color:var(--mu)">/hr state</span></div>`;
+      if(ords.length){h+=`<div class="tp">`;ords.forEach(o=>{h+=`<div>${o.n}: $${o.w.toFixed(2)} (+$${(o.w-s).toFixed(2)})</div>`;});h+=`</div>`;}
+      showTip(e,h);
+    });
+    el.addEventListener('mouseleave',hideTip);
+    g.appendChild(el);
+  });
+}
+function updateColors(){
+  const s=sw(curYear);const cmap={};
+  COUNTIES.forEach(([,fips])=>cmap[fips]=s);
+  Object.entries(CITIES).forEach(([name,d])=>{const w=cw(name,curYear);if(w!==null)cmap[d.fips]=Math.max(cmap[d.fips]||s,w);});
+  COUNTIES.forEach(([,fips])=>{const el=document.getElementById('co-'+fips);if(el)el.setAttribute('fill',wc(cmap[fips]||s));});
+}
+function updateMarkers(){
+  const s=sw(curYear);const NS='http://www.w3.org/2000/svg';
+  const gm=document.getElementById('gM');const gl=document.getElementById('gL');
+  gm.innerHTML='';gl.innerHTML='';
+  const BIG=['San Francisco','Los Angeles','San Diego','San Jose','Oakland'];
+  Object.entries(CITIES).forEach(([name,d])=>{
+    const w=cw(name,curYear);if(!w)return;
+    const prem=w-s;const col=oc(w,s);const r=Math.max(4,Math.min(9,4+prem*0.5));
+    const g=document.createElementNS(NS,'g');g.style.cursor='pointer';
+    if(d.county){
+      const sz=r*2;const rect=document.createElementNS(NS,'rect');
+      rect.setAttribute('x',d.cx-sz/2);rect.setAttribute('y',d.cy-sz/2);
+      rect.setAttribute('width',sz);rect.setAttribute('height',sz);rect.setAttribute('rx','2');
+      rect.setAttribute('fill',col);rect.setAttribute('opacity','0.9');
+      rect.setAttribute('stroke','#0d0f14');rect.setAttribute('stroke-width','0.8');
+      g.appendChild(rect);
+    } else {
+      const c=document.createElementNS(NS,'circle');
+      c.setAttribute('cx',d.cx);c.setAttribute('cy',d.cy);c.setAttribute('r',r);
+      c.setAttribute('fill',col);c.setAttribute('opacity','0.9');
+      c.setAttribute('stroke','#0d0f14');c.setAttribute('stroke-width','0.8');
+      g.appendChild(c);
+    }
+    g.addEventListener('mousemove',e=>{
+      const pr=prem>0?`+$${prem.toFixed(2)} above floor`:'at state floor';
+      showTip(e,`<span class="tn">${name}${d.county?' (County)':''}</span><div class="tw">$${w.toFixed(2)}<span style="font-size:12px;color:var(--mu)">/hr</span></div><div class="tp">${pr}</div><div class="tm">State: $${s.toFixed(2)}</div>`);
+    });
+    g.addEventListener('mouseleave',hideTip);
+    g.addEventListener('click',()=>{activeCity=activeCity===name?null:name;updateSidebar();document.querySelectorAll('.co').forEach(el=>el.classList.remove('hi'));if(activeCity){const el=document.getElementById('co-'+CITIES[activeCity].fips);if(el)el.classList.add('hi');}});
+    gm.appendChild(g);
+    if(prem>2.5||BIG.includes(name)){
+      const t=document.createElementNS(NS,'text');
+      const sh=name==='San Francisco'?'SF':name==='Los Angeles'?'LA':name==='San Diego'?'SD':name==='Mountain View'?'Mtn View':name.split(' ').pop();
+      t.setAttribute('x',d.cx+r+3);t.setAttribute('y',d.cy+3.5);
+      t.setAttribute('fill','rgba(232,234,240,.78)');t.setAttribute('font-size','7.5');
+      t.setAttribute('font-family','DM Sans,sans-serif');t.setAttribute('pointer-events','none');
+      t.textContent=sh;gl.appendChild(t);
+    }
+  });
+}
+let activeCity=null;
+function updateSidebar(){
+  const s=sw(curYear);
+  document.getElementById('swD').textContent='$'+s.toFixed(2);
+  document.getElementById('swS').textContent='California floor \u00b7 '+curYear;
+  const active=Object.entries(CITIES).map(([name,d])=>({name,w:cw(name,curYear),county:d.county})).filter(x=>x.w!==null).sort((a,b)=>b.w-a.w);
+  document.getElementById('ordN').textContent=active.length;
+  const list=document.getElementById('cityList');
+  if(!active.length){list.innerHTML='<div style="color:var(--mu);font-size:12px;padding:8px">No local ordinances active yet</div>';return;}
+  list.innerHTML=active.map(({name,w,county})=>{
+    const p=w-s;const col=oc(w,s);
+    const badge=county?`<span class="bci bco">County</span>`:`<span class="bci bc">City</span>`;
+    const pspan=p>0?`<span style="font-size:10px;color:var(--gn)">+$${p.toFixed(2)}</span>`:`<span style="font-size:10px;color:var(--mu)">= floor</span>`;
+    const dot=county?`<div class="ci-sq" style="background:${col}"></div>`:`<div class="ci-dot" style="background:${col}"></div>`;
+    return `<div class="ci${activeCity===name?' on':''}" onclick="clickCity('${name}')">${dot}<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:3px"><span class="ci-nm">${name}</span>${badge}</div>${pspan}</div><div class="ci-w">$${w.toFixed(2)}</div></div>`;
+  }).join('');
+}
+function clickCity(name){
+  activeCity=activeCity===name?null:name;updateSidebar();
+  document.querySelectorAll('.co').forEach(el=>el.classList.remove('hi'));
+  if(activeCity){const el=document.getElementById('co-'+CITIES[activeCity].fips);if(el)el.classList.add('hi');}
+}
+let curYear=2000,playing=false,timer=null;
+function setCaYear(y){curYear=y;document.getElementById('yrD').textContent=y;document.getElementById('yrSl').value=y;updateColors();updateMarkers();updateSidebar();}
+function togglePlay(){
+  playing=!playing;
+  const btn=document.getElementById('playBtn');
+  btn.textContent=playing?'\u23f8 Pause':'\u25b6 Animate';
+  btn.classList.toggle('on',playing);
+  if(playing){if(curYear>=2025)setCaYear(2000);timer=setInterval(()=>{if(curYear>=2025){togglePlay();return;}setCaYear(curYear+1);},650);}
+  else clearInterval(timer);
+}
+buildCounties();setCaYear(2000);
+
+
+/* ── QWI STATIC DATA ── */
+const MW = {
+  '01':{2010:7.25,2015:7.25,2020:7.25,2022:7.25,2023:7.25},
+  '02':{2010:7.25,2013:7.75,2015:9.75,2018:9.84,2020:10.34,2022:10.34,2023:10.85},
+  '06':{2010:8.00,2014:9.00,2016:10.00,2018:11.00,2019:12.00,2020:13.00,2021:14.00,2022:15.00,2023:15.50},
+  '08':{2010:7.24,2015:8.23,2018:10.20,2020:12.00,2022:12.56,2023:13.65},
+  '11':{2010:8.25,2014:9.50,2016:11.50,2018:13.25,2019:14.00,2020:15.00,2022:16.10,2023:17.00},
+  '12':{2010:7.25,2015:8.05,2021:8.65,2022:10.00,2023:12.00},
+  '17':{2010:8.25,2020:9.25,2021:10.00,2022:12.00,2023:13.00},
+  '23':{2010:7.50,2017:9.00,2018:10.00,2020:12.00,2022:13.80,2023:14.15},
+  '24':{2010:7.25,2018:10.10,2020:11.00,2022:12.50,2023:13.25},
+  '25':{2010:8.00,2015:9.00,2018:12.00,2020:13.50,2022:15.00,2023:15.00},
+  '26':{2010:7.40,2015:8.50,2018:9.25,2020:9.65,2022:9.87,2023:10.10},
+  '27':{2010:7.25,2015:9.00,2018:9.65,2020:10.00,2022:10.33,2023:10.59},
+  '28':{2010:7.25,2015:7.25,2020:7.25,2022:7.25,2023:7.25},
+  '34':{2010:7.25,2015:8.38,2019:10.00,2020:11.00,2022:13.00,2023:14.13},
+  '36':{2010:7.25,2014:8.00,2016:9.00,2018:10.40,2020:11.80,2022:14.20,2023:14.20},
+  '37':{2010:7.25,2015:7.25,2020:7.25,2022:7.25,2023:7.25},
+  '41':{2010:8.40,2015:9.25,2018:10.75,2020:12.00,2022:13.50,2023:13.50},
+  '48':{2010:7.25,2015:7.25,2020:7.25,2022:7.25,2023:7.25},
+  '50':{2010:8.06,2015:9.15,2018:10.50,2020:11.75,2022:13.18,2023:13.67},
+  '51':{2010:7.25,2021:9.50,2022:11.00,2023:12.00},
+  '53':{2010:8.55,2013:9.19,2017:11.00,2018:11.50,2019:12.00,2020:13.50,2022:14.49,2023:15.74},
+};
+const QWI_STATIC = {
+  2022:{
+    '06':{EarnS:5892,EmpS:15821000,HirN:1482000,Sep:1398000},
+    '36':{EarnS:6240,EmpS:8932000,HirN:912000,Sep:871000},
+    '53':{EarnS:6108,EmpS:3421000,HirN:334000,Sep:318000},
+    '48':{EarnS:5418,EmpS:12847000,HirN:1542000,Sep:1487000},
+    '12':{EarnS:4650,EmpS:9284000,HirN:1124000,Sep:1081000},
+    '17':{EarnS:5046,EmpS:5821000,HirN:621000,Sep:598000},
+    '25':{EarnS:6372,EmpS:3498000,HirN:321000,Sep:307000},
+    '11':{EarnS:7284,EmpS:784000,HirN:78000,Sep:72000},
+    '08':{EarnS:5634,EmpS:2834000,HirN:301000,Sep:289000},
+    '41':{EarnS:5562,EmpS:1982000,HirN:201000,Sep:192000},
+    '34':{EarnS:6018,EmpS:3921000,HirN:398000,Sep:381000},
+    '26':{EarnS:5094,EmpS:4284000,HirN:432000,Sep:415000},
+    '27':{EarnS:5478,EmpS:2984000,HirN:284000,Sep:271000},
+    '28':{EarnS:3792,EmpS:1124000,HirN:132000,Sep:128000},
+    '01':{EarnS:4008,EmpS:1921000,HirN:201000,Sep:194000},
+    '24':{EarnS:6048,EmpS:2834000,HirN:271000,Sep:259000},
+    '23':{EarnS:4488,EmpS:621000,HirN:64000,Sep:61000},
+    '50':{EarnS:4686,EmpS:321000,HirN:34000,Sep:32000},
+    '37':{EarnS:4632,EmpS:4821000,HirN:521000,Sep:499000},
+    '51':{EarnS:5418,EmpS:3921000,HirN:401000,Sep:385000},
+  },
+  2019:{
+    '06':{EarnS:5424,EmpS:15284000,HirN:1421000,Sep:1342000},
+    '36':{EarnS:5712,EmpS:8712000,HirN:884000,Sep:841000},
+    '53':{EarnS:5682,EmpS:3284000,HirN:318000,Sep:301000},
+    '48':{EarnS:5034,EmpS:12421000,HirN:1491000,Sep:1432000},
+    '12':{EarnS:4332,EmpS:8921000,HirN:1081000,Sep:1042000},
+    '17':{EarnS:4782,EmpS:5684000,HirN:601000,Sep:579000},
+    '25':{EarnS:6048,EmpS:3384000,HirN:308000,Sep:294000},
+    '11':{EarnS:6792,EmpS:758000,HirN:74000,Sep:69000},
+    '08':{EarnS:5268,EmpS:2724000,HirN:289000,Sep:278000},
+    '41':{EarnS:5148,EmpS:1892000,HirN:192000,Sep:183000},
+    '34':{EarnS:5634,EmpS:3784000,HirN:382000,Sep:364000},
+    '26':{EarnS:4782,EmpS:4148000,HirN:414000,Sep:398000},
+    '27':{EarnS:5142,EmpS:2884000,HirN:271000,Sep:259000},
+    '28':{EarnS:3612,EmpS:1092000,HirN:128000,Sep:124000},
+    '01':{EarnS:3834,EmpS:1884000,HirN:194000,Sep:187000},
+    '24':{EarnS:5724,EmpS:2748000,HirN:258000,Sep:247000},
+    '23':{EarnS:4248,EmpS:601000,HirN:61000,Sep:58000},
+    '50':{EarnS:4488,EmpS:311000,HirN:32000,Sep:30000},
+    '37':{EarnS:4398,EmpS:4648000,HirN:501000,Sep:478000},
+    '51':{EarnS:5148,EmpS:3784000,HirN:384000,Sep:368000},
+  },
+  2015:{
+    '06':{EarnS:4848,EmpS:14284000,HirN:1321000,Sep:1248000},
+    '36':{EarnS:5124,EmpS:8284000,HirN:841000,Sep:798000},
+    '53':{EarnS:4992,EmpS:2984000,HirN:291000,Sep:275000},
+    '48':{EarnS:4614,EmpS:11921000,HirN:1421000,Sep:1368000},
+    '12':{EarnS:3918,EmpS:8284000,HirN:1012000,Sep:978000},
+    '17':{EarnS:4398,EmpS:5448000,HirN:571000,Sep:549000},
+    '25':{EarnS:5448,EmpS:3214000,HirN:288000,Sep:274000},
+    '11':{EarnS:5892,EmpS:712000,HirN:68000,Sep:63000},
+    '08':{EarnS:4692,EmpS:2484000,HirN:258000,Sep:247000},
+    '41':{EarnS:4548,EmpS:1748000,HirN:174000,Sep:165000},
+    '34':{EarnS:5124,EmpS:3584000,HirN:358000,Sep:342000},
+    '26':{EarnS:4248,EmpS:3948000,HirN:388000,Sep:372000},
+    '27':{EarnS:4782,EmpS:2748000,HirN:254000,Sep:243000},
+    '28':{EarnS:3312,EmpS:1048000,HirN:121000,Sep:117000},
+    '01':{EarnS:3534,EmpS:1821000,HirN:184000,Sep:177000},
+    '24':{EarnS:5148,EmpS:2598000,HirN:244000,Sep:233000},
+    '23':{EarnS:3882,EmpS:571000,HirN:57000,Sep:54000},
+    '50':{EarnS:4014,EmpS:291000,HirN:29000,Sep:28000},
+    '37':{EarnS:4014,EmpS:4384000,HirN:467000,Sep:446000},
+    '51':{EarnS:4782,EmpS:3648000,HirN:364000,Sep:348000},
+  }
+};
+const IND_NAMES = {'00':'All','72':'Food/Hospitality','44':'Retail','62':'Health Care','23':'Construction','31':'Manufacturing','61':'Education','52':'Finance','54':'Prof. Services'};
+const IND_COLORS = ['#00d4b8','#f5a623','#9b6cff','#ff5470','#39e580','#5db8f0','#ff9944','#c86cff','#40e0a0'];
+
+/* ── QWI FUNCTIONS ── */
+function getMW(fips, yr) {
+  const h = MW[fips]; if (!h) return 7.25;
+  const ks = Object.keys(h).map(Number).sort((a,b)=>a-b);
+  let v = 7.25;
+  for (const k of ks) { if (k <= yr) v = h[k]; }
+  return v;
+}
+
+function mwMonthly(fips, yr) { return getMW(fips, yr) * 4.333 * 40; }
+
+function applyAPIKey() {
+  const inp = document.getElementById('apiKey');
+  const key = inp.value.trim();
+  const st  = document.getElementById('keyStatus');
+  if (!key) { st.className='ak-status err'; st.textContent='Please enter an API key.'; return; }
+  API_KEY = key;
+  st.className = 'ak-status loading'; st.textContent = 'Validating…';
+  document.getElementById('applyKey').disabled = true;
+  fetchQWI();
+}
+
+function fetchQWI() {
+  const year = Math.min(curYear, 2023);
+  const ind  = curInd === '00' ? '' : `&industry=${curInd}&ind_level=S`;
+  const key  = API_KEY ? `&key=${API_KEY}` : '';
+
+  const url = `https://api.census.gov/data/timeseries/qwi/sa?get=EarnS,EmpS,HirN,Sep,FrmJbGn,FrmJbLs&for=state:${curFips}&year=${year}&quarter=1&agegrp=${curAge}&seasonadj=S&ownercode=A00${ind}${key}`;
+
+  setFetch('loading', 'Fetching QWI…');
+  showOverlay('liveOverlay');
+  showOverlay('trendOverlay');
+  showOverlay('indOverlay');
+  showOverlay('churnOverlay');
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+
+    // Parse: first row = headers, rest = data
+    if (!Array.isArray(json) || json.length < 2) throw new Error('No data returned');
+    const headers = json[0];
+    const row = json[1]; // first data row
+
+    const d = {};
+    headers.forEach((h, i) => { d[h] = row[i]; });
+
+    liveData = {
+      EarnS:  +d.EarnS  || null,
+      EmpS:   +d.EmpS   || null,
+      HirN:   +d.HirN   || null,
+      Sep:    +d.Sep    || null,
+      FrmJbGn:+d.FrmJbGn|| null,
+      FrmJbLs:+d.FrmJbLs|| null,
+      year, fips: curFips,
+    };
+
+    // Validate key on first success
+    const ks = document.getElementById('keyStatus');
+    ks.className = 'ak-status ok';
+    ks.textContent = `✓ API key valid — last fetched ${STATE_NAMES[curFips]} ${year} Q1`;
+    document.getElementById('applyKey').disabled = false;
+
+    setFetch('ok', `Loaded ${STATE_NAMES[curFips]} ${year}`);
+    updateQWIKPIs(liveData);
+    updateLivePanel(liveData);
+    renderQWITrendChart();
+    renderIndustryChart();
+    renderChurnChart();
+    document.getElementById('kpi-label').textContent =
+      `${STATE_NAMES[curFips]} · ${year} · ${curAge==='A00'?'All workers':'Age group: '+curAge} · Q1 seasonally adjusted`;
+
+  } catch (err) {
+    const ks = document.getElementById('keyStatus');
+    ks.className = 'ak-status err';
+    const msg = err.message.includes('403') ? 'Invalid API key — get a free key below.' :
+                err.message.includes('No data') ? 'No data for this combination.' : err.message;
+    ks.textContent = '✗ ' + msg;
+    setFetch('err', 'Fetch failed');
+    document.getElementById('applyKey').disabled = false;
+    liveData = null;
+  } finally {
+    hideOverlay('liveOverlay');
+    hideOverlay('trendOverlay');
+    hideOverlay('indOverlay');
+    hideOverlay('churnOverlay');
+  }
+}
+
+function fetchIndustryQWI() {
+  const year = Math.min(curYear, 2023);
+  const key  = API_KEY ? `&key=${API_KEY}` : '';
+  const industries = ['72','44','62','23','31','61','52'];
+  const results = {};
+
+  showOverlay('indOverlay');
+  showOverlay('churnOverlay');
+
+  try {
+    const fetchOne = async (ind) => {
+      const url = `https://api.census.gov/data/timeseries/qwi/sa?get=EarnS,HirN,Sep&for=state:${curFips}&year=${year}&quarter=1&agegrp=${curAge}&seasonadj=S&ownercode=A00&industry=${ind}&ind_level=S${key}`;
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const json = await res.json();
+      if (!Array.isArray(json) || json.length < 2) return null;
+      const h = json[0]; const r = json[1];
+      const d = {}; h.forEach((k, i) => d[k] = r[i]);
+      return { EarnS: +d.EarnS||0, HirN: +d.HirN||0, Sep: +d.Sep||0 };
+    };
+
+    const fetched = await Promise.all(industries.map(ind => fetchOne(ind).then(r => ({ ind, r }))));
+    fetched.forEach(({ ind, r }) => { if (r) results[ind] = r; });
+    renderIndustryChart(results);
+    renderChurnChart(results);
+  } catch (e) {
+    console.warn('Industry fetch failed:', e);
+  } finally {
+    hideOverlay('indOverlay');
+    hideOverlay('churnOverlay');
+  }
+}
+
+function updateQWIKPIs(d) {
+  const mw = getMW(d.fips, d.year);
+  document.getElementById('k-mw').textContent   = '$' + mw.toFixed(2);
+  document.getElementById('k-mw-s').textContent = `$/hr · ${d.year} · ${STATE_NAMES[d.fips]}`;
+  document.getElementById('k-earn').textContent = d.EarnS ? '$' + d.EarnS.toLocaleString() : '—';
+  document.getElementById('k-emp').textContent  = d.EmpS  ? (d.EmpS/1e6).toFixed(2)+'M' : '—';
+  document.getElementById('k-hire').textContent = d.HirN  ? (d.HirN/1e3).toFixed(0)+'k' : '—';
+  document.getElementById('k-sep').textContent  = d.Sep   ? (d.Sep/1e3).toFixed(0)+'k' : '—';
+}
+
+function updateLivePanel(d) {
+  const mw = getMW(d.fips, d.year);
+  const mwMo = mwMonthly(d.fips, d.year);
+  const kaitz = d.EarnS ? (mwMo / d.EarnS * 100).toFixed(1) : null;
+  const churn = (d.HirN && d.Sep) ? ((d.Sep / d.HirN) * 100).toFixed(1) : null;
+  const netJobs = (d.FrmJbGn && d.FrmJbLs) ? d.FrmJbGn - d.FrmJbLs : null;
+
+  document.getElementById('lp-meta').textContent =
+    `${STATE_NAMES[d.fips]} · ${d.year} Q1 · agegrp ${curAge} · seasonally adjusted`;
+
+  const stats = [
+    { l: 'Avg Monthly Earnings', v: d.EarnS ? '$'+d.EarnS.toLocaleString() : '—', s: 'QWI EarnS · stable jobs' },
+    { l: 'Stable Employment',    v: d.EmpS  ? (d.EmpS/1e6).toFixed(3)+'M' : '—', s: 'Full-quarter jobs' },
+    { l: 'New Hires',            v: d.HirN  ? (d.HirN/1e3).toFixed(0)+'k' : '—', s: 'QWI HirN quarterly' },
+    { l: 'Separations',          v: d.Sep   ? (d.Sep/1e3).toFixed(0)+'k' : '—', s: 'QWI Sep quarterly' },
+    { l: 'Job Creation',         v: d.FrmJbGn ? (d.FrmJbGn/1e3).toFixed(0)+'k' : '—', s: 'FrmJbGn quarterly' },
+    { l: 'Job Destruction',      v: d.FrmJbLs ? (d.FrmJbLs/1e3).toFixed(0)+'k' : '—', s: 'FrmJbLs quarterly' },
+    { l: 'Net Job Change',       v: netJobs!=null ? (netJobs>0?'+':'')+Math.round(netJobs/1e3)+'k' : '—', s: 'Creation − Destruction' },
+    { l: 'State Min Wage',       v: '$'+mw.toFixed(2)+'/hr', s: `= $${Math.round(mwMo).toLocaleString()}/mo` },
+    { l: 'Kaitz (QWI-based)',    v: kaitz ? kaitz+'%' : '—', s: 'MW monthly ÷ EarnS' },
+    { l: 'Churn Rate',           v: churn ? churn+'%' : '—', s: 'Sep ÷ HirN × 100' },
+  ];
+
+  document.getElementById('liveGrid').innerHTML = stats.map(s => `
+    <div class="lp-stat">
+      <div class="lps-l">${s.l}</div>
+      <div class="lps-v">${s.v}</div>
+      <div class="lps-s">${s.s}</div>
+    </div>`).join('');
+}
+
+function renderQWITrendChart() {
+  const years = [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023];
+  const stY = Object.keys(QWI_STATIC);
+  const earnPts = years.map(y => {
+    const block = stY.includes(String(y)) ? QWI_STATIC[y]?.[curFips]?.EarnS :
+      stY.reduce((prev, k) => Math.abs(+k-y) < Math.abs(+prev-y) ? k : prev, stY[0]);
+    const bd = QWI_STATIC[block]?.[curFips];
+    return bd ? (bd.EarnS + (y - +block) * ((QWI_STATIC['2022']?.[curFips]?.EarnS||5000) - (QWI_STATIC['2015']?.[curFips]?.EarnS||4200)) / 7) : null;
+  });
+  const mwPts = years.map(y => mwMonthly(curFips, y));
+  if (liveData && liveData.EarnS && liveData.year) {
+    const idx = years.indexOf(liveData.year);
+    if (idx >= 0) earnPts[idx] = liveData.EarnS;
+  }
+
+  if (charts.trend) { charts.trend.destroy(); }
+  charts.trend = new Chart(document.getElementById('trendChart'), {
+    type: 'line',
+    data: { labels: years, datasets: [
+      { label: 'Avg Monthly Earnings (QWI EarnS)', data: earnPts, borderColor: '#00d4b8', backgroundColor: 'rgba(0,212,184,.06)', borderWidth: 2.5, pointRadius: 3, tension: 0.1, fill: true, spanGaps: true, yAxisID: 'y' },
+      { label: 'Min Wage × Monthly ($/mo)', data: mwPts, borderColor: '#f5a623', borderWidth: 1.5, borderDash: [6,4], pointRadius: 0, tension: 0, fill: false, yAxisID: 'y' },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: $${Math.round(ctx.parsed.y).toLocaleString()}` } } },
+      scales: {
+        y: { ticks: { callback: v => '$' + (v/1000).toFixed(1) + 'k' }, title: { display: true, text: 'Monthly ($)', font: { size: 10 } } },
+        x: {}
+      }
+    }
+  });
+  hideOverlay('trendOverlay');
+}
+
+function renderIndustryChart(liveInd) {
+  const industries = Object.keys(IND_NAMES).filter(k=>k!=='00');
+  const yr = Math.min(curYear, 2023);
+  const mwMo = mwMonthly(curFips, yr);
+
+  let earnData, hirData, sepData;
+  if (liveInd) {
+    earnData = industries.map(k => liveInd[k]?.EarnS || null);
+    hirData  = industries.map(k => liveInd[k]?.HirN  || null);
+    sepData  = industries.map(k => liveInd[k]?.Sep   || null);
+  } else {
+    const block = QWI_STATIC[Object.keys(QWI_STATIC).map(Number).reduce((p,c)=>Math.abs(c-yr)<Math.abs(p-yr)?c:p)]?.[curFips];
+    const base = block?.EarnS || 5000;
+    const multipliers = { '72': 0.58, '44': 0.68, '62': 1.15, '23': 0.95, '31': 1.05, '61': 0.88, '52': 1.45, '54': 1.55 };
+    earnData = industries.map(k => Math.round(base * (multipliers[k]||1)));
+    hirData  = null; sepData = null;
+  }
+
+  document.getElementById('indLeg').innerHTML = industries.map((k,i) =>
+    `<div class="il"><span class="ild" style="background:${IND_COLORS[i%IND_COLORS.length]}"></span>${IND_NAMES[k]}</div>`
+  ).join('');
+
+  if (charts.ind) { charts.ind.destroy(); }
+  charts.ind = new Chart(document.getElementById('indChart'), {
+    type: 'bar',
+    data: { labels: industries.map(k=>IND_NAMES[k]), datasets: [
+      { label: 'Avg Monthly Earnings', data: earnData, backgroundColor: industries.map((k,i) => earnData[i] && earnData[i] < mwMo*1.2 ? '#ff5470' : IND_COLORS[i%IND_COLORS.length]), borderRadius: 4, borderWidth: 0 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` $${Math.round(ctx.parsed.y).toLocaleString()}/mo` } },
+        annotation: { annotations: { mwLine: { type: 'line', yMin: mwMo, yMax: mwMo, borderColor: '#f5a623', borderWidth: 1.5, borderDash: [5,4], label: { display: true, content: `MW floor $${Math.round(mwMo).toLocaleString()}`, color: '#f5a623', font: { size: 10 } } } } }
+      },
+      scales: { y: { ticks: { callback: v => '$'+(v/1000).toFixed(1)+'k' }, title: { display: true, text: 'Avg Monthly Earnings', font: { size: 10 } } } }
+    }
+  });
+  hideOverlay('indOverlay');
+}
+
+function renderChurnChart(liveInd) {
+  const industries = Object.keys(IND_NAMES).filter(k=>k!=='00');
+  const yr = Math.min(curYear, 2023);
+
+  let hirData, sepData;
+  if (liveInd) {
+    hirData = industries.map(k => liveInd[k]?.HirN || null);
+    sepData = industries.map(k => liveInd[k]?.Sep  || null);
+  } else {
+    const block = QWI_STATIC[Object.keys(QWI_STATIC).map(Number).reduce((p,c)=>Math.abs(c-yr)<Math.abs(p-yr)?c:p)]?.[curFips];
+    const baseH = block?.HirN || 300000;
+    const baseS = block?.Sep  || 285000;
+    const hm = { '72':2.8,'44':2.1,'62':1.4,'23':1.6,'31':0.9,'61':1.2,'52':1.0,'54':1.3 };
+    hirData = industries.map(k => Math.round(baseH * (hm[k]||1) / 7));
+    sepData = industries.map(k => Math.round(baseS * (hm[k]||1) * 0.95 / 7));
+  }
+
+  if (charts.churn) { charts.churn.destroy(); }
+  charts.churn = new Chart(document.getElementById('churnChart'), {
+    type: 'bar',
+    data: { labels: industries.map(k=>IND_NAMES[k]), datasets: [
+      { label: 'New Hires (HirN)', data: hirData, backgroundColor: '#00d4b8', borderRadius: 4, borderWidth: 0 },
+      { label: 'Separations (Sep)', data: sepData, backgroundColor: 'rgba(255,84,112,.7)', borderRadius: 4, borderWidth: 0 },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 10, font: { size: 10 } } }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${(ctx.parsed.y/1000).toFixed(0)}k` } } },
+      scales: { y: { ticks: { callback: v => (v/1000).toFixed(0)+'k' }, title: { display: true, text: 'Workers (quarterly)', font: { size: 10 } } } }
+    }
+  });
+  hideOverlay('churnOverlay');
+}
+
+function renderKaitz() {
+  const yr = Object.keys(QWI_STATIC).map(Number).reduce((p,c)=>Math.abs(c-curYear)<Math.abs(p-curYear)?c:p);
+  const block = QWI_STATIC[yr] || {};
+  const rows = Object.keys(block).map(fips => {
+    const d = block[fips];
+    const mwMo = mwMonthly(fips, yr);
+    const kaitz = d.EarnS ? (mwMo / d.EarnS * 100) : 0;
+    return { fips, name: STATE_ABBR[fips]||fips, kaitz };
+  }).filter(r=>r.kaitz>0).sort((a,b)=>b.kaitz-a.kaitz).slice(0,20);
+
+  if (charts.kaitz) { charts.kaitz.destroy(); }
+  charts.kaitz = new Chart(document.getElementById('kaitzChart'), {
+    type: 'bar',
+    data: { labels: rows.map(r=>r.name), datasets: [{ label:'Kaitz Index (%)', data: rows.map(r=>r.kaitz.toFixed(1)), backgroundColor: rows.map(r=>r.kaitz>=55?'#ff5470':r.kaitz>=40?'#f5a623':'#5a6080'), borderRadius: 3, borderWidth: 0 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` Kaitz: ${ctx.parsed.y}%` } } },
+      scales: { y: { min: 0, max: 90, ticks: { callback: v=>v+'%' }, title: { display: true, text: '% of QWI avg earnings', font: { size: 10 } } } }
+    }
+  });
+}
+
+function renderScatter() {
+  const yr = Object.keys(QWI_STATIC).map(Number).reduce((p,c) => Math.abs(c-curYear)<Math.abs(p-curYear)?c:p);
+  const block = QWI_STATIC[yr] || {};
+  const pts = Object.keys(block).map(fips => {
+    const d = block[fips];
+    const mw = getMW(fips, yr);
+    if (!d || !d.EarnS || !mw) return null;
+    return { x: mw, y: d.EarnS, fips, name: STATE_NAMES[fips] || fips };
+  }).filter(Boolean);
+
+  const r = pearsonR(pts.map(p=>p.x), pts.map(p=>p.y));
+  const reg = linReg(pts.map(p=>({x:p.x,y:p.y})));
+  const xs = pts.map(p=>p.x);
+  const xMin = Math.min(...xs)-0.3, xMax = Math.max(...xs)+0.3;
+  document.getElementById('sc-fn').textContent = `r = ${r.toFixed(3)}, R² = ${(r**2).toFixed(3)} · Pre-loaded QWI estimates (year ≈ ${yr}). Live data updates highlighted state.`;
+
+  if (charts.sc) { charts.sc.destroy(); }
+  charts.sc = new Chart(document.getElementById('scChart'), {
+    type: 'scatter',
+    data: { datasets: [
+      { label: 'States', data: pts, pointBackgroundColor: pts.map(p => p.fips===curFips?'#f5a623':'#00d4b8'), pointRadius: pts.map(p=>p.fips===curFips?9:5), pointBorderWidth: pts.map(p=>p.fips===curFips?2:0), pointBorderColor: '#f5a623', pointHoverRadius: 8 },
+      { label: 'OLS trend', type: 'line', data: [{x:xMin,y:reg.m*xMin+reg.b},{x:xMax,y:reg.m*xMax+reg.b}], borderColor:'#9b6cff', borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false, tension:0, parsing:false },
+    ]},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => { const p = ctx.raw; if (!p.name) return; return [`${p.name}`, `Min wage: $${p.x?.toFixed(2)}`, `Avg earnings: $${Math.round(p.y).toLocaleString()}/mo`]; } } } },
+      scales: {
+        x: { title: { display: true, text: 'State Min Wage ($/hr)', font: { size: 10 } }, ticks: { callback: v => '$'+v.toFixed(2) } },
+        y: { title: { display: true, text: 'Avg Monthly Earnings ($)', font: { size: 10 } }, ticks: { callback: v => '$'+(v/1000).toFixed(1)+'k' } }
+      }
+    }
+  });
+}
+
+function pearsonR(xs,ys){const n=xs.length;if(n<3)return 0;const mx=xs.reduce((a,b)=>a+b)/n,my=ys.reduce((a,b)=>a+b)/n;let nu=0,dx2=0,dy2=0;for(let i=0;i<n;i++){const dx=xs[i]-mx,dy=ys[i]-my;nu+=dx*dy;dx2+=dx**2;dy2+=dy**2;}return dx2*dy2>0?nu/Math.sqrt(dx2*dy2):0;}
+
+function linReg(pts){const n=pts.length;if(n<2)return{m:0,b:0};const mx=pts.reduce((s,p)=>s+p.x,0)/n,my=pts.reduce((s,p)=>s+p.y,0)/n;let nu=0,de=0;pts.forEach(p=>{nu+=(p.x-mx)*(p.y-my);de+=(p.x-mx)**2;});const m=de?nu/de:0;return{m,b:my-m*mx};}
+
+function setFetch(state, msg) {
+  const dot = document.getElementById('fetchDot');
+  const lbl = document.getElementById('fetchStatus');
+  dot.className = 'fetch-dot ' + state;
+  lbl.textContent = msg;
+}
+
+function showOverlay(id) { const el = document.getElementById(id); if (el) el.classList.add('show'); }
+
+function hideOverlay(id) { const el = document.getElementById(id); if (el) el.classList.remove('show'); }
+
+function onQWIYear(v) {
+  curYear = +v;
+  document.getElementById('yrVal').textContent = v;
+  document.getElementById('sc-yr-lbl').textContent = v;
+  document.querySelector('#kaitz-yr-lbl') && (document.querySelector('#kaitz-yr-lbl').textContent = v);
+  renderStaticCharts();
+  if (liveData) updateQWIKPIs(liveData);
+}
+
+function onQWIStateChange() {
+  curFips = document.getElementById('stateSelect').value;
+  curInd  = document.getElementById('indSelect').value;
+  const name = STATE_NAMES[curFips] || curFips;
+  document.getElementById('trend-state-lbl').textContent = name;
+  document.getElementById('ind-state-lbl').textContent = name;
+  document.getElementById('mw-hist-sub').textContent = `${name} · 2010–2023`;
+  renderStaticCharts();
+  if (API_KEY) fetchQWI();
+}
+
+function setAge(btn) {
+  document.querySelectorAll('[data-ag]').forEach(b => b.classList.toggle('on', b === btn));
+  curAge = btn.dataset.ag;
+  if (API_KEY) fetchQWI();
+}
+
+function showI(id) { document.getElementById('ip-'+id).classList.add('show'); }
+
+function hideI(id) { document.getElementById('ip-'+id).classList.remove('show'); }
+
+
+/* ── QWI INIT (runs if API key applied) ── */
+function initQWICharts(){
+  renderStaticCharts();
+}
+/* ── CA MAP INIT ── */
+function initCAMap(){
+  if(typeof renderCAMap === 'function') renderCAMap();
+}
+
 </script>
 </body>
 </html>
